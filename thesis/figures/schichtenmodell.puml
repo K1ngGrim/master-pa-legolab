@@ -1,0 +1,41 @@
+@startsalt schichtenmodell
+' Schichtenmodell der Architektur.
+' Bewusst implementierungsfrei: keine Klassen-, Bibliotheks- oder Produktnamen.
+'
+' HINWEIS ZUR PFLEGE: Die Zellen sind mit geschuetzten Leerzeichen (U+00A0)
+' auf einheitliche Breite gebracht. Normale Leerzeichen entfernt PlantUML,
+' und "..." wuerde salt als Eingabefeld rendern. Beim Aendern von Beschriftungen
+' die Polsterung mitfuehren, sonst springen die Spaltenbreiten.
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 15
+
+{
+  {
+    {
+      Steuereinheit
+      {#
+              Anwendung       
+             Objektmodell     
+            Aufrufschicht     
+          Nachrichtenschicht  
+           Transportschicht   
+      }
+    } | {
+      Anzeigeeinheit
+      {#
+         Anzeige und Eingabe  
+             Objektmodell     
+            Aufrufschicht     
+          Nachrichtenschicht  
+           Transportschicht   
+      }
+    }
+  }
+  {#
+                             Bus                              
+  }
+}
+@endsalt

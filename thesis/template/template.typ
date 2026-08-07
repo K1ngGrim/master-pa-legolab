@@ -136,6 +136,7 @@
   logo_right: none,
   custom_front_page: "",
   company_logo: "",
+  ai_usage_disclosure: false,
   body,
 ) = {
   // Set the document's basic properties.
@@ -290,6 +291,34 @@
     #line(start: (0%, 10%), length: 30%)
     #authors.at(0).name
 
+  ]
+
+  if ai_usage_disclosure != false [
+    #pagebreak()
+    #align(center)[
+      #heading(outlined: false, numbering: none, text(0.85em, "ERKLÄRUNG ZUR NUTZUNG VON KI-WERKZEUGEN"))
+    ]
+    #text(11pt)[
+      #par(justify: true)[
+        Bei der Erstellung dieser Arbeit wurden KI-Werkzeuge unterstützend
+        eingesetzt, insbesondere für Teile des Programmcodes sowie für
+        Textentwürfe. Alle inhaltlichen und konzeptionellen Entscheidungen,
+        die Durchführung und Auswertung, die Überprüfung sämtlicher Ergebnisse
+        sowie die endgültige Fassung des Textes wurden von den Autor:innen selbst
+        erstellt und geprüft.
+      ]
+      #v(0.5em)
+      #par(justify: true)[
+        Bei der Nutzung wurden die allgemein anerkannten Standards guter
+        wissenschaftlicher Praxis sowie die einschlägigen Vorgaben des
+        Fachbereichs zum Umgang mit KI-generierten Inhalten beachtet.
+        Jede wesentliche Behauptung wurde eigenständig auf Plausibilität und
+        Richtigkeit geprüft und durch geeignete Quellen belegt. Es wurden keine
+        personenbezogenen, urheberrechtlich geschützten oder vertraulichen Daten
+        an die KI-Systeme übermittelt. Die eigenständige Leistung der Autor:innen
+        ist durchgängig gewahrt.
+      ]
+    ]
   ]
 
   if restriction_notice != [] [
