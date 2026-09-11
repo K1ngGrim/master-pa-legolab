@@ -1,0 +1,54 @@
+@startuml interceptor_ablauf
+' Ablauf eines Aufrufs an der Interceptor-Schnittstelle.
+' Bewusst ohne Feldnamen, Opcodes und Byte-Angaben: gezeigt wird allein, dass
+' sich jede Interaktion auf dieselbe Operation zurueckfuehren laesst und dass
+' jede von der Steuereinheit ausgeht.
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam ParticipantPadding 25
+skinparam BoxPadding 15
+hide footbox
+
+box "Steuereinheit"
+  participant "Transport-\nschicht" as TC
+  participant "Interceptor" as IC
+end box
+
+box "Anzeigeeinheit"
+  participant "Interceptor" as ID
+  participant "Transport-\nschicht" as TD
+end box
+
+== Nachricht übertragen ==
+
+loop je Paket der Nachricht
+  TC  ->  IC : send(Datenpaket)
+  IC  ->  ID : Block
+  ID  ->  TD : Datenpaket
+  TD --> ID  : Ack
+  ID --> IC  : Block
+  IC --> TC  : Ack
+end
+
+== Ergebnis abholen ==
+
+loop bis das Ergebnis bereitliegt
+  TC  ->  IC : send(Bereitschaftsanfrage)
+  IC  ->  ID : Block
+  ID --> IC  : Block
+  IC --> TC  : bereit / noch nicht
+end
+
+loop je Paket des Ergebnisses
+  TC  ->  IC : send(Abholanfrage)
+  IC  ->  ID : Block
+  ID  ->  TD : Abholanfrage
+  TD --> ID  : Ergebnispaket
+  ID --> IC  : Block
+  IC --> TC  : Ergebnispaket
+end
+
+@enduml

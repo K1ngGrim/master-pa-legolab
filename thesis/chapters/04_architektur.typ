@@ -1,4 +1,4 @@
-= Architektur des Systems
+= Architektur des Systems <sec:architektur>
 
 Dieses Kapitel entwickelt die Architektur der Lösung aus den Anforderungen des vorigen Kapitels. Die Darstellung bleibt bewusst auf der konzeptionellen Ebene und benennt weder konkrete Bibliotheken noch Datenformate oder Klassen. Beschrieben werden die Entwurfsziele, der geschichtete Aufbau mit den Aufgaben der einzelnen Schichten, die wiederkehrenden Entwurfsrollen innerhalb dieser Schichten sowie das Kommunikationsmodell. Wie sich dieser Entwurf auf eine bestimmte Hardware, eine bestimmte Laufzeitumgebung und einen bestimmten Bus abbilden lässt, zeigt @sec:referenzimplementierung anhand des im Rahmen dieser Arbeit umgesetzten Systems.
 
@@ -23,17 +23,17 @@ Zwei Eigenschaften dieses Aufbaus sind hervorzuheben. Zum einen ist er symmetris
 
 Die folgenden Abschnitte beschreiben die Schichten von unten nach oben. Für jede Schicht werden ihre Aufgabe, die von ihr nach oben angebotene Abstraktion und die bewusst nicht von ihr übernommenen Aufgaben benannt.
 
-=== Transportschicht
+=== Busanbindung
 
-Die Transportschicht ist die einzige Schicht mit Kenntnis des tatsächlichen Übertragungswegs. Ihre Aufgabe besteht darin, einen Block fester Länge zur Gegenseite zu befördern und einen ebensolchen Block als Antwort entgegenzunehmen. Sie kennt weder den Inhalt dieses Blocks noch dessen Bedeutung.
+Die Busanbindung ist die einzige Schicht mit Kenntnis des tatsächlichen Übertragungswegs. Ihre Aufgabe besteht darin, einen Block fester Länge zur Gegenseite zu befördern und einen ebensolchen Block als Antwort entgegenzunehmen. Sie kennt weder den Inhalt dieses Blocks noch dessen Bedeutung.
 
 Nach oben bietet sie damit eine denkbar schmale Abstraktion an: einen paketweisen, vom Client angestoßenen Austausch fester Größe. Diese Schmalheit ist beabsichtigt, denn sie ist der Preis dafür, dass die Schicht austauschbar bleibt. Jeder Übertragungsweg, der einen anfragegetriebenen Austausch von Blöcken fester Länge leisten kann, ist als Unterbau geeignet.
 
 Nicht zu ihren Aufgaben gehören die Zerlegung größerer Nachrichten, die Zuordnung von Antworten zu Anfragen und jede Form der Auslegung des Inhalts. Die Paketgröße ist für diese Schicht eine gegebene Eigenschaft des Übertragungswegs und keine Größe, die sie beeinflusst.
 
-=== Nachrichtenschicht
+=== Transportschicht
 
-Die Nachrichtenschicht überbrückt den Abstand zwischen einer Nachricht beliebiger Länge und den kleinen Paketen des Übertragungswegs. Sie ist damit die Schicht, in der sich die zentrale Einschränkung des Zielsystems niederschlägt.
+Die Transportschicht überbrückt den Abstand zwischen einer Nachricht beliebiger Länge und den kleinen Paketen des Übertragungswegs. Sie ist damit die Schicht, in der sich die zentrale Einschränkung des Zielsystems niederschlägt.
 
 Ihre erste Aufgabe ist die Serialisierung: Eine strukturierte Nachricht wird in eine Folge von Bytes überführt und auf der Gegenseite wieder ausgelesen. Ihre zweite Aufgabe ist die Rahmung. Jedes Paket erhält Steuerinformationen, die es der Gegenseite erlauben, die ursprüngliche Nachricht wiederherzustellen: eine Kennung der Nachricht, zu der das Paket gehört, seine Position innerhalb dieser Nachricht, die Angabe, ob es das letzte Paket ist, und die Anzahl der tatsächlich genutzten Nutzbytes. Ihre dritte Aufgabe ist die Fragmentierung, also das Zerlegen einer Nachricht in eine Folge solcher Pakete und deren Zusammensetzen auf der Gegenseite.
 
@@ -41,11 +41,11 @@ Nach oben verbirgt diese Schicht die Paketgröße vollständig. Höhere Schichte
 
 Zwei Entwurfsentscheidungen dieser Schicht verdienen Beachtung. Erstens ist die Rahmung vom Serialisierungsformat getrennt. Beide sind an je einer Stelle gebündelt, sodass sich das Format wechseln lässt, ohne die Rahmung anzutasten. Zweitens muss die Rahmung die Länge der Nutzlast ausdrücklich mitführen und darf sie nicht aus dem Inhalt ableiten, etwa durch das Entfernen von Füllbytes am Ende. Andernfalls schränkt die Rahmung die zulässigen Inhalte ein und bindet die Schicht an ein textbasiertes Format. Bei einer Nutzlast von wenigen Byte je Paket ist die Größe der Steuerinformationen zudem kein Randaspekt, sondern der wesentliche Kostenfaktor der gesamten Übertragung.
 
-=== Aufrufschicht
+=== Kommunikationsschicht
 
-Die Aufrufschicht stellt den entfernten Aufruf her. Auf der aufrufenden Seite bildet sie aus dem Namen einer Methode, deren Argumenten und der Angabe des Wirkungsbereichs eine Nachricht, übergibt diese nach unten und nimmt anschließend das Ergebnis entgegen. Auf der ausführenden Seite nimmt sie eine Nachricht entgegen, wählt den zuständigen Empfänger, ruft die benannte Methode auf und stellt deren Ergebnis zur Abholung bereit.
+Die Kommunikationsschicht stellt den entfernten Aufruf her. Auf der aufrufenden Seite bildet sie aus dem Namen einer Methode, deren Argumenten und der Angabe des Wirkungsbereichs eine Nachricht, übergibt diese nach unten und nimmt anschließend das Ergebnis entgegen. Auf der ausführenden Seite nimmt sie eine Nachricht entgegen, wählt den zuständigen Empfänger, ruft die benannte Methode auf und stellt deren Ergebnis zur Abholung bereit.
 
-In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da die ausführende Seite nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Aufrufschicht verbirgt diesen Umstand: Nach oben erscheint ein Aufruf als gewöhnlicher, synchroner Methodenaufruf, der zurückkehrt, sobald das Ergebnis vorliegt.
+In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da die ausführende Seite nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt diesen Umstand: Nach oben erscheint ein Aufruf als gewöhnlicher, synchroner Methodenaufruf, der zurückkehrt, sobald das Ergebnis vorliegt.
 
 Nicht zu ihren Aufgaben gehört die Kenntnis der aufgerufenen Objekte. Sie befördert einen benannten Aufruf zu einem benannten Empfänger, ohne zu wissen, was dieser darstellt.
 
@@ -69,9 +69,9 @@ Innerhalb der Schichten treten drei wiederkehrende Rollen auf. Sie sind als Entw
 
 === Interceptor
 
-Der Interceptor bildet die Nahtstelle zwischen Aufrufschicht und Transport. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Aufruf abgesetzt, eine Bestätigung verarbeitet und die Bereitschaft eines Ergebnisses geprüft wird. Auf der aufrufenden Seite verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf der ausführenden Seite nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
+Der Interceptor bildet die Nahtstelle zwischen Kommunikationsschicht und Busanbindung. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Aufruf abgesetzt, eine Bestätigung verarbeitet und die Bereitschaft eines Ergebnisses geprüft wird. Auf der aufrufenden Seite verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf der ausführenden Seite nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
 
-Da diese Schnittstelle ohne Bezug auf einen konkreten Übertragungsweg formuliert ist, bildet der Interceptor den Ansatzpunkt für die Transportunabhängigkeit. Ein anderer Übertragungsweg wird angebunden, indem eine weitere Ausprägung dieser Rolle bereitgestellt wird; die höheren Schichten bleiben unberührt.
+Da diese Schnittstelle ohne Bezug auf einen konkreten Übertragungsweg formuliert ist, bildet der Interceptor den Ansatzpunkt für die Unabhängigkeit vom Übertragungsweg. Ein anderer Übertragungsweg wird angebunden, indem eine weitere Ausprägung dieser Rolle bereitgestellt wird; die höheren Schichten bleiben unberührt.
 
 === Dispatcher
 
@@ -95,10 +95,10 @@ Ereignisse wie Berührungen werden nach demselben Prinzip behandelt. Die Anzeige
 
 == Datenfluss im System
 
-Der Weg eines Aufrufs durch die Schichten lässt sich in vier Phasen gliedern. Zunächst nimmt der Stellvertreter den Methodenaufruf entgegen und übergibt ihn der Aufrufschicht. Diese bildet aus Methodennamen, Argumenten und Wirkungsbereich eine Nachricht. Die Nachrichtenschicht serialisiert sie, zerlegt sie in Pakete und versieht diese mit Steuerinformationen.
+Der Weg eines Aufrufs durch die Schichten lässt sich in vier Phasen gliedern. Zunächst nimmt der Stellvertreter den Methodenaufruf entgegen und übergibt ihn der Kommunikationsschicht. Diese bildet aus Methodennamen, Argumenten und Wirkungsbereich eine Nachricht. Die Transportschicht serialisiert sie, zerlegt sie in Pakete und versieht diese mit Steuerinformationen.
 
-In der zweiten Phase überträgt die Steuereinheit die Pakete. Die Anzeigeeinheit bestätigt jedes empfangene Paket und setzt die Nachricht zusammen, sobald das letzte Paket eingetroffen ist. In der dritten Phase übergibt die Aufrufschicht die zusammengesetzte Nachricht dem Dispatcher, der die zugehörige Methode auf dem Adapter aufruft. Das Ergebnis wird wiederum zu einer Nachricht verpackt und zur Abholung bereitgestellt.
+In der zweiten Phase überträgt die Steuereinheit die Pakete. Die Anzeigeeinheit bestätigt jedes empfangene Paket und setzt die Nachricht zusammen, sobald das letzte Paket eingetroffen ist. In der dritten Phase übergibt die Kommunikationsschicht die zusammengesetzte Nachricht dem Dispatcher, der die zugehörige Methode auf dem Adapter aufruft. Das Ergebnis wird wiederum zu einer Nachricht verpackt und zur Abholung bereitgestellt.
 
-In der letzten Phase fragt die Steuereinheit ab, ob das Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab. Die Aufrufschicht setzt die Antwort zusammen, liest die Nutzlast aus und gibt das Ergebnis an den Stellvertreter zurück, der es an die Anwendung weiterreicht.
+In der letzten Phase fragt die Steuereinheit ab, ob das Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab. Die Kommunikationsschicht setzt die Antwort zusammen, liest die Nutzlast aus und gibt das Ergebnis an den Stellvertreter zurück, der es an die Anwendung weiterreicht.
 
 Bemerkenswert an diesem Ablauf ist das Verhältnis von Nutzlast und Steuerverkehr. Ein einzelner Aufruf zerfällt in eine Folge von Paketen, die jeweils einzeln bestätigt werden, gefolgt von wiederholten Abfragen nach dem Ergebnis. Die Anzahl der erforderlichen Übertragungen und nicht die Geschwindigkeit des Übertragungswegs bestimmt damit die Dauer eines Aufrufs. Die Evaluation greift diese Beobachtung auf und beziffert sie.

@@ -156,16 +156,22 @@
       // e.g. a level two heading `== ...` could be (2, 1)
       // e.g. a level three heading `=== ...` could be (1, 0, 2)
       let numbers = nums.pos()
-      if numbers.len() <= 3 {
+      if numbers.len() <= 4 {
         numbering("1.1", ..numbers)
       }
     },
   )
+
   show heading: it => [
     #if it.level == 1 [
       #colbreak(weak: true)
     ]#pad(bottom: 0.5em)[#it]]
-  set math.equation(numbering: "(1)", supplement: [Rechnung])
+  show heading.where(level: 4): set heading(outlined: false, supplement: [Absatz])
+  show heading.where(level: 4): it => {
+    parbreak()
+    text(weight: "bold")[#it.body.]
+  }
+  set math.equation(numbering: "(1)", supplement: [Formel])
   show math.equation: set text(weight: 400)
   show raw: set text(font: "New Computer Modern Mono")
   show link: set text(fill: blue.darken(55%))

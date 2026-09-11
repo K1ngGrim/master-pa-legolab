@@ -19,18 +19,18 @@ skinparam defaultFontSize 15
       {#
               Anwendung       
              Objektmodell     
-            Aufrufschicht     
-          Nachrichtenschicht  
+        Kommunikationsschicht 
            Transportschicht   
+             Busanbindung     
       }
     } | {
       Anzeigeeinheit
       {#
          Anzeige und Eingabe  
              Objektmodell     
-            Aufrufschicht     
-          Nachrichtenschicht  
+        Kommunikationsschicht 
            Transportschicht   
+             Busanbindung     
       }
     }
   }

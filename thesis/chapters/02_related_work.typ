@@ -1,4 +1,35 @@
-= Verwandte Arbeiten
+= Grundlagen und verwandte Arbeiten <sec:relatedwork>
+
+// UMFANG: Die Abschnitte 2.1 bis 2.3 fassen nur zusammen, was zum Verstaendnis
+// der spaeteren Kapitel noetig ist - zusammen etwa zwei bis drei Seiten. Die
+// vergleichende Betrachtung der Ansaetze steht ab 2.4 und traegt die
+// Einordnung der Arbeit; hier wird nichts vorweggenommen, was dort ausfuehrlich
+// behandelt wird.
+
+== Entfernter Prozeduraufruf und Middleware
+
+// - Grundgedanke des entfernten Aufrufs: ein Aufruf sieht lokal aus, laeuft
+//   aber woanders ab; Stellvertreter auf der einen, Skelett auf der anderen
+//   Seite
+// - Aufrufstransparenz als Ziel und was sie kostet
+// - Middleware als Schicht zwischen Anwendung und Verbindung
+// - Erweiterung auf entfernte Objekte statt einzelner Prozeduren
+// Knapp halten, die Begriffe werden in Kap. 4 und 5 gebraucht.
+
+== Serialisierung von Nachrichten
+
+// - Warum ueberhaupt: strukturierte Werte muessen zu Bytes werden
+// - Text- gegen binaerbasierte Formate, schemagebunden gegen schemafrei
+// - Fuer diese Arbeit wichtig: Formate mit Nullbytes in der Ausgabe stellen
+//   Anforderungen an die Rahmung -> greift Kap. 5 wieder auf
+
+== Eingebettete Systeme und ihre Kommunikation
+
+// - Ressourcenbeschraenkte Laufzeitumgebungen, MicroPython als Beispiel
+// - Was dort fehlt: Netzwerkstack, Nebenlaeufigkeit, dynamischer Speicher
+// - Bussysteme mit Master-Slave-Prinzip, anfragegetriebene Uebertragung
+// - Begriffe, die Kap. 3.4 dann am Zielsystem konkretisiert
+
 
 Die in dieser Arbeit entwickelte Middleware steht in einer langen Tradition von Ansätzen für entfernte Aufrufe und für die Kommunikation in verteilten und eingebetteten Systemen. Dieses Kapitel ordnet die eigene Lösung in dieses Umfeld ein. Da das Feld sehr breit ist, werden ausgewählte Vertreter betrachtet und entlang einheitlicher Kriterien verglichen. Ziel ist es, die bestehende Lücke zu benennen, die die vorliegende Arbeit schließt.
 
@@ -47,7 +78,11 @@ MQTT @MQTTStandardIoT ist auf ressourcenarme Geräte und kleine Pakete ausgelegt
 
 Diese Protokolle sind der betrachteten Domäne nahe, lösen aber eine andere Aufgabe. Sie zielen auf Gerätesteuerung mit festem Befehlssatz oder auf nachrichtenbasiertes Veröffentlichen und Abonnieren und nicht auf einen allgemeinen, objektorientierten entfernten Aufruf über einen anfragegetriebenen Kanal.
 
-== PUPRemote als Transportbasis
+== Der betrachtete Bus und PUPRemote als Transportbasis
+
+// Vorangestellt in zwei bis drei Saetzen: LPF2 als Bus, Modi als Kanaele,
+// Hub als Master. Damit entfaellt ein eigener Grundlagenabschnitt zum Bus.
+
 
 PUPRemote @PUPRemoteDocumentationAntons nimmt in diesem Umfeld eine Sonderstellung ein, da es nicht als Alternative, sondern als Baustein der eigenen Lösung auftritt. Die Bibliothek erschließt den PUP- und LPF2-Bus und stellt darauf benannte Aufrufe bereit. Jeder Aufruf belegt einen eigenen Modus des Busses und ist über feste Formatangaben für beide Richtungen beschrieben. Der Hub schreibt die Argumente in den zugehörigen Modus und liest anschließend den Rückgabewert aus demselben Modus zurück. Mittels PUPRemote werden beidseitig befehle registriert, welche dann durch den Master aufgerufen werden können. Jedoch sind länge der Methodennamen, Argumente und Rückgabewerte durch feste Formatangaben begrenzt. Damit besitzt PUPRemote durchaus eine Aufrufsemantik und ist nicht auf reinen Datentransport beschränkt. 
 
