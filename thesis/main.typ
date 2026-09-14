@@ -1,6 +1,6 @@
 #import "template/template.typ": *
 #import "@preview/wrap-it:0.1.1"
-#import "@preview/glossarium:0.5.6": make-glossary, register-glossary, print-glossary, gls, glspl
+#import "@preview/glossarium:0.5.10": make-glossary, register-glossary, print-glossary, gls, glspl
 #import "chapters/00_0_abkürzungen.typ": *
 #import "chapters/00_01_abstract.typ": *
 

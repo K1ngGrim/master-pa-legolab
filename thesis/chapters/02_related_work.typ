@@ -1,37 +1,34 @@
 = Grundlagen und verwandte Arbeiten <sec:relatedwork>
 
-// UMFANG: Die Abschnitte 2.1 bis 2.3 fassen nur zusammen, was zum Verstaendnis
-// der spaeteren Kapitel noetig ist - zusammen etwa zwei bis drei Seiten. Die
-// vergleichende Betrachtung der Ansaetze steht ab 2.4 und traegt die
-// Einordnung der Arbeit; hier wird nichts vorweggenommen, was dort ausfuehrlich
-// behandelt wird.
+Die in dieser Arbeit entwickelte Middleware steht in einer langen Tradition von Ansätzen für entfernte Aufrufe und für die Kommunikation in verteilten und eingebetteten Systemen. Die ersten drei Abschnitte führen die Begriffe ein, die in den Entwurfskapiteln gebraucht werden. Anschließend ordnet das Kapitel die eigene Lösung in dieses Umfeld ein. Da das Feld sehr breit ist, werden ausgewählte Vertreter betrachtet und entlang einheitlicher Kriterien verglichen. Ziel ist es, die bestehende Lücke zu benennen, die die vorliegende Arbeit schließt.
 
-== Entfernter Prozeduraufruf und Middleware
+== Entfernter Prozeduraufruf und Middleware <sec:grundlagen-rpc>
 
-// - Grundgedanke des entfernten Aufrufs: ein Aufruf sieht lokal aus, laeuft
-//   aber woanders ab; Stellvertreter auf der einen, Skelett auf der anderen
-//   Seite
-// - Aufrufstransparenz als Ziel und was sie kostet
-// - Middleware als Schicht zwischen Anwendung und Verbindung
-// - Erweiterung auf entfernte Objekte statt einzelner Prozeduren
-// Knapp halten, die Begriffe werden in Kap. 4 und 5 gebraucht.
+Bei einem entfernten Prozeduraufruf, englisch @rpc, ruft ein Programm eine Prozedur auf, die auf einem anderen Rechner ausgeführt wird. Im Quelltext sieht dieser Aufruf aus wie ein gewöhnlicher lokaler Aufruf. Die Idee wurde von Birrell und Nelson beschrieben und ist seitdem die Grundlage der meisten Middleware-Systeme @birrellImplementingRemoteProcedure1984. Der Aufruf wird auf der aufrufenden Seite von einem Stellvertreter entgegengenommen, der dieselbe Signatur besitzt wie die eigentliche Prozedur, sie aber nicht ausführt. Er verpackt den Namen der Prozedur und die Argumente zu einer Nachricht und übergibt sie dem Transport. Auf der ausführenden Seite nimmt ein Gegenstück die Nachricht entgegen, liest die Argumente aus, ruft die eigentliche Prozedur auf und schickt deren Rückgabewert zurück. Dieses Gegenstück wird klassisch als Skelett bezeichnet. Das Umwandeln von Argumenten und Rückgabewerten in eine übertragbare Form heißt Marshalling.
 
-== Serialisierung von Nachrichten
+Das Ziel dieses Aufbaus ist die Aufrufstransparenz. Der Aufrufer soll nicht wissen müssen, ob eine Prozedur lokal oder entfernt ausgeführt wird. Vollständig einlösen lässt sich das nicht. Ein entfernter Aufruf dauert um Größenordnungen länger als ein lokaler, er kann teilweise fehlschlagen, während der Aufrufer weiterläuft, und Zeiger in den lokalen Speicher haben auf der Gegenseite keine Bedeutung. Waldo et al. führen aus, dass diese Unterschiede sich nicht dauerhaft verbergen lassen und in der Schnittstelle sichtbar bleiben sollten @waldoNoteDistributedComputing1994. Transparenz wird deshalb überwiegend als Aussage über die Aufrufsyntax verstanden und nicht als Zusicherung gleicher Laufzeiteigenschaften.
 
-// - Warum ueberhaupt: strukturierte Werte muessen zu Bytes werden
-// - Text- gegen binaerbasierte Formate, schemagebunden gegen schemafrei
-// - Fuer diese Arbeit wichtig: Formate mit Nullbytes in der Ausgabe stellen
-//   Anforderungen an die Rahmung -> greift Kap. 5 wieder auf
+Die Schicht, die Stellvertreter, Marshalling und Transport bereitstellt, wird als Middleware bezeichnet. Sie liegt zwischen der Anwendung und der Verbindung, bietet der Anwendung eine einheitliche Schnittstelle an und verbirgt die Eigenheiten der Übertragung @tanenbaumDistributedSystems2017. Ein wiederkehrender Aufbau für solche Systeme ist das Broker-Muster, das den Stellvertreter auf der Client-Seite, den vermittelnden Broker und das Gegenstück auf der Server-Seite als eigenständige Rollen beschreibt @buschmannPatternOrientedSoftware1996.
 
-== Eingebettete Systeme und ihre Kommunikation
+Der ursprüngliche Ansatz kennt nur einen festen Satz von Prozeduren. Objektorientierte Middleware erweitert ihn auf entfernte Objekte, die zur Laufzeit entstehen und über eine Referenz angesprochen werden. Der Stellvertreter entspricht dann dem Proxy-Muster @gammaDesignPatternsElements1994. Er implementiert dieselbe Schnittstelle wie das entfernte Objekt, führt dessen Referenz mit und gibt jeden Aufruf zusammen mit dieser Referenz weiter. Bekannte Vertreter dieses Ansatzes sind @corba @CommonObjectRequest2021 und Java @rmi @JavaRemoteMethod. Die Aufteilung in einen Stellvertreter auf der aufrufenden und ein Gegenstück auf der ausführenden Seite findet sich in @sec:architektur wieder, wo das Gegenstück als Adapter bezeichnet wird.
 
-// - Ressourcenbeschraenkte Laufzeitumgebungen, MicroPython als Beispiel
-// - Was dort fehlt: Netzwerkstack, Nebenlaeufigkeit, dynamischer Speicher
-// - Bussysteme mit Master-Slave-Prinzip, anfragegetriebene Uebertragung
-// - Begriffe, die Kap. 3.4 dann am Zielsystem konkretisiert
+== Serialisierung von Nachrichten <sec:grundlagen-serialisierung>
 
+Eine Nachricht liegt im Programm als strukturierter Wert vor, etwa als Objekt, als Liste oder als Abbildung. Übertragen wird dagegen eine Folge von Bytes. Die interne Darstellung eines Werts im Arbeitsspeicher lässt sich dafür nicht verwenden, da sie Verweise enthält und von Wortbreite, Byte-Reihenfolge und Laufzeitumgebung abhängt. Serialisierung bezeichnet die Umwandlung eines strukturierten Werts in eine Bytefolge, Deserialisierung den umgekehrten Weg.
 
-Die in dieser Arbeit entwickelte Middleware steht in einer langen Tradition von Ansätzen für entfernte Aufrufe und für die Kommunikation in verteilten und eingebetteten Systemen. Dieses Kapitel ordnet die eigene Lösung in dieses Umfeld ein. Da das Feld sehr breit ist, werden ausgewählte Vertreter betrachtet und entlang einheitlicher Kriterien verglichen. Ziel ist es, die bestehende Lücke zu benennen, die die vorliegende Arbeit schließt.
+Die gebräuchlichen Formate unterscheiden sich vor allem in zwei Punkten. Der erste ist die Kodierung. Textbasierte Formate wie die @json oder @xml sind ohne Werkzeuge lesbar und erleichtern damit die Fehlersuche, benötigen aber mehr Platz, weil Schlüssel und Strukturzeichen als Klartext mit übertragen werden. Binäre Formate stellen dieselben Werte deutlich kürzer dar, ihre Ausgabe ist ohne Kenntnis des Formats jedoch nicht mehr zu deuten. Der zweite Punkt ist die Bindung an ein Schema. Schemafreie Formate führen die Struktur in der Nachricht selbst mit, sodass Sender und Empfänger nichts vorab vereinbaren müssen. Schemagebundene Formate setzen eine geteilte Beschreibung der Datenstruktur voraus und sparen dafür die Feldnamen in der Nachricht ein. Welche Vertreter für ein Gerät mit sehr kleinen Paketen in Frage kommen, behandelt @sec:serialisierung-geraete.
+
+Für diese Arbeit ist eine weitere Eigenschaft binärer Formate wichtig. Ihre Ausgabe kann jedes beliebige Byte enthalten, auch das Nullbyte. Ein Empfänger kann die Länge der Nutzlast deshalb nicht aus dem Inhalt ableiten, etwa indem er Nullbytes am Ende eines Pakets als Füllung abschneidet. Die Rahmung muss die Länge dann ausdrücklich mitführen. Bei einem textbasierten Format fällt dieser Unterschied nicht auf, weil dessen Ausgabe kein Nullbyte enthält. Er zeigt sich erst beim Wechsel auf eine binäre Kodierung. @sec:nutzlastlaenge greift das auf.
+
+== Eingebettete Systeme und ihre Kommunikation <sec:grundlagen-embedded>
+
+Eingebettete Systeme verfügen über erheblich weniger Speicher und Rechenleistung als ein Arbeitsplatzrechner. @rfc 7228 fasst solche Geräte unter dem Begriff constrained nodes zusammen und ordnet sie nach verfügbarem Arbeits- und Programmspeicher in Klassen ein @bormannTerminologyConstrainedNode2014. Die betrachteten Größenordnungen liegen bei einigen zehn bis einigen hundert Kilobyte Arbeitsspeicher. Entwurfsentscheidungen, die auf einem gewöhnlichen Rechner keine Rolle spielen, werden in diesem Rahmen bestimmend.
+
+Auf solchen Geräten kommen angepasste Laufzeitumgebungen zum Einsatz. MicroPython ist eine für Mikrocontroller ausgelegte Implementierung von Python @MicroPythonPythonMicrocontrollers. Der Sprachkern bleibt weitgehend erhalten, die Standardbibliothek ist dagegen stark verkleinert. Welche Teile vorhanden sind, hängt vom jeweiligen Port ab. Auf stark beschränkter Hardware fehlen häufig ein vollständiger Netzwerkstack und die üblichen Mittel nebenläufiger Programmierung. Ohne Netzwerkstack stehen auch die darauf aufbauenden Abstraktionen nicht zur Verfügung, von Sockets bis zu fertigen Protokollbibliotheken. Ohne Nebenläufigkeit gibt es keinen Hintergrundprozess, der Daten entgegennimmt, während die Anwendung weiterläuft. Hinzu kommt der kleine Heap. Jede Zuweisung erhöht den Druck auf die Speicherbereinigung, weshalb Puffer nach Möglichkeit vorab angelegt und wiederverwendet werden.
+
+Die Verbindung zwischen einem Mikrocontroller und seiner Peripherie läuft über Bussysteme, die für kurze Strecken und wenige Leitungen ausgelegt sind. Viele von ihnen arbeiten nach dem Master-Slave-Prinzip. Eine Seite, der Master, stößt jede Übertragung an, die andere Seite antwortet ausschließlich. @i2c @I2CBus und @spi @MctdeSPISerial2019 sind verbreitete Vertreter, auf Feldebene folgt Modbus im @rtu\-Modus demselben Muster @MODBUSApplicationProtocol. Ein Slave, bei dem Daten anfallen, kann diese nicht von sich aus schicken. Er hält sie bereit, bis der Master sie abfragt. Dieses wiederholte Abfragen wird als Polling bezeichnet. Wie schnell ein Ereignis auf der Slave-Seite beim Master ankommt, hängt damit nicht davon ab, wann es entstanden ist, sondern vom Abfragetakt des Masters.
+
+Die je Übertragung nutzbare Datenmenge ist auf solchen Bussen klein und häufig fest vorgegeben. Die größte in einem Paket übertragbare Nutzlast wird als @mtu bezeichnet. Ist eine Nachricht länger, muss sie in mehrere Pakete zerlegt werden. Damit der Empfänger sie wieder zusammensetzen kann, trägt jedes Paket zusätzliche Steuerinformationen, die üblicherweise als Header vorangestellt werden. Diese Steuerinformationen gehen von der ohnehin knappen Nutzlast ab, sodass ihre Größe bei kleinen Paketen unmittelbar auf die Anzahl der nötigen Übertragungen durchschlägt. Wie sich diese Eigenschaften am betrachteten Zielsystem konkret darstellen, zeigt @sec:einschraenkungen.
 
 == Einordnung und Auswahlkriterien
 
@@ -56,11 +53,11 @@ Das Konzept von entfernten Prozeduraufrufen wurde früh standardisiert. Der @onc
 
 JSON-RPC verfolgt eine deutlich schlankere Idee @JSONRPC20Specification. Die Spezifikation beschreibt ausschließlich das Format der Anfrage- und Antwortnachrichten auf Basis der @json und überlässt den Transport bewusst der Anwendung. In ihrer Philosophie ist diese Trennung dem hier verfolgten Ansatz nahe. Allerdings setzt JSON-RPC voraus, dass eine darunterliegende Schicht vollständige Nachrichten zustellen kann. Es definiert weder ein Framing noch eine Fragmentierung für sehr kleine Pakete und sieht keinen Mechanismus für einen anfragegetriebenen Rückkanal auf einem Master-Slave-Bus vor.
 
-Am anderen Ende des Spektrums steht @g_RPC @GRPC. Das Rahmenwerk verbindet Protocol Buffers als schemagebundene Serialisierung mit HTTP/2 als Transport und unterstützt unter anderem Datenströme in beide Richtungen. Diese Leistungsfähigkeit erfordert jedoch einen vollständigen HTTP/2-Stack und setzt eine bidirektionale Verbindung voraus. Für den betrachteten LEGO-Bus und die eingesetzten Laufzeitumgebungen ist @g_RPC zu schwergewichtig und zu stark an seinen Transport gebunden.
+Am anderen Ende des Spektrums steht @g_RPC @GRPC. Das Rahmenwerk verbindet Protocol Buffers als schemagebundene Serialisierung mit @http/2 als Transport und unterstützt unter anderem Datenströme in beide Richtungen. Diese Leistungsfähigkeit erfordert jedoch einen vollständigen @http/2-Stack und setzt eine bidirektionale Verbindung voraus. Für den betrachteten LEGO-Bus und die eingesetzten Laufzeitumgebungen ist @g_RPC zu schwergewichtig und zu stark an seinen Transport gebunden.
 
 Zusammengefasst setzen die etablierten Rahmenwerke entweder einen leistungsfähigen Transport voraus oder standardisieren nur die Nachrichtenebene und lassen Framing, Fragmentierung und den Rückkanal offen. Genau diese darunterliegende Schicht adressiert die vorliegende Arbeit.
 
-== Serialisierung für ressourcenarme Geräte
+== Serialisierung für ressourcenarme Geräte <sec:serialisierung-geraete>
 
 Da die Serialisierung die Nachrichtengröße und damit die Anzahl der nötigen Pakete bestimmt, ist sie für ein System mit kleinen Paketen besonders relevant. Die @json ist schemafrei und gut lesbar, erzeugt aber durch Klartextschlüssel und Strukturzeichen vergleichsweise große Ausgaben @brayJavaScriptObjectNotation2017. Binäre und schemafreie Formate wie MessagePack @MessagePackItsJSON und die @cbor @bormannConciseBinaryObject2020 @CBORConciseBinary erreichen bei gleichem Datenmodell deutlich kompaktere Darstellungen. Schemagebundene Formate wie Protocol Buffers gehen noch einen Schritt weiter und setzen eine geteilte Beschreibung der Datenstruktur voraus @ProtocolBuffers. Für sehr kleine Geräte existiert mit Nanopb @NanopbZephyrProject eine ressourcenschonende Implementierung dieses Ansatzes.
 
@@ -74,17 +71,15 @@ Das Umwandeln und das Auslesen der Nutzlast sind deshalb an einer einzigen Stell
 
 Neben den allgemeinen Rahmenwerken existieren Protokolle, die näher an der betrachteten Domäne liegen. Firmata @FirmataArduino2026 ermöglicht die Steuerung eines Mikrocontrollers von einem übergeordneten Rechner aus und überträgt dazu einen festgelegten Satz von Befehlen über eine serielle Verbindung. Die Asymmetrie zwischen einem treibenden Rechner und einem reagierenden Gerät ähnelt der hier vorliegenden Situation. Allerdings beschränkt sich Firmata auf einen vordefinierten Befehlsumfang und bietet weder einen allgemeinen entfernten Aufruf noch eine Abstraktion entfernter Objekte.
 
-MQTT @MQTTStandardIoT ist auf ressourcenarme Geräte und kleine Pakete ausgelegt und kommt ohne eine durchgehende TCP-Verbindung aus. Es folgt jedoch einem Modell aus Veröffentlichen und Abonnieren, benötigt ein Gateway sowie einen Vermittler und setzt voraus, dass das Gerät eigenständig veröffentlichen kann. Auf einem reinen Master-Slave-Bus, auf dem die untergeordnete Seite nicht von sich aus senden darf, ist dieses Modell nicht unmittelbar anwendbar.
+@mqtt @MQTTStandardIoT ist auf ressourcenarme Geräte und kleine Pakete ausgelegt und kommt ohne eine durchgehende @tcp\-Verbindung aus. Es folgt jedoch einem Modell aus Veröffentlichen und Abonnieren, benötigt ein Gateway sowie einen Vermittler und setzt voraus, dass das Gerät eigenständig veröffentlichen kann. Auf einem reinen Master-Slave-Bus, auf dem die untergeordnete Seite nicht von sich aus senden darf, ist dieses Modell nicht unmittelbar anwendbar.
 
 Diese Protokolle sind der betrachteten Domäne nahe, lösen aber eine andere Aufgabe. Sie zielen auf Gerätesteuerung mit festem Befehlssatz oder auf nachrichtenbasiertes Veröffentlichen und Abonnieren und nicht auf einen allgemeinen, objektorientierten entfernten Aufruf über einen anfragegetriebenen Kanal.
 
 == Der betrachtete Bus und PUPRemote als Transportbasis
 
-// Vorangestellt in zwei bis drei Saetzen: LPF2 als Bus, Modi als Kanaele,
-// Hub als Master. Damit entfaellt ein eigener Grundlagenabschnitt zum Bus.
+Der Hub und die angeschlossenen Geräte verkehren über @lpf2, ein Protokoll, das auf einer @uart\-Verbindung über die Sensorports aufsetzt @LEGOUARTSensor. Der Hub ist dabei der Master und stößt jede Übertragung an. Ein Gerät meldet sich beim Anstecken mit den Modi an, die es unterstützt. Jeder Modus beschreibt einen Kanal mit festem Namen, fester Länge und festem Datentyp. Der Hub wählt einen dieser Modi aus und liest dessen Wert oder schreibt einen Wert hinein.
 
-
-PUPRemote @PUPRemoteDocumentationAntons nimmt in diesem Umfeld eine Sonderstellung ein, da es nicht als Alternative, sondern als Baustein der eigenen Lösung auftritt. Die Bibliothek erschließt den PUP- und LPF2-Bus und stellt darauf benannte Aufrufe bereit. Jeder Aufruf belegt einen eigenen Modus des Busses und ist über feste Formatangaben für beide Richtungen beschrieben. Der Hub schreibt die Argumente in den zugehörigen Modus und liest anschließend den Rückgabewert aus demselben Modus zurück. Mittels PUPRemote werden beidseitig befehle registriert, welche dann durch den Master aufgerufen werden können. Jedoch sind länge der Methodennamen, Argumente und Rückgabewerte durch feste Formatangaben begrenzt. Damit besitzt PUPRemote durchaus eine Aufrufsemantik und ist nicht auf reinen Datentransport beschränkt. 
+PUPRemote @PUPRemoteDocumentationAntons nimmt in diesem Umfeld eine Sonderstellung ein, da es nicht als Alternative, sondern als Baustein der eigenen Lösung auftritt. Die Bibliothek erschließt den @pup\- und @lpf2\-Bus und stellt darauf benannte Aufrufe bereit. Jeder Aufruf belegt einen eigenen Modus des Busses und ist über feste Formatangaben für beide Richtungen beschrieben. Der Hub schreibt die Argumente in den zugehörigen Modus und liest anschließend den Rückgabewert aus demselben Modus zurück. Mittels PUPRemote werden beidseitig befehle registriert, welche dann durch den Master aufgerufen werden können. Jedoch sind länge der Methodennamen, Argumente und Rückgabewerte durch feste Formatangaben begrenzt. Damit besitzt PUPRemote durchaus eine Aufrufsemantik und ist nicht auf reinen Datentransport beschränkt. 
 
 Diese Semantik trägt jedoch nur so weit, wie sich ein Aufruf auf einen vorab registrierten Modus und ein einzelnes Paket fester Größe abbilden lässt. Die Anzahl der Modi ist durch den Bus begrenzt, die Formate stehen zur Übersetzungszeit fest, und für Nachrichten, die größer sind als ein Paket, ist kein Mechanismus vorgesehen. Eine Middleware, die beliebige Methoden auf einer zur Laufzeit wachsenden Menge entfernter Objekte anbieten soll, kann daher nicht einen Modus je Aufruf vergeben.
 
@@ -103,13 +98,13 @@ Die vorliegende Arbeit nutzt PUPRemote deshalb nicht als Aufrufmechanismus, sond
       table.header(
         [*Ansatz*], [*Ebene*], [*Abstraktionsgrad*], [*Serialisierung*], [*Transportbindung*], [*Fragmentierung*], [*Eignung kleiner Master-Slave-Bus*],
       ),
-      [gRPC], [Middleware], [RPC und Datenströme], [Protocol Buffers, schemagebunden], [an HTTP/2 gebunden], [über HTTP/2], [ungeeignet, setzt Push voraus],
-      [JSON-RPC], [Nachrichtenformat], [nur Nachrichtenformat], [JSON, textbasiert], [unabhängig, offen], [nicht definiert], [offen, Rückkanal fehlt],
-      [MessagePack und CBOR], [Serialisierung], [nur Serialisierung], [binär, schemafrei], [entfällt], [entfällt], [entfällt],
+      [@g_RPC], [Middleware], [@rpc und Datenströme], [Protocol Buffers, schemagebunden], [an @http/2 gebunden], [über @http/2], [ungeeignet, setzt Push voraus],
+      [JSON-RPC], [Nachrichtenformat], [nur Nachrichtenformat], [@json, textbasiert], [unabhängig, offen], [nicht definiert], [offen, Rückkanal fehlt],
+      [MessagePack und @cbor], [Serialisierung], [nur Serialisierung], [binär, schemafrei], [entfällt], [entfällt], [entfällt],
       [Firmata], [Geräteprotokoll], [Gerätesteuerung mit festen Befehlen], [binär, fest], [seriell, fest], [nein], [passend, aber fester Befehlssatz],
-      [MQTT], [Nachrichtenprotokoll], [Veröffentlichen und Abonnieren], [binär, kompakt], [unabhängig, braucht Gateway], [teilweise], [setzt eigenständiges Senden voraus],
-      [PUPRemote], [Transportanbindung, hier als Baustein verwendet], [entfernter Aufruf, ein Modus je Aufruf], [feste Formatangaben je Modus], [an PUP und LPF2 gebunden], [nein, ein Paket], [passend, aber nur ein Paket],
-      [Diese Arbeit], [Middleware], [entfernter Aufruf und entfernte Objekte], [JSON, gekapselt und austauschbar], [gekapselt, PUPRemote als erste Bindung], [ja, eingebaut], [passend, client-gesteuerter Rückkanal],
+      [@mqtt], [Nachrichtenprotokoll], [Veröffentlichen und Abonnieren], [binär, kompakt], [unabhängig, braucht Gateway], [teilweise], [setzt eigenständiges Senden voraus],
+      [PUPRemote], [Transportanbindung, hier als Baustein verwendet], [entfernter Aufruf, ein Modus je Aufruf], [feste Formatangaben je Modus], [an @pup und @lpf2 gebunden], [nein, ein Paket], [passend, aber nur ein Paket],
+      [Diese Arbeit], [Middleware], [entfernter Aufruf und entfernte Objekte], [@json, gekapselt und austauschbar], [gekapselt, PUPRemote als erste Bindung], [ja, eingebaut], [passend, client-gesteuerter Rückkanal],
     )
   ],
 ) <tab:vergleich>

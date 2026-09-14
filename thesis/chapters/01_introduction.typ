@@ -6,7 +6,7 @@ Mit zunehmender Nutzung entsteht jedoch häufig der Wunsch, solche Systeme über
 
 Die Erweiterung bestehender Embedded-Systeme um externe Komponenten ist jedoch nicht trivial. Neben der reinen Hardwareanbindung spielen insbesondere Aspekte der Kommunikation und der Softwareintegration eine entscheidende Rolle. Unterschiedliche Systemkomponenten müssen koordiniert zusammenarbeiten, wobei vorhandene Schnittstellen und Laufzeitumgebungen bestimmte Einschränkungen mit sich bringen können.
 
-Vor diesem Hintergrund beschäftigt sich die vorliegende Arbeit mit der Frage, wie sich externe Peripherie an ein solches System anbinden lässt, wenn die verfügbare Verbindung dafür nur eingeschränkt geeignet ist. Der Schwerpunkt liegt dabei nicht auf der Ansteuerung eines einzelnen Geräts, sondern auf einer Softwareschicht, die zwischen Anwendung und Verbindung vermittelt und die Eigenheiten der Übertragung vor der Anwendung verbirgt. Die Anbindung eines TFT-Touchscreen-Displays dient als Anwendungsfall, an dem dieser Entwurf entwickelt, umgesetzt und bewertet wird.
+Vor diesem Hintergrund beschäftigt sich die vorliegende Arbeit mit der Frage, wie sich externe Peripherie an ein solches System anbinden lässt, wenn die verfügbare Verbindung dafür nur eingeschränkt geeignet ist. Der Schwerpunkt liegt dabei nicht auf der Ansteuerung eines einzelnen Geräts, sondern auf einer Softwareschicht, die zwischen Anwendung und Verbindung vermittelt und die Eigenheiten der Übertragung vor der Anwendung verbirgt. Die Anbindung eines @tft\-Touchscreen-Displays dient als Anwendungsfall, an dem dieser Entwurf entwickelt, umgesetzt und bewertet wird.
 
 == Problemstellung <sec:problemstellung>
 
