@@ -59,11 +59,6 @@
 
       target: figure.where(kind: raw),
     ),
-    outline(
-      title: [Prompt-Listings],
-
-      target: figure.where(kind: "prompt"),
-    ),
   ),
 )
 

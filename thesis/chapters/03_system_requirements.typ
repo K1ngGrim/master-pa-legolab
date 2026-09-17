@@ -2,30 +2,30 @@
 
 == Zielsystem und Hardwareumgebung <sec:zielsystem>
 
-Ausgangspunkt der vorliegenden Arbeit ist eine bestehende Hardwareplattform aus dem LEGO-Education-Ökosystem. Die Plattform definiert die technischen Rahmenbedingungen, innerhalb derer die in @sec:einleitung motivierte Display-Integration realisiert werden muss. Im Folgenden wird zunächst die zentrale Hardwarekomponente vorgestellt, anschließend werden ihre Eigenschaften im Hinblick auf die Anbindung eines Touchscreen-Displays analysiert. Aus dieser Analyse heraus ergibt sich die Notwendigkeit einer externen Erweiterung, deren mögliche Ausprägungen im letzten Abschnitt skizziert werden.
+Ausgangspunkt der vorliegenden Arbeit ist eine bestehende Hardwareplattform aus dem LEGO-Education-Umfeld. Sie legt die technischen Rahmenbedingungen fest, in denen die in @sec:einleitung motivierte Display-Integration umgesetzt werden muss. Im Folgenden wird zunächst die zentrale Hardwarekomponente vorgestellt. Anschließend werden ihre Eigenschaften im Hinblick auf die Anbindung eines Touchscreen-Displays analysiert. Aus dieser Analyse ergibt sich die Notwendigkeit einer externen Erweiterung.
 
 === Der LEGO Education SPIKE Prime Hub als Ausgangsplattform
 
-Den Kern des Zielsystems bildet der LEGO Education SPIKE Prime Hub @HandlungsorientiertesLernen. Hierbei handelt es sich um einen programmierbaren Steuerbaustein, der primär für den Einsatz im Bildungsbereich konzipiert ist und über sechs Ein- und Ausgabeports zum Anschluss von LEGO-kompatiblen Sensoren und Aktoren verfügt. Zur Interaktion mit dem Nutzer stellt der Hub eine Matrix aus 5 × 5 @led:pl, drei Tasten sowie einen einfachen Lautsprecher bereit.
+Den Kern des Zielsystems bildet der LEGO Education SPIKE Prime Hub @HandlungsorientiertesLernen. Hierbei handelt es sich um einen programmierbaren Steuerbaustein, der primär für den Einsatz im Bildungsbereich konzipiert ist und über sechs Ein- und Ausgabeports zum Anschluss von LEGO-kompatiblen Sensoren und Aktoren verfügt. Für die Interaktion mit dem Nutzer stellt der Hub eine Matrix aus 5 × 5 @led:pl, drei Tasten und einen einfachen Lautsprecher bereit.
 
-Intern basiert der Hub auf einem STM32F413-Mikrocontroller @STM32F413423STMicroelectronics mit einem ARM-Cortex-M4-Kern, einer Taktfrequenz von etwa 100 MHz, rund 1 bis 1,5 MB Flash-Speicher sowie 320 KB @sram @LegoLabKarlsruhe. Die Programmierung kann grafisch über die offizielle LEGO-Software oder textbasiert mittels MicroPython erfolgen. Welche Firmware konkret zum Einsatz kommt und welche Auswirkungen diese Wahl auf die spätere Lösung hat, wird in @sec:einschraenkungen vertieft.
+Intern basiert der Hub auf einem STM32F413-Mikrocontroller @STM32F413423STMicroelectronics mit einem ARM-Cortex-M4-Kern, einer Taktfrequenz von etwa 100 MHz, rund 1 bis 1,5 MB Flash-Speicher sowie 320 kB @sram @LegoLabKarlsruhe. Die Programmierung kann grafisch über die offizielle LEGO-Software oder textbasiert mittels MicroPython erfolgen. Welche Firmware konkret eingesetzt wird und wie sich diese Wahl auf die spätere Lösung auswirkt, wird in @sec:einschraenkungen vertieft.
 
 Für die vorliegende Arbeit sind drei Eigenschaften des Hubs von besonderer Bedeutung:
 
 - Der Hub stellt ausschließlich passive, an die Sensor- und Motorports gebundene Erweiterungsmöglichkeiten bereit. Eine direkte Anbindung beliebiger Peripheriegeräte über offene Schnittstellen wie @spi @MctdeSPISerial2019 oder @i2c @I2CBus ist nicht vorgesehen.
 - Die verfügbaren Anzeige- und Eingabemöglichkeiten beschränken sich auf die genannte @led\-Matrix sowie die Hub-Tasten.
-- Die Rechenleistung und der Arbeitsspeicher sind für einen Mikrocontroller zwar typisch, im Hinblick auf grafische Benutzeroberflächen jedoch stark limitiert.
+- Rechenleistung und Arbeitsspeicher sind für einen Mikrocontroller zwar typisch, für grafische Benutzeroberflächen jedoch stark begrenzt.
 
-Diese Eigenschaften legen den Rahmen fest, innerhalb dessen die Display-Integration konzipiert werden muss.
+Diese Eigenschaften bilden den Rahmen, in dem die Display-Integration entworfen werden muss.
 
 === Notwendigkeit einer externen Erweiterung
 
-Aus den in @sec:problemstellung motivierten Anforderungen an eine grafische Benutzeroberfläche mit Touch-Funktionalität ergibt sich unmittelbar ein Konflikt mit der beschriebenen Plattform. Die im Hub integrierten Ausgabe- und Eingabemöglichkeiten beschränken sich auf eine niedrig auflösende @led\-Matrix und einfache Tasten und sind damit für die Darstellung komplexer Inhalte sowie für eine differenzierte Benutzerinteraktion ungeeignet. Auch eine Erweiterung des Hubs selbst ist nicht vorgesehen, da der Hub als geschlossene Komponente konzipiert ist und keine Schnittstellen zum direkten Anschluss grafischer Peripheriegeräte bereitstellt.
+Aus den in @sec:problemstellung motivierten Anforderungen an eine grafische Benutzeroberfläche mit Touch-Funktionalität ergibt sich ein direkter Konflikt mit der beschriebenen Plattform. Die im Hub integrierten Ausgabe- und Eingabemöglichkeiten beschränken sich auf eine niedrig auflösende @led\-Matrix und einfache Tasten und sind damit für die Darstellung komplexer Inhalte sowie für eine differenzierte Benutzerinteraktion ungeeignet. Eine Erweiterung des Hubs selbst ist ebenfalls nicht vorgesehen, da er als geschlossene Komponente konzipiert ist und keine Schnittstellen zum direkten Anschluss grafischer Peripherie bereitstellt.
 
-Daraus folgt, dass die geforderte Display-Funktionalität nicht innerhalb des Hubs, sondern ausschließlich außerhalb davon realisiert werden kann. Die Aufgabe der Display-Ansteuerung muss demnach an eine externe Hardwarekomponente delegiert werden, die ihrerseits an einen der vorhandenen Sensorports des Hubs angebunden wird. Hieraus ergeben sich zwei eigenständige Teilprobleme, die in den folgenden Abschnitten weiter ausgearbeitet werden:
+Die geforderte Display-Funktionalität lässt sich daher nur außerhalb des Hubs umsetzen. Die Ansteuerung des Displays muss an eine externe Hardwarekomponente abgegeben werden, die an einen der vorhandenen Sensorports des Hubs angeschlossen wird. Hieraus ergeben sich zwei eigenständige Teilprobleme, die in den folgenden Abschnitten weiter ausgearbeitet werden:
 
 - die Wahl einer geeigneten externen Hardware zur Ansteuerung eines Displays sowie
-- die Etablierung einer geeigneten Kommunikationsbeziehung zwischen Hub und dieser externen Komponente.
+- eine geeignete Kommunikation zwischen dem Hub und dieser externen Komponente.
 
 == Anforderungen an die Display-Integration
 
@@ -35,81 +35,82 @@ Bevor konkrete Hardwarekomponenten betrachtet werden, lassen sich aus der Zielse
 
 - *D1 -- Grafische Darstellung.* Das Display soll die Darstellung einfacher grafischer Elemente wie Schaltflächen, Beschriftungen und Anzeigen ermöglichen.
 - *D2 -- Berührungseingabe.* Es soll zugleich Benutzereingaben über einen Touchscreen entgegennehmen.
-- *D3 -- Embedded-typische Auslegung.* Hinsichtlich Auflösung, Größe und Energieaufnahme orientieren sich die Anforderungen an typischen Embedded-Anwendungen und liegen damit im Bereich kleiner @tft\-Displays mit Auflösungen im Bereich von etwa 240 × 320 Pixeln.
+- *D3 -- Embedded-typische Auslegung.* Auflösung, Größe und Energieaufnahme orientieren sich an typischen Embedded-Anwendungen. Damit kommen kleine @tft\-Displays mit einer Auflösung von etwa 240 × 320 Pixeln in Frage.
 
-Solche Displays sind in unterschiedlichen Ausführungen verfügbar. Eine im Embedded-Bereich weit verbreitete Variante stellen Module mit ILI9341-Display-Controller dar, die eine Auflösung von 240 × 320 Pixeln bei einer Farbtiefe von 18 Bit unterstützen und über die @spi\-Schnittstelle angesteuert werden können. Für die Erkennung von Berührungen kommen typischerweise kapazitive Touch-Controller wie der FT6X36 zum Einsatz, die über @i2c angebunden werden und neben Einzelberührungen auch Mehrfingergesten erfassen können. Solche Module sind kostengünstig verfügbar und werden in der Maker- und Embedded-Community häufig in Verbindung mit Mikrocontrollern der ESP32-Familie eingesetzt.
+Solche Displays sind in unterschiedlichen Ausführungen verfügbar. Im Embedded-Bereich weit verbreitet sind Module mit ILI9341-Display-Controller. Sie unterstützen eine Auflösung von 240 × 320 Pixeln bei einer Farbtiefe von 18 Bit und werden über @spi angesteuert. Für die Erkennung von Berührungen kommen typischerweise kapazitive Touchcontroller wie der FT6X36 zum Einsatz, die über @i2c angebunden werden und neben Einzelberührungen auch Mehrfingergesten erfassen können. Solche Module sind kostengünstig verfügbar und werden in der Maker- und Embedded-Community häufig in Verbindung mit Mikrocontrollern der ESP32-Familie eingesetzt.
 
-=== Anforderungen an eine externe Steuerungseinheit
+=== Anforderungen an einen externen Mikrocontroller
 
-Da der SPIKE Prime Hub selbst keine direkte Anbindung eines @tft\-Displays über @spi ermöglicht, muss zwischen Hub und Display eine zusätzliche Steuerungseinheit vermitteln. Diese übernimmt die unmittelbare Ansteuerung des Displays sowie die Verarbeitung der Touch-Eingaben und stellt gleichzeitig die Kommunikation mit dem Hub sicher. Aus dieser Doppelrolle ergeben sich mehrere Anforderungen an die einzusetzende Hardware:
+Da der SPIKE Prime Hub selbst kein @tft\-Display über @spi anbinden kann, muss zwischen Hub und Display ein zusätzlicher Mikrocontroller vermitteln. Er übernimmt die Ansteuerung des Displays und die Verarbeitung der Touch-Eingaben und kommuniziert gleichzeitig mit dem Hub. Aus dieser Doppelrolle ergeben sich folgende Anforderungen an die Hardware:
 
 - *S1 -- Displayschnittstellen.* Sie muss über geeignete Schnittstellen zur Ansteuerung typischer @tft\-Displays verfügen, insbesondere @spi für die Bildschirmdaten und @i2c für den Touch-Controller.
 - *S2 -- Rechenleistung und Speicher.* Sie muss ausreichend Rechenleistung und Speicher bieten, um eine grafische Bibliothek wie etwa @LVGL @LVGLLightVersatile ausführen zu können.
 - *S3 -- Busanbindung.* Sie muss über eine Schnittstelle verfügen, die kompatibel zu den Sensorports des SPIKE Prime Hubs ist, oder eine entsprechende Anbindung über @lpf2 unterstützen.
 
-Diese Anforderungen werden von im Bildungs- und Maker-Bereich verfügbaren Erweiterungsboards erfüllt, die speziell für die Anbindung an LEGO-Hubs entworfen wurden. Ein Beispiel hierfür sind ESP32-basierte Boards der LMS-ESP32-Reihe @LMSESP32V20Clever2023, die sich gegenüber dem Hub als LEGO-Sensor ausgeben und damit eine Kommunikation über das @lpf2\-Protokoll ermöglichen. Welche konkrete Hardware im Rahmen dieser Arbeit eingesetzt wird, sowie die zugehörige Softwarekonfiguration werden im Kapitel zur Referenzimplementierung dargestellt.
+Diese Anforderungen erfüllen Erweiterungsboards aus dem Bildungs- und Maker-Bereich, die speziell für die Anbindung an LEGO-Hubs entworfen wurden. Ein Beispiel sind die ESP32-basierten Boards der LMS-ESP32-Reihe @LMSESP32V20Clever2023. Sie geben sich gegenüber dem Hub als LEGO-Sensor aus und können dadurch über das @lpf2\-Protokoll kommunizieren. Welche Hardware in dieser Arbeit konkret eingesetzt wird und wie die Software dafür eingerichtet ist, beschreibt @sec:referenzimplementierung.
 
 === Resultierende Systemstruktur
 
-Aus den genannten Überlegungen ergibt sich eine grundsätzliche Systemstruktur, die sich aus drei Teilen zusammensetzt: dem SPIKE Prime Hub als zentrale Steuereinheit, einer externen Steuerungseinheit zur unmittelbaren Ansteuerung des Displays sowie einem @tft\-Touchscreen-Display als Anzeige- und Eingabeelement. Die Kopplung zwischen Hub und externer Steuerungseinheit erfolgt dabei über die vom Hub bereitgestellten Sensorports und das zugehörige @lpf2\-Protokoll. Die konkrete Ausgestaltung dieser Kommunikation und der damit verbundenen Einschränkungen wird in den folgenden Abschnitten dieses Kapitels detailliert betrachtet.
+Aus diesen Überlegungen ergibt sich eine Systemstruktur aus drei Teilen. Der SPIKE Prime Hub führt die Anwendung aus, ein externer Mikrocontroller steuert das Display an, und ein @tft\-Touchscreen-Display dient zur Anzeige und Eingabe. Hub und Mikrocontroller sind über einen Sensorport des Hubs und das @lpf2\-Protokoll verbunden. Im Folgenden wird der Hub als Steuereinheit bezeichnet. Mikrocontroller und Display bilden zusammen die Anzeigeeinheit. Wie die Kommunikation zwischen beiden aussehen muss und welchen Einschränkungen sie unterliegt, betrachten die folgenden Abschnitte.
 
 == Kommunikationsanforderungen <sec:kommunikationsanforderungen>
 
-Der vorige Abschnitt legt fest, aus welchen Komponenten das System besteht. Offen ist noch, was die Verbindung zwischen Steuer- und Anzeigeeinheit leisten muss. Die folgenden Anforderungen leiten sich aus dem Anwendungsfall einer interaktiven Oberfläche ab und nehmen keinen Bezug auf einen bestimmten Übertragungsweg. Sie sind mit K1 bis K6 nummeriert, damit @sec:evaluation später auf sie verweisen kann.
+Der vorige Abschnitt legt fest, aus welchen Komponenten das System besteht. Offen ist noch, was die Verbindung zwischen Steuer- und Anzeigeeinheit leisten muss. Die folgenden Anforderungen leiten sich aus dem Anwendungsfall einer interaktiven Oberfläche ab und beziehen sich nicht auf einen bestimmten Übertragungsweg. Sie sind mit K1 bis K6 nummeriert, damit @sec:evaluation später auf sie verweisen kann.
 
-- *K1 -- Strukturierte Nachrichten unbestimmter Länge.* Ein Bedienelement lässt sich nicht durch einen einzelnen Wert beschreiben. Zum Erzeugen einer Schaltfläche gehören Position, Abmessungen und Beschriftung, ein Beschriftungstext hat keine feste Länge, und eine Auswahlliste enthält unterschiedlich viele Einträge. Die Verbindung muss deshalb zusammengesetzte Werte übertragen können, deren Länge erst zur Laufzeit feststeht. Feste Formatangaben je Aufruf, wie sie die in @sec:relatedwork betrachtete Transportbibliothek verwendet, reichen dafür nicht aus.
+- *K1 -- Strukturierte Nachrichten unbestimmter Länge.* Ein Bedienelement lässt sich nicht durch einen einzelnen Wert beschreiben. Zum Erzeugen einer Schaltfläche gehören Position, Abmessungen und Beschriftung. Ein Beschriftungstext hat keine feste Länge, und eine Auswahlliste enthält unterschiedlich viele Einträge. Die Verbindung muss deshalb zusammengesetzte Werte übertragen können, deren Länge erst zur Laufzeit feststeht. Feste Formatangaben je Aufruf, wie sie die in @sec:relatedwork betrachtete Transportbibliothek verwendet, reichen dafür nicht aus.
 
-- *K2 -- Aufrufe mit zuordenbarem Ergebnis.* Viele Aufrufe liefern einen Rückgabewert. Das Erzeugen eines Objekts liefert eine Referenz, über die es später angesprochen wird, das Auslesen eines Zustands den entsprechenden Wert. Zu jeder Anfrage muss also eine Antwort zurückkommen. Werden mehrere Anfragen nacheinander abgesetzt, muss erkennbar bleiben, welche Antwort zu welcher Anfrage gehört.
+- *K2 -- Aufrufe mit zuordenbarem Ergebnis.* Viele Aufrufe liefern einen Rückgabewert. Das Erzeugen eines Objekts liefert eine Referenz, über die es später angesprochen wird. Das Auslesen eines Zustands liefert den entsprechenden Wert. Zu jeder Anfrage muss also eine Antwort zurückkommen. Werden mehrere Anfragen nacheinander abgesetzt, muss erkennbar bleiben, welche Antwort zu welcher Anfrage gehört.
 
-- *K3 -- Rückfluss von Ereignissen.* Berührungen entstehen auf der Anzeigeeinheit, ausgewertet werden sie von der Anwendung auf der Steuereinheit. Informationen müssen daher auch dann von der Anzeige- zur Steuereinheit gelangen, wenn sie keine Antwort auf einen Aufruf sind. Ereignisse sollen dabei nicht verloren gehen. Lässt sich ein Verlust nicht vermeiden, muss er zumindest erkennbar sein.
+- *K3 -- Rückfluss von Ereignissen.* Berührungen entstehen auf der Anzeigeeinheit, ausgewertet werden sie aber von der Anwendung auf der Steuereinheit. Informationen müssen daher auch dann von der Anzeige- zur Steuereinheit gelangen, wenn sie keine Antwort auf einen Aufruf sind. Ereignisse sollen dabei nicht verloren gehen. Lässt sich ein Verlust nicht vermeiden, muss er zumindest erkennbar sein.
 
 - *K4 -- Antwortzeit.* Berührung und Reaktion auf dem Bildschirm sollen für den Benutzer zusammengehören. Als Richtwert dient die bei direkter Manipulation übliche Grenze von etwa 100 Millisekunden. // QUELLE: Beleg für die 100-ms-Grenze ergänzen (z. B. Nielsen 1993, Response Times, oder Card/Moran/Newell 1983).
-  Gemeint ist dabei der gesamte Vorgang aus Erkennung, Übertragung, Verarbeitung und Rückmeldung und nicht die Übertragung eines einzelnen Pakets.
+  Gemeint ist dabei der gesamte Vorgang aus Erkennung, Übertragung, Verarbeitung und Rückmeldung, nicht die Übertragung eines einzelnen Pakets.
 
 - *K5 -- Begrenzter Speicherbedarf.* Auf beiden Seiten der Verbindung arbeitet ein Mikrocontroller. Puffer brauchen deshalb eine feste Obergrenze, die schon beim Entwurf bekannt ist. Verfahren, die im ungünstigen Fall beliebig viel Speicher belegen, etwa das Sammeln aller bisher aufgetretenen Ereignisse, kommen nicht in Frage.
 
-- *K6 -- Unabhängigkeit vom Übertragungsweg.* Der Übertragungsweg ist durch die Plattform vorgegeben und gehört nicht zum eigentlichen Problem. Seine Eigenschaften sollen sich deshalb nur in einem klar abgegrenzten Teil des Entwurfs auswirken. Prüfen lässt sich das an der Frage, wie viel geändert werden müsste, um denselben Dienst über einen anderen Weg anzubieten.
+- *K6 -- Unabhängigkeit vom Übertragungsweg.* Der Übertragungsweg ist durch die Plattform vorgegeben und gehört nicht zum eigentlichen Problem. Seine Eigenschaften sollen sich deshalb nur in einem klar abgegrenzten Teil des Entwurfs auswirken. Prüfen lässt sich das daran, wie viel geändert werden müsste, um denselben Dienst über einen anderen Weg anzubieten.
 
 K1 bis K3 betreffen den Inhalt der Übertragung, K4 und K5 die Bedingungen, unter denen sie stattfindet, und K6 den Aufbau des Entwurfs. Der folgende Abschnitt stellt diesen Anforderungen die Eigenschaften der Plattform gegenüber.
 
 == Einschränkungen der Plattform <sec:einschraenkungen>
 
-Steuer- und Anzeigeeinheit sind über einen Sensorport des Hubs und das @lpf2\-Protokoll gekoppelt. Aus dieser Kopplung ergeben sich drei Einschränkungen, die den Anforderungen aus dem vorigen Abschnitt entgegenstehen. Sie werden im Folgenden einzeln beschrieben und den betroffenen Anforderungen zugeordnet. Dabei handelt es sich um Eigenschaften der Kopplung selbst und nicht um Schwächen einer bestimmten Umsetzung. Wie der Entwurf darauf reagiert, zeigen @sec:architektur und @sec:entwurf, die konkrete Umsetzung zeigt @sec:referenzimplementierung.
+Steuer- und Anzeigeeinheit sind über einen Sensorport des Hubs und das @lpf2\-Protokoll gekoppelt. Aus dieser Kopplung ergeben sich drei Einschränkungen, die den Anforderungen aus dem vorigen Abschnitt entgegenstehen. Sie werden im Folgenden einzeln beschrieben und den betroffenen Anforderungen zugeordnet. Es handelt sich dabei um Eigenschaften der Kopplung selbst und nicht um Schwächen einer bestimmten Umsetzung. Wie der Entwurf darauf reagiert, zeigen @sec:architektur und @sec:entwurf. Die konkrete Umsetzung beschreibt @sec:referenzimplementierung.
 
 === Eingeschränkte Kommunikationsrichtung
 
 Das @lpf2\-Protokoll arbeitet nach dem Master-Slave-Prinzip. // QUELLE: Beleg für das LPF2-Protokoll ergänzen.
-Der Hub ist dabei der Master: Er wählt den aktiven Modus des angeschlossenen Geräts aus und stößt jede Übertragung an. Das Gerät meldet sich als Sensor an und stellt Werte bereit, die der Hub abruft. Von sich aus senden kann es nicht.
+Der Hub ist dabei der Master. Er wählt den aktiven Modus des angeschlossenen Geräts aus und stößt jede Übertragung an. Das Gerät meldet sich als Sensor an und stellt Werte bereit, die der Hub abruft. Von sich aus senden kann es nicht.
 
-Die in @sec:relatedwork beschriebene Transportbibliothek bildet das direkt ab und bietet ein einziges Zugriffsmuster an: Die Steuereinheit schreibt Daten in einen Modus und liest im selben Vorgang die Antwort zurück. Jede Übertragung besteht damit aus Anfrage und Antwort, und die Anzeigeeinheit antwortet ausschließlich.
+Die in @sec:relatedwork beschriebene Bibliothek PUPRemote bildet das direkt ab und bietet ein einziges Zugriffsmuster an. Die Steuereinheit schreibt Daten in einen Modus und liest im selben Vorgang die Antwort zurück. Jede Übertragung besteht damit aus Anfrage und Antwort, und die Anzeigeeinheit antwortet ausschließlich.
 
-Für die Anforderungen bedeutet das, dass sich weder Ergebnisse (K2) noch Ereignisse (K3) zustellen lassen. Beides kann nur bereitgehalten und abgefragt werden. Entsteht ein Ergebnis erst nach der letzten Anfrage, ist eine weitere Anfrage nötig, und eine Berührung zwischen zwei Anfragen muss bis zur nächsten Anfrage zwischengespeichert werden. Wann eine Rückmeldung eintrifft, bestimmt damit nicht die Seite, auf der sie entsteht, sondern die Seite, die sie abholt. Die zeitliche Auflösung für Ereignisse ist dadurch durch den Abfragetakt der Steuereinheit begrenzt, was sich unmittelbar auf K4 auswirkt.
+Für die Anforderungen bedeutet das, dass sich weder Ergebnisse (K2) noch Ereignisse (K3) zustellen lassen. Beides kann nur bereitgehalten und abgefragt werden. Entsteht ein Ergebnis erst nach der letzten Anfrage, ist eine weitere Anfrage nötig, und eine Berührung zwischen zwei Anfragen muss bis zur nächsten Anfrage zwischengespeichert werden. Wann eine Rückmeldung eintrifft, bestimmt damit die Seite, die sie abholt. Die zeitliche Auflösung von Ereignissen ist dadurch durch den Abfragetakt der Steuereinheit begrenzt, was sich direkt auf K4 auswirkt.
 
 === Begrenzte Paketgröße
 
-Ein Modus des Busses überträgt eine feste, vorab vereinbarte Anzahl von Bytes. Zusammen mit der auf dem Hub eingesetzten Firmware liegt die nutzbare Obergrenze bei 16 Byte je Übertragung; oberhalb dieses Werts treten Prüfsummenfehler auf. // QUELLE: Beleg für die Pybricks-Firmware und die Paketgrenze ergänzen.
-Da jedes Paket zusätzlich Steuerinformationen für die Wiederzusammensetzung tragen muss, bleibt für die Nachricht selbst noch weniger übrig. In der Referenzimplementierung sind es 13 nutzbare Byte je Paket, wie @sec:referenzimplementierung zeigt.
+Ein Modus des Busses überträgt eine feste, vorab vereinbarte Anzahl von Bytes. Zusammen mit der auf dem Hub eingesetzten Firmware liegt die nutzbare Obergrenze bei 16 Byte je Übertragung. Oberhalb dieses Werts treten Prüfsummenfehler auf. // QUELLE: Beleg für die Pybricks-Firmware und die Paketgrenze ergänzen.
+Da jedes Paket zusätzlich Steuerinformationen für das Zusammensetzen tragen muss, bleibt für die Nachricht selbst noch weniger übrig. In der Referenzimplementierung sind es 13 nutzbare Byte je Paket, wie @sec:referenzimplementierung zeigt.
 
-Schon eine einfache Aufrufnachricht mit Objektreferenz, Methodennamen und wenigen Argumenten überschreitet diesen Rahmen deutlich. K1 lässt sich in einem einzelnen Paket also nicht erfüllen. Nachrichten müssen daher in mehrere Pakete zerlegt werden, damit sich überhaupt eine vollständige Nachricht übertragen lässt. Hinzu kommt, dass die Steuerinformationen bei einer Nutzlast von wenigen Byte einen erheblichen Anteil der Übertragung ausmachen.
+Schon eine einfache Aufrufnachricht mit Objektreferenz, Methodenname und wenigen Argumenten überschreitet diesen Rahmen deutlich. K1 lässt sich mit einem einzelnen Paket also nicht erfüllen, und Nachrichten müssen in mehrere Pakete zerlegt werden. Hinzu kommt, dass die Steuerinformationen bei einer Nutzlast von wenigen Byte einen großen Anteil der Übertragung ausmachen.
 
-Eine weitere Beschränkung ergibt sich aus der Stromversorgung. Ein Display benötigt mehr Strom, als die Logikversorgung des Ports liefert, weshalb die Anzeigeeinheit die höhere Versorgungsspannung über den Port anfordert. In diesem Fall verkürzt sich die zulässige Länge der Modusnamen von elf auf fünf Zeichen. Damit ist auch der Namensraum knapp, über den das Protokoll seine Kanäle benennt. @sec:hardwareaufbau geht auf die Versorgung näher ein.
+Eine weitere Beschränkung ergibt sich aus der Stromversorgung. Ein Display benötigt mehr Strom, als die Logikversorgung des Ports liefert. Die Anzeigeeinheit fordert deshalb die höhere Versorgungsspannung über den Port an. In diesem Fall verkürzt sich die zulässige Länge der Modusnamen von elf auf fünf Zeichen, wodurch auch die Namen der Kanäle knapp werden. @sec:hardwareaufbau geht auf die Versorgung näher ein.
 
 === Beschränkte Laufzeitumgebung
 
 Der Hub wird in einer für Mikrocontroller ausgelegten Python-Variante programmiert, deren Funktionsumfang gegenüber einer vollständigen Laufzeitumgebung deutlich eingeschränkt ist. Konkret handelt es sich um MicroPython @MicroPythonPythonMicrocontrollers in der Ausprägung von Pybricks @Pybricks, einer Firmware für LEGO-Hubs. @sec:laufzeitumgebung geht auf die Unterschiede zwischen beiden Seiten ein.
+
 Ein Netzwerkstack und die darauf aufbauenden Abstraktionen stehen nicht zur Verfügung. Die üblichen Bausteine verteilter Kommunikation lassen sich deshalb nicht verwenden und müssen durch eigene ersetzt werden.
 
-Schwerer wiegt, dass auf der Steuereinheit keine echte Nebenläufigkeit zur Verfügung steht. Es gibt keinen Hintergrundprozess, der Pakete entgegennimmt oder Ergebnisse einsammelt, während die Anwendung weiterläuft. Das Warten auf ein Ergebnis findet deshalb im Kontrollfluss der Anwendung selbst statt: Ein Aufruf, dessen Ergebnis noch nicht vorliegt, hält die Anwendung an. Mehrere ausstehende Aufrufe lassen sich damit nicht überlappen, ihre Übertragungszeiten addieren sich.
+Schwerer wiegt, dass auf der Steuereinheit keine echte Nebenläufigkeit zur Verfügung steht. Es gibt keinen Hintergrundprozess, der Pakete entgegennimmt oder Ergebnisse einsammelt, während die Anwendung weiterläuft. Das Warten auf ein Ergebnis findet deshalb im Kontrollfluss der Anwendung selbst statt. Solange das Ergebnis eines Aufrufs nicht vorliegt, steht die Anwendung still. Mehrere Aufrufe können sich damit nicht überlappen, und ihre Übertragungszeiten addieren sich.
 
-Dazu kommt der begrenzte Arbeitsspeicher auf beiden Seiten. K5 ist auf dieser Plattform damit eine harte Grenze: Puffer für unvollständig empfangene Nachrichten, für bereitgehaltene Ergebnisse und für zwischengespeicherte Ereignisse brauchen alle eine feste Obergrenze, und für den Fall, dass diese erreicht wird, muss ein Verhalten festgelegt sein.
+Dazu kommt der begrenzte Arbeitsspeicher auf beiden Seiten. K5 ist auf dieser Plattform damit eine harte Grenze. Puffer für unvollständig empfangene Nachrichten, für bereitgehaltene Ergebnisse und für zwischengespeicherte Ereignisse brauchen jeweils eine feste Obergrenze. Außerdem muss festgelegt sein, was passiert, wenn diese erreicht wird.
 
 === Wechselwirkung der Einschränkungen
 
-Einzeln betrachtet wäre jede der drei Einschränkungen zu bewältigen. Kleine Pakete lassen sich durch Zerlegung überbrücken, eine fehlende Sendemöglichkeit durch regelmäßiges Abfragen, und ein Ablauf lässt sich auch ohne Nebenläufigkeit sequenziell formulieren. Zusammen verstärken sie sich jedoch gegenseitig.
+Einzeln betrachtet ließe sich jede der drei Einschränkungen bewältigen. Kleine Pakete lassen sich durch Zerlegung überbrücken, eine fehlende Sendemöglichkeit durch regelmäßiges Abfragen, und ein Ablauf lässt sich auch ohne Nebenläufigkeit sequenziell formulieren. Zusammen verstärken sie sich jedoch gegenseitig.
 
-Durch die kleine Paketgröße zerfällt eine Nachricht in viele Pakete. Wegen der eingeschränkten Kommunikationsrichtung erfordert jedes dieser Pakete eine eigene Anfrage der Steuereinheit samt Antwort, und für das Abholen des Ergebnisses sind weitere Anfragen nötig. Ohne Nebenläufigkeit lassen sich diese Anfragen nicht überlappen, sondern werden nacheinander abgearbeitet.
+Durch die kleine Paketgröße zerfällt eine Nachricht in viele Pakete. Wegen der eingeschränkten Kommunikationsrichtung erfordert jedes dieser Pakete eine eigene Anfrage der Steuereinheit samt Antwort, und für das Abholen des Ergebnisses sind weitere Anfragen nötig. Ohne Nebenläufigkeit werden all diese Anfragen nacheinander abgearbeitet.
 
-Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem von der Anzahl der nötigen Übertragungen abhängt und weniger von der Übertragungsgeschwindigkeit des Busses. Ein zusätzliches Byte Steuerinformation je Paket erhöht bei einer Nutzlast von wenigen Byte die Anzahl der Pakete und damit auch die Dauer eines Aufrufs. Der Entwurf sollte deshalb vor allem Übertragungen einsparen. @sec:evaluation greift das wieder auf und beziffert es.
+Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem von der Anzahl der nötigen Übertragungen abhängt und weniger von der Geschwindigkeit des Busses. Ein zusätzliches Byte Steuerinformation je Paket kann bei einer Nutzlast von wenigen Byte die Anzahl der Pakete und damit die Dauer eines Aufrufs erhöhen. Ziel des Entwurfs ist deshalb vor allem, Übertragungen einzusparen. @sec:evaluation greift das auf und beziffert es.
 
 @tab:konflikt fasst die Gegenüberstellung von Anforderungen und Einschränkungen zusammen.
 
@@ -127,17 +128,17 @@ Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem v
       [K3], [Rückfluss von Ereignissen], [Keine eigenständige Übertragung durch die Anzeigeeinheit], [Ereignisse werden zwischengespeichert und von der Steuereinheit abgeholt],
       [K4], [Antwortzeit], [Alle drei Einschränkungen gemeinsam], [Anzahl der Übertragungen je Aufruf wird zur bestimmenden Größe],
       [K5], [Begrenzter Speicherbedarf], [Beschränkter Arbeitsspeicher beider Seiten], [Feste Obergrenzen für alle Puffer, festgelegtes Verhalten beim Überlauf],
-      [K6], [Unabhängigkeit vom Übertragungsweg], [Eigenheiten von Bus und Transportbibliothek], [Alle wegabhängigen Anteile in einer austauschbaren Schicht bündeln],
+      [K6], [Unabhängigkeit vom Übertragungsweg], [Eigenheiten von Bus und PUPRemote], [Alle wegabhängigen Anteile in einer austauschbaren Schicht bündeln],
     )
   ],
 ) <tab:konflikt>
 
 == Verallgemeinerung des Problemraums <sec:verallgemeinerung>
 
-Die im vorigen Abschnitt herausgearbeiteten Einschränkungen wurden am konkreten Zielsystem hergeleitet. Sie sind jedoch nicht an dieses System gebunden, und diese Feststellung ist für die weitere Arbeit von Bedeutung: Sie entscheidet darüber, ob der folgende Entwurf eine Einzellösung darstellt oder eine Klasse von Verbindungen adressiert.
+Die im vorigen Abschnitt beschriebenen Einschränkungen wurden am konkreten Zielsystem hergeleitet. Sie sind jedoch nicht an dieses System gebunden. Das ist für die weitere Arbeit wichtig, denn davon hängt ab, ob der folgende Entwurf eine Einzellösung ist oder für eine ganze Klasse von Verbindungen gilt.
 
 Die drei Eigenschaften lassen sich von der Plattform ablösen und als allgemeine Merkmale einer Verbindung formulieren. Erstens ist die Übertragung anfragegetrieben, das heißt, nur eine der beiden Seiten kann eine Übertragung anstoßen. Zweitens ist die Nutzlast je Übertragung klein und fest vorgegeben. Drittens steht auf mindestens einer Seite eine Laufzeitumgebung zur Verfügung, die weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellt.
 
-Diese Kombination tritt über den betrachteten Bus hinaus in verschiedenen Ausprägungen auf. Bei der Kommunikation über @i2c treibt der Master den Bus, und ein Slave kann eine Übertragung nicht selbstständig beginnen. Modbus @rtu folgt demselben Muster aus Anfrage und Antwort. Auch bei Bluetooth Low Energy ist der verbreitete Zugriff über lesende Anfragen des Clients organisiert, und die standardmäßig ausgehandelte Nutzlast liegt in derselben Größenordnung wie beim hier betrachteten Bus. In allen genannten Fällen stellen sich dieselben Fragen: Wie werden Nachrichten zerlegt und wieder zusammengesetzt, wie gelangen Ergebnisse und Ereignisse zur anfragenden Seite zurück, und wie lässt sich all das vor der Anwendung verbergen.
+Diese Kombination tritt über den betrachteten Bus hinaus in verschiedenen Ausprägungen auf. Bei der Kommunikation über @i2c treibt der Master den Bus, und ein Slave kann eine Übertragung nicht selbstständig beginnen. Modbus @rtu folgt demselben Muster aus Anfrage und Antwort. Auch bei Bluetooth Low Energy erfolgt der übliche Zugriff über lesende Anfragen des Clients, und die standardmäßig ausgehandelte Nutzlast liegt in derselben Größenordnung wie beim hier betrachteten Bus. In allen genannten Fällen stellen sich dieselben Fragen. Wie werden Nachrichten zerlegt und wieder zusammengesetzt? Wie gelangen Ergebnisse und Ereignisse zur anfragenden Seite zurück? Und wie lässt sich all das vor der Anwendung verbergen?
 
-Die vorliegende Arbeit behandelt den betrachteten Bus daher als einen Vertreter dieser Klasse. Der in den folgenden Kapiteln entwickelte Entwurf wird so formuliert, dass er auf die genannten Merkmale Bezug nimmt und nicht auf Eigenschaften einer bestimmten Plattform. Inwieweit dies gelungen ist, greift die Diskussion am Ende der Arbeit erneut auf.
+Die vorliegende Arbeit behandelt den betrachteten Bus daher als einen Vertreter dieser Klasse. Der Entwurf in den folgenden Kapiteln bezieht sich deshalb auf die genannten Merkmale und nicht auf Eigenschaften einer bestimmten Plattform. Inwieweit das gelungen ist, wird am Ende der Arbeit diskutiert.
