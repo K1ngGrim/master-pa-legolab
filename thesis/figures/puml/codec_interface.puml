@@ -1,0 +1,38 @@
+@startuml codec
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam classAttributeIconSize 0
+hide empty members
+
+abstract class Codec {
+  + name : str
+  + encode(obj) : bytes
+  + decode(data) : object
+}
+
+class JsonCodec {
+  + name = "json"
+  + encode(obj) : bytes
+  + decode(data) : object
+}
+
+class MessagePackCodec {
+  + name = "msgpack"
+  + encode(obj) : bytes
+  + decode(data) : object
+}
+
+class Message {
+  + {static} transform_payload(payload) : bytes
+  + {static} parse_payload(payload) : object
+}
+
+Codec <|-- JsonCodec
+Codec <|-- MessagePackCodec
+
+Message ..> Codec : get_codec()
+
+@enduml

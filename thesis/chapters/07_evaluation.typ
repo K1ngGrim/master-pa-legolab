@@ -28,7 +28,7 @@
 
 // Kurz halten, ein bis zwei Absaetze - passend zum Umfang von Kap. 6.2:
 // - Funktioniert der Aufbau unter realen Bedingungen (Stecken, Handhabung)?
-// - Was die zweite Ausbaustufe praktisch gebracht hat
+// - Was die Steckverbinder praktisch kosten (haeufigste Fehlerquelle)
 // - Was man anders machen wuerde
 
 == Diskussion der Ergebnisse

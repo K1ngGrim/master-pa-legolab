@@ -19,6 +19,15 @@
 
 === Alternative Serialisierung
 
+=== Integrierter Hardwareaufbau
+
+// Nicht gebaut, aus Zeitgruenden. Hier als Erweiterung fuehren, nicht in
+// Kap. 6 als Ausbaustufe:
+// - eine Traegerplatine statt drei Baugruppen und zwei Steckverbindern
+// - Versorgung: 8 V von M+ auf 3,3 V, Dioden-ODER mit USB als Startquelle
+// - Was dadurch NICHT besser wird: Protokoll, Latenz und Software bleiben
+//   unveraendert
+
 === Weitere Peripherieklassen
 
 == Zusammenfassung

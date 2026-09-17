@@ -96,7 +96,7 @@ Eine weitere Beschränkung ergibt sich aus der Stromversorgung. Ein Display ben�
 
 === Beschränkte Laufzeitumgebung
 
-Der Hub wird in einer für Mikrocontroller ausgelegten Python-Variante programmiert, deren Funktionsumfang gegenüber einer vollständigen Laufzeitumgebung deutlich eingeschränkt ist. // QUELLE: Belege für MicroPython und die eingesetzte Hub-Firmware ergänzen.
+Der Hub wird in einer für Mikrocontroller ausgelegten Python-Variante programmiert, deren Funktionsumfang gegenüber einer vollständigen Laufzeitumgebung deutlich eingeschränkt ist. Konkret handelt es sich um MicroPython @MicroPythonPythonMicrocontrollers in der Ausprägung von Pybricks @Pybricks, einer Firmware für LEGO-Hubs. @sec:laufzeitumgebung geht auf die Unterschiede zwischen beiden Seiten ein.
 Ein Netzwerkstack und die darauf aufbauenden Abstraktionen stehen nicht zur Verfügung. Die üblichen Bausteine verteilter Kommunikation lassen sich deshalb nicht verwenden und müssen durch eigene ersetzt werden.
 
 Schwerer wiegt, dass auf der Steuereinheit keine echte Nebenläufigkeit zur Verfügung steht. Es gibt keinen Hintergrundprozess, der Pakete entgegennimmt oder Ergebnisse einsammelt, während die Anwendung weiterläuft. Das Warten auf ein Ergebnis findet deshalb im Kontrollfluss der Anwendung selbst statt: Ein Aufruf, dessen Ergebnis noch nicht vorliegt, hält die Anwendung an. Mehrere ausstehende Aufrufe lassen sich damit nicht überlappen, ihre Übertragungszeiten addieren sich.

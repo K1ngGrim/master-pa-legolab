@@ -1,0 +1,69 @@
+@startuml objektmodell
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "display/protocol" {
+  abstract class ScreenBase {
+    + create_label(x, y, width, height, label)
+    + create_button(x, y, width, height, label)
+    + set_active()
+    + delete()
+  }
+  abstract class LabelBase {
+    + set_text(text)
+    + delete()
+  }
+}
+
+package "Hub" {
+  class RemoteObject {
+    + object_id
+    - _session
+    + is_valid()
+    - _call(method, args)
+  }
+  class Screen
+  class Label
+}
+
+package "Anzeigeeinheit" {
+  class EspScreenAdapter
+  class EspLabeladapter
+  class ObjectRegistry {
+    + register(obj, kind, parent)
+    + get(ref, kind)
+    + release_tree(ref)
+  }
+}
+
+abstract class RPCDispatcher {
+  + handle_message(msg)
+}
+class LvEventHandler {
+  + on_event(evt)
+}
+
+RemoteObject <|-- Screen
+RemoteObject <|-- Label
+ScreenBase <|-- Screen
+LabelBase  <|-- Label
+ScreenBase <|-- EspScreenAdapter
+LabelBase  <|-- EspLabeladapter
+
+RPCDispatcher  <|-- EspScreenAdapter
+RPCDispatcher  <|-- EspLabeladapter
+LvEventHandler <|-- EspScreenAdapter
+
+Screen ..> Label : erzeugt
+EspScreenAdapter --> ObjectRegistry : nutzt
+EspLabeladapter  --> ObjectRegistry : nutzt
+
+note bottom of EspLabeladapter
+  Display und Button
+  folgen demselben Muster
+end note
+@enduml

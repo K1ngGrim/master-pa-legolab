@@ -21,6 +21,8 @@ Das System ist in fünf Schichten gegliedert, die auf beiden Seiten der Verbindu
 
 Zwei Eigenschaften dieses Aufbaus sind hervorzuheben. Zum einen ist er symmetrisch: Beide Seiten besitzen dieselben Schichten mit denselben Verantwortlichkeiten, sie unterscheiden sich lediglich in der Richtung, aus der ein Aufruf eintrifft. Zum anderen ist er streng geschichtet. Jede Schicht spricht ausschließlich mit der unmittelbar darunterliegenden, sodass eine Änderung innerhalb einer Schicht die übrigen nicht berührt.
 
+Die beiden Seiten nehmen dabei feste Rollen ein. Die Steuereinheit ruft Methoden auf und stößt jede Übertragung an. Sie wird im Folgenden als Client bezeichnet. Die Anzeigeeinheit führt die Aufrufe aus und antwortet ausschließlich. Sie wird im Folgenden als Server bezeichnet. Die Rollen decken sich mit der Verteilung auf dem Bus, auf dem der Hub als Master arbeitet. Sie wechseln im Betrieb nicht, auch nicht bei Ereignissen, da auch diese vom Client abgefragt werden.
+
 Die folgenden Abschnitte beschreiben die Schichten von unten nach oben. Für jede Schicht werden ihre Aufgabe, die von ihr nach oben angebotene Abstraktion und die bewusst nicht von ihr übernommenen Aufgaben benannt.
 
 === Busanbindung
@@ -43,17 +45,17 @@ Zwei Entwurfsentscheidungen dieser Schicht verdienen Beachtung. Erstens ist die 
 
 === Kommunikationsschicht
 
-Die Kommunikationsschicht stellt den entfernten Aufruf her. Auf der aufrufenden Seite bildet sie aus dem Namen einer Methode, deren Argumenten und der Angabe des Wirkungsbereichs eine Nachricht, übergibt diese nach unten und nimmt anschließend das Ergebnis entgegen. Auf der ausführenden Seite nimmt sie eine Nachricht entgegen, wählt den zuständigen Empfänger, ruft die benannte Methode auf und stellt deren Ergebnis zur Abholung bereit.
+Die Kommunikationsschicht stellt den entfernten Aufruf her. Auf dem Client bildet sie aus dem Namen einer Methode, deren Argumenten und der Angabe des Wirkungsbereichs eine Nachricht, übergibt diese nach unten und nimmt anschließend das Ergebnis entgegen. Auf dem Server nimmt sie eine Nachricht entgegen, wählt den zuständigen Empfänger, ruft die benannte Methode auf und stellt deren Ergebnis zur Abholung bereit.
 
-In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da die ausführende Seite nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt diesen Umstand: Nach oben erscheint ein Aufruf als gewöhnlicher, synchroner Methodenaufruf, der zurückkehrt, sobald das Ergebnis vorliegt.
+In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da der Server nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt diesen Umstand: Nach oben erscheint ein Aufruf als gewöhnlicher, synchroner Methodenaufruf, der zurückkehrt, sobald das Ergebnis vorliegt.
 
 Nicht zu ihren Aufgaben gehört die Kenntnis der aufgerufenen Objekte. Sie befördert einen benannten Aufruf zu einem benannten Empfänger, ohne zu wissen, was dieser darstellt.
 
 === Objektmodell
 
-Das Objektmodell hebt den entfernten Aufruf auf die Ebene entfernter Objekte. Grafische Elemente wie Bildschirme, Beschriftungen und Schaltflächen werden als Objekte abgebildet, die auf der ausführenden Seite bestehen und auf der aufrufenden Seite durch Stellvertreter vertreten werden.
+Das Objektmodell hebt den entfernten Aufruf auf die Ebene entfernter Objekte. Grafische Elemente wie Bildschirme, Beschriftungen und Schaltflächen werden als Objekte abgebildet, die auf dem Server bestehen und auf dem Client durch Stellvertreter vertreten werden.
 
-Grundlage ist eine gemeinsame abstrakte Schnittstelle je Objekttyp, die auf beiden Seiten vorliegt. Damit ein Stellvertreter ein bestimmtes entferntes Objekt anspricht, vergibt die ausführende Seite beim Erzeugen eines Objekts eine Referenz und verwaltet die Objekte in einer Registratur. Der Stellvertreter führt diese Referenz mit und übergibt sie bei jedem Aufruf. Auf diese Weise lassen sich beliebig viele Objekte erzeugen und gezielt ansprechen.
+Grundlage ist eine gemeinsame abstrakte Schnittstelle je Objekttyp, die auf beiden Seiten vorliegt. Damit ein Stellvertreter ein bestimmtes entferntes Objekt anspricht, vergibt der Server beim Erzeugen eines Objekts eine Referenz und verwaltet die Objekte in einer Registratur. Der Stellvertreter führt diese Referenz mit und übergibt sie bei jedem Aufruf. Auf diese Weise lassen sich beliebig viele Objekte erzeugen und gezielt ansprechen.
 
 Nach oben bietet diese Schicht eine Sicht an, die sich von einer rein lokalen Programmierung nicht unterscheidet. Sie ist damit die Schicht, die das Ziel der Aufrufstransparenz einlöst.
 
@@ -69,36 +71,36 @@ Innerhalb der Schichten treten drei wiederkehrende Rollen auf. Sie sind als Entw
 
 === Interceptor
 
-Der Interceptor bildet die Nahtstelle zwischen Kommunikationsschicht und Busanbindung. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Aufruf abgesetzt, eine Bestätigung verarbeitet und die Bereitschaft eines Ergebnisses geprüft wird. Auf der aufrufenden Seite verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf der ausführenden Seite nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
+Der Interceptor bildet die Nahtstelle zwischen Kommunikationsschicht und Busanbindung. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Aufruf abgesetzt, eine Bestätigung verarbeitet und die Bereitschaft eines Ergebnisses geprüft wird. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
 
 Da diese Schnittstelle ohne Bezug auf einen konkreten Übertragungsweg formuliert ist, bildet der Interceptor den Ansatzpunkt für die Unabhängigkeit vom Übertragungsweg. Ein anderer Übertragungsweg wird angebunden, indem eine weitere Ausprägung dieser Rolle bereitgestellt wird; die höheren Schichten bleiben unberührt.
 
 === Dispatcher
 
-Der Dispatcher ordnet eine eingehende Nachricht der auszuführenden Methode zu. Jede Nachricht führt dazu die Angabe ihres Wirkungsbereichs, den Namen der Methode und deren Argumente mit sich. Anhand des Wirkungsbereichs wählt der Dispatcher den zuständigen Empfänger und ruft dort die benannte Methode auf.
+Der Dispatcher ordnet eine eingehende Nachricht der auszuführenden Methode zu. Jede Nachricht führt dazu die Angabe ihres Wirkungsbereichs, eine Kennung der Methode und deren Argumente mit sich. Anhand des Wirkungsbereichs wählt der Dispatcher den zuständigen Empfänger und ruft dort die benannte Methode auf.
 
 Für jeden Objekttyp kann ein eigener Empfänger registriert werden. Diese Trennung entkoppelt das Routing der Nachrichten von der eigentlichen Umsetzung der Methoden und erlaubt es, das Objektmodell schrittweise zu erweitern, ohne die darunterliegenden Schichten zu berühren.
 
 === Stellvertreter und Adapter
 
-Stellvertreter und Adapter sind die beiden Seiten desselben Objekttyps. Der Stellvertreter implementiert die gemeinsame Schnittstelle auf der aufrufenden Seite und leitet jeden Methodenaufruf weiter. Der Adapter implementiert dieselbe Schnittstelle auf der ausführenden Seite und enthält die reale Logik, die der Dispatcher aufruft.
+Stellvertreter und Adapter sind die beiden Seiten desselben Objekttyps. Der Stellvertreter implementiert die gemeinsame Schnittstelle auf dem Client und leitet jeden Methodenaufruf weiter. Der Adapter implementiert dieselbe Schnittstelle auf dem Server und enthält die reale Logik, die der Dispatcher aufruft.
 
 Dass beide dieselbe Schnittstelle erfüllen, ist die strukturelle Grundlage der Aufrufstransparenz: Für die Anwendung ist nicht erkennbar und nicht erheblich, ob sie mit einem Stellvertreter oder mit einer lokalen Umsetzung arbeitet.
 
 == Kommunikationsmodell
 
-Aus Sicht der Anwendung ist die Kommunikation synchron. Ein Aufruf kehrt erst zurück, wenn das Ergebnis vorliegt. Unter dieser Oberfläche folgt die Übertragung dem anfragegetriebenen Muster des Übertragungswegs. Jede Übertragung wird von der Steuereinheit angestoßen, die Anzeigeeinheit antwortet nur.
+Aus Sicht der Anwendung ist die Kommunikation synchron. Ein Aufruf kehrt erst zurück, wenn das Ergebnis vorliegt. Unter dieser Oberfläche folgt die Übertragung dem anfragegetriebenen Muster des Übertragungswegs. Jede Übertragung wird vom Client angestoßen, der Server antwortet nur.
 
-Logisch werden zwei Kanäle unterschieden. Über den ersten Kanal sendet die Steuereinheit die Pakete eines Aufrufs, und die Anzeigeeinheit bestätigt jedes Paket. Über den zweiten Kanal fragt die Steuereinheit den Zustand und das Ergebnis ab. Sie prüft zunächst, ob ein Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab.
+Logisch werden zwei Kanäle unterschieden. Über den ersten Kanal sendet der Client die Pakete eines Aufrufs, und der Server bestätigt jedes Paket. Über den zweiten Kanal fragt der Client den Zustand und das Ergebnis ab. Er prüft zunächst, ob ein Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab.
 
-Ereignisse wie Berührungen werden nach demselben Prinzip behandelt. Die Anzeigeeinheit puffert sie, und die Steuereinheit fragt sie bei Bedarf ab. Damit ist auch die Ereignisbehandlung an den Takt der Steuereinheit gebunden, was die zeitliche Auflösung begrenzt. Dieser client-gesteuerte Rückkanal ist die zentrale Antwort der Architektur auf die eingeschränkte Kommunikationsrichtung.
+Ereignisse wie Berührungen werden nach demselben Prinzip behandelt. Der Server puffert sie, und der Client fragt sie bei Bedarf ab. Damit ist auch die Ereignisbehandlung an den Takt des Clients gebunden, was die zeitliche Auflösung begrenzt. Dieser client-gesteuerte Rückkanal ist die zentrale Antwort der Architektur auf die eingeschränkte Kommunikationsrichtung.
 
 == Datenfluss im System
 
 Der Weg eines Aufrufs durch die Schichten lässt sich in vier Phasen gliedern. Zunächst nimmt der Stellvertreter den Methodenaufruf entgegen und übergibt ihn der Kommunikationsschicht. Diese bildet aus Methodennamen, Argumenten und Wirkungsbereich eine Nachricht. Die Transportschicht serialisiert sie, zerlegt sie in Pakete und versieht diese mit Steuerinformationen.
 
-In der zweiten Phase überträgt die Steuereinheit die Pakete. Die Anzeigeeinheit bestätigt jedes empfangene Paket und setzt die Nachricht zusammen, sobald das letzte Paket eingetroffen ist. In der dritten Phase übergibt die Kommunikationsschicht die zusammengesetzte Nachricht dem Dispatcher, der die zugehörige Methode auf dem Adapter aufruft. Das Ergebnis wird wiederum zu einer Nachricht verpackt und zur Abholung bereitgestellt.
+In der zweiten Phase überträgt der Client die Pakete. Der Server bestätigt jedes empfangene Paket und setzt die Nachricht zusammen, sobald das letzte Paket eingetroffen ist. In der dritten Phase übergibt die Kommunikationsschicht die zusammengesetzte Nachricht dem Dispatcher, der die zugehörige Methode auf dem Adapter aufruft. Das Ergebnis wird wiederum zu einer Nachricht verpackt und zur Abholung bereitgestellt.
 
-In der letzten Phase fragt die Steuereinheit ab, ob das Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab. Die Kommunikationsschicht setzt die Antwort zusammen, liest die Nutzlast aus und gibt das Ergebnis an den Stellvertreter zurück, der es an die Anwendung weiterreicht.
+In der letzten Phase fragt der Client ab, ob das Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab. Die Kommunikationsschicht setzt die Antwort zusammen, liest die Nutzlast aus und gibt das Ergebnis an den Stellvertreter zurück, der es an die Anwendung weiterreicht.
 
 Bemerkenswert an diesem Ablauf ist das Verhältnis von Nutzlast und Steuerverkehr. Ein einzelner Aufruf zerfällt in eine Folge von Paketen, die jeweils einzeln bestätigt werden, gefolgt von wiederholten Abfragen nach dem Ergebnis. Die Anzahl der erforderlichen Übertragungen und nicht die Geschwindigkeit des Übertragungswegs bestimmt damit die Dauer eines Aufrufs. Die Evaluation greift diese Beobachtung auf und beziffert sie.

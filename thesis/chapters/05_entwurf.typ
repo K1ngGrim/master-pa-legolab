@@ -42,21 +42,21 @@ In verteilten Systemen durchläuft eine Nachricht den Schichtenstapel stets zwei
 
 Die Transportschicht setzt also nach unten einen Übertragungsweg voraus. Damit die Anforderungen, wie sie in @sec:kommunikationsanforderungen beschrieben wurde, erfüllt werden können, darf sie über diesen Weg möglichst wenig wissen. Jede Eigenschaft, die sie voraussetzt, schließt Übertragungswege aus, die diese Eigenschaft nicht bieten. Die Schnittstelle zwischen beiden ist deshalb nicht danach zu bemessen, was ein bestimmter Bus kann, sondern danach, was die betrachtete Verbindungsklasse mindestens leisten muss.
 
-Da nur eine Seite der Verbindung, die aufrufende Seite, die Übertragung anstoßen kann, lässt sich jede Interaktion auf denselben Ablauf zurückführen:
+Da nur der Client die Übertragung anstoßen kann, lässt sich jede Interaktion auf denselben Ablauf zurückführen:
 
 #figure(
   image("../figures/interceptor_ablauf.png", width: 85%),
   caption: [Ablauf eines Aufrufs an der Interceptor-Schnittstelle. Jede der drei
-  Phasen besteht aus Wiederholungen derselben Operation, und jede wird von der
-  Steuereinheit angestoßen.],
+  Phasen besteht aus Wiederholungen derselben Operation, und jede wird vom
+  Client angestoßen.],
 ) <abb:interceptor>
 
 Die Schnittstelle bietet daher eine einzige Operation: Ein Block begrenzter Größe wird übergeben, und im selben Vorgang kommt ein Block zurück. Ob dieser Block Nutzdaten trägt, ein Acknowledgment oder eine Anfrage nach dem Ergebnis, ist für die Schnittstelle ohne Belang, da sie ihn nur befördert, ohne ihn zu lesen. Die drei Phasen in @abb:interceptor unterscheiden sich allein im Inhalt der Blöcke, nicht in der Operation.
 
 
-Eine reichere Schnittstelle wäre denkbar, würde aber Übertragungswege ausschließen.  Eine Zustellung ohne vorherige Anfrage setzt voraus, dass die untergeordnete Seite von sich aus senden kann und ein Warten auf eine Meldung der Gegenseite setzt zusätzlich voraus, dass sie dies zu einem selbst gewählten Zeitpunkt tut. Beides leistet der hier betrachtete Bus nicht, und beides ist auch für die übrigen Vertreter der in @sec:verallgemeinerung beschriebenen Klasse nicht vorauszusetzen. Die Schnittstelle bildet daher die Schnittmenge dessen, was alle Übertragungswege dieser Klasse leisten können.
+Eine reichere Schnittstelle wäre denkbar, würde aber Übertragungswege ausschließen.  Eine Zustellung ohne vorherige Anfrage setzt voraus, dass der Server von sich aus senden kann und ein Warten auf eine Meldung des Servers setzt zusätzlich voraus, dass er dies zu einem selbst gewählten Zeitpunkt tut. Beides leistet der hier betrachtete Bus nicht, und beides ist auch für die übrigen Vertreter der in @sec:verallgemeinerung beschriebenen Klasse nicht vorauszusetzen. Die Schnittstelle bildet daher die Schnittmenge dessen, was alle Übertragungswege dieser Klasse leisten können.
 
-Beide Seiten erfüllen dieselbe Schnittstelle und unterscheiden sich allein in der Richtung, aus der ein Block eintrifft. Die aufrufende Seite übergibt Blöcke und erhält Antworten, die ausführende nimmt Blöcke entgegen und beantwortet sie. Die Schnittstelle ist also symmetrisch, wodurch eine Änderung des Übertragungsweges eine Stelle pro Seite betrifft.
+Beide Seiten erfüllen dieselbe Schnittstelle und unterscheiden sich allein in der Richtung, aus der ein Block eintrifft. Der Client übergibt Blöcke und erhält Antworten, der Server nimmt Blöcke entgegen und beantwortet sie. Die Schnittstelle ist also symmetrisch, wodurch eine Änderung des Übertragungsweges eine Stelle pro Seite betrifft.
 
 Nicht zur Schnittstelle gehört jede Auslegung des Inhalts. Sie kennt weder die Zugehörigkeit eines Blocks zu einer Nachricht noch dessen Position darin, sie setzt nichts zusammen, erkennt keine Wiederholungen und ordnet keine Antworten zu. Alles, was Struktur voraussetzt, liegt darüber und ist Gegenstand der folgenden Kapitel. Die Interceptor-Schnittstelle erfüllt damit die Anforderung K6 aus @sec:kommunikationsanforderungen, dass die Transportschicht möglichst wenig über den Übertragungsweg wissen darf.
 
@@ -166,7 +166,7 @@ Für den Umgang mit den liegengebliebenen Blöcken bestehen zwei Möglichkeiten:
 - Die unvollständige Nachricht wird verworfen, sobald eine neue beginnt. Das ist der einfachere Weg, setzt aber voraus, dass nie mehr als eine Nachricht gleichzeitig übertragen wird.
 - Die unvollständige Nachricht bleibt erhalten und kann später fortgesetzt werden. Das erlaubt mehrere gleichzeitige Übertragungen, verlangt aber einen Puffer je Kennung, eine Regel, wann eine Nachricht endgültig aufgegeben wird, und eine Laufzeitumgebung, die mehrere Übertragungen nebenläufig verwalten kann.
 
-Der Entwurf wählt die erste Möglichkeit. Die betrachtete Verbindungsklasse ist anfragegetrieben, sodass die aufrufende Seite ohnehin nur eine Nachricht zugleich senden kann. Hinzu kommt, dass die in @sec:einschraenkungen beschriebene Laufzeitumgebung die für die zweite Möglichkeit nötige Nebenläufigkeit nicht bereitstellt.
+Der Entwurf wählt die erste Möglichkeit. Die betrachtete Verbindungsklasse ist anfragegetrieben, sodass der Client ohnehin nur eine Nachricht zugleich senden kann. Hinzu kommt, dass die in @sec:einschraenkungen beschriebene Laufzeitumgebung die für die zweite Möglichkeit nötige Nebenläufigkeit nicht bereitstellt.
 
 ==== Wie viel Speicher die Rekonstruktion benötigt <pg:speicher>
 Der Empfänger muss alle Blöcke einer Nachricht halten, bis sie vollständig ist. Anforderung K5 verlangt dafür eine zur Entwurfszeit bekannte Obergrenze. Sie ergibt sich aus den bisherigen Festlegungen: Ist $b_"pos"$ die Breite des Positionsfelds in Bit, so lassen sich $2^(b_"pos")$ Positionen unterscheiden, und die längste übertragbare Nachricht beträgt
@@ -218,9 +218,9 @@ Das Verfahren gegen diese Fälle ist Stop-and-Wait @arq. Es wird ein Block gesen
 
 Die drei genannten Fehlerfälle sind für den Sender nicht unterscheidbar. Er beobachtet in allen dasselbe, nämlich eine ausbleibende Bestätigung. Eine Unterscheidung wäre auch ohne Nutzen, da die Reaktion in allen Fällen dieselbe ist. Der Empfänger erkennt die Wiederholung an der Position und verwirft sie, wie in @sec:fragmentierung beschrieben.
 
-Wiederholungen brauchen eine Obergrenze. Ohne sie wartet die aufrufende Seite endlos, sobald die Gegenseite dauerhaft nicht antwortet. Aus einem Fehler auf der einen Seite wird dann ein Stillstand der Anwendung auf der anderen. Mit einer Obergrenze scheitert der Aufruf nach einer bekannten Zeit und die Anwendung behält die Kontrolle. Das ist zugleich die Voraussetzung dafür, dass K4 geprüft werden kann, denn eine Antwortzeit lässt sich nur angeben, wenn sie nach oben begrenzt ist.
+Wiederholungen brauchen eine Obergrenze. Ohne sie wartet der Client endlos, sobald der Server dauerhaft nicht antwortet. Aus einem Fehler auf der einen Seite wird dann ein Stillstand der Anwendung auf der anderen. Mit einer Obergrenze scheitert der Aufruf nach einer bekannten Zeit und die Anwendung behält die Kontrolle. Das ist zugleich die Voraussetzung dafür, dass K4 geprüft werden kann, denn eine Antwortzeit lässt sich nur angeben, wenn sie nach oben begrenzt ist.
 
-Dieselbe Überlegung gilt für das Abholen des Ergebnisses. Die aufrufende Seite fragt so lange nach, bis ein Ergebnis vorliegt, und braucht auch dafür eine Obergrenze. Auf der ausführenden Seite folgt daraus eine Zusicherung. Jeder Aufruf muss ein Ergebnis oder Fehlermeldung hinterlassen, auch wenn die Ausführung selbst fehlschlägt. Bleibt beides aus, wartet die Gegenseite auf etwas, das nie eintrifft. Die Fehlerbehandlung ist damit Bestandteil des Protokolls und nicht der Umsetzung überlassen. 
+Dieselbe Überlegung gilt für das Abholen des Ergebnisses. Der Client fragt so lange nach, bis ein Ergebnis vorliegt, und braucht auch dafür eine Obergrenze. Für den Server folgt daraus eine Zusicherung. Jeder Aufruf muss ein Ergebnis oder Fehlermeldung hinterlassen, auch wenn die Ausführung selbst fehlschlägt. Bleibt beides aus, wartet der Client auf etwas, das nie eintrifft. Die Fehlerbehandlung ist damit Bestandteil des Protokolls und nicht der Umsetzung überlassen. 
 
 Drei Aufgaben übernimmt die Schicht ausdrücklich nicht. Sie korrigiert keine Fehler, sondern verlässt sich auf die Prüfsumme des Übertragungswegs und wiederholt den betroffenen Block. Sie sichert die Reihenfolge nicht eigens, da der Kanal sequenziell arbeitet, auch wenn das Positionsfeld die Rekonstruktion davon unabhängig macht. Und sie betreibt keine Stauvermeidung. Auf einer Punkt-zu-Punkt-Verbindung mit einem Master und einer einzigen Nachricht gleichzeitig kann kein Stau entstehen.
 
@@ -236,9 +236,9 @@ Von der Transportschicht kennt sie nur zwei Vorgänge. Eine Nachricht wird hinge
 
 Was die Schicht herstellt, ist ein @rpc, wie er in @sec:relatedwork eingeführt wurde. Die Anwendung ruft eine Methode auf, die auf einem anderen Gerät ausgeführt wird, und erhält deren Rückgabewert. Dass dabei eine Übertragung stattgefunden hat, ist an der Aufrufstelle nicht erkennbar. Dieses Verhalten wird als Aufruftransparenz bezeichnet.
 
-Die dort betrachteten Rahmenwerke setzen dafür Eigenschaften voraus, die diese Verbindung nicht bietet. Sie erwarten einen Transport, der Nachrichten beliebiger Länge zuverlässig befördert, und einen Rückkanal, über den die ausführende Seite ihr Ergebnis von sich aus zustellt. Beides ist hier nicht gegeben. Die folgenden Abschnitte entwickeln deshalb einen eigenen Aufrufmechanismus, der mit den Mitteln der Transportschicht auskommt.
+Die dort betrachteten Rahmenwerke setzen dafür Eigenschaften voraus, die diese Verbindung nicht bietet. Sie erwarten einen Transport, der Nachrichten beliebiger Länge zuverlässig befördert, und einen Rückkanal, über den der Server sein Ergebnis von sich aus zustellt. Beides ist hier nicht gegeben. Die folgenden Abschnitte entwickeln deshalb einen eigenen Aufrufmechanismus, der mit den Mitteln der Transportschicht auskommt.
 
-Damit ist sie die Schicht, in der aus der Übertragung ein entfernter Aufruf wird. Zu klären ist, welche Angaben eine Aufrufnachricht mitführen muss, wie eine Antwort ihrer Anfrage zugeordnet wird, wie die ausführende Seite den zuständigen Empfänger auswählt und auf welchem Weg ein Ergebnis zurückgelangt. 
+Damit ist sie die Schicht, in der aus der Übertragung ein entfernter Aufruf wird. Zu klären ist, welche Angaben eine Aufrufnachricht mitführen muss, wie eine Antwort ihrer Anfrage zugeordnet wird, wie der Server den zuständigen Empfänger auswählt und auf welchem Weg ein Ergebnis zurückgelangt. 
 
 === Aufbau einer Aufrufnachricht
 
@@ -248,13 +248,17 @@ Damit ist sie die Schicht, in der aus der Übertragung ein entfernter Aufruf wir
 // - Ergebnis und Fehler reisen auf demselben Weg und sind am Schluessel
 //   unterscheidbar
 
-Ein @rpc muss so viel mitführen, dass die ausführende Seite den Aufruf ohne weitere Rückfrage durchführen kann. Drei Angaben sind dafür nötig: Der Name der Methode legt fest, was auszuführen ist. Die Argumente liefern die Werte, mit denen es auszuführen ist. Der Wirkungsbereich bestimmt, auf welchem Objekt die Methode ausgeführt wird. Wie dies funktioniert, wird im übernächsten Abschnitt beschrieben.
+Ein @rpc muss so viel mitführen, dass der Server den Aufruf ohne weitere Rückfrage durchführen kann. Drei Angaben sind dafür nötig: Die Kennung der Methode legt fest, was auszuführen ist. Die Argumente liefern die Werte, mit denen es auszuführen ist. Der Wirkungsbereich bestimmt, auf welcher Klasseninstanz die Methode ausgeführt wird. Wie dies funktioniert, wird im übernächsten Abschnitt beschrieben.
 
-Angaben über Typen oder Signaturen werden nicht mitgeführt. Aus @sec:serialisierung folgt, dass das Format ohne Schema auskommt, und damit reisen nur Werte und keine Beschreibungen von Werten. Ob eine Methode existiert oder bestimmte Argumente erwartet stellt sich erst auf der ausführenden Seite heraus. Die Prüfung findet also zur Laufzeit statt und nicht vorab. 
+Angaben über Typen oder Signaturen werden nicht mitgeführt. Aus @sec:serialisierung folgt, dass das Format ohne Schema auskommt, und damit reisen nur Werte und keine Beschreibungen von Werten. Ob eine Methode existiert oder bestimmte Argumente erwartet stellt sich erst auf dem Server heraus. Die Prüfung findet also zur Laufzeit statt und nicht vorab. 
 
-Das Ergebnis nimmt denselben Weg zurück. Es ist ebenfalls eine Nachricht und trägt entweder den Rückgabewert oder eine Fehlermeldung. Welcher der beiden Fälle vorliegt, ist am Schlüssel zu erkennen, unter dem der Inhalt steht. Diese Bündelung folgt aus der Zusicherung in @sec:zuverlaessigkeit, denn die aufrufende Seite wartet auf genau eine Antwort und muss auch im Fehlerfall eine erhalten. 
+Das Ergebnis nimmt denselben Weg zurück. Es ist ebenfalls eine Nachricht und trägt entweder den Rückgabewert oder eine Fehlermeldung. Welcher der beiden Fälle vorliegt, ist am Schlüssel zu erkennen, unter dem der Inhalt steht. Diese Bündelung folgt aus der Zusicherung in @sec:zuverlaessigkeit, denn der Client wartet auf genau eine Antwort und muss auch im Fehlerfall eine erhalten. 
 
-Die Bezeichner der Angaben sind Teil der Nutzlast und werden mit jeder Nachricht übertragen. Nach @eq:blöcke wirkt sich ihre Länge unmittelbar auf die Anzahl der Blöcke aus. Sie werden deshalb so kurz gewählt, wie es die Unterscheidbarkeit zulässt. Das ist zugleich der Preis der Schemafreiheit. Ein schemagebundenes Format würde die Bezeichner einmal vorab vereinbaren und in der Nachricht nur noch Werte übertragen.
+Die Angaben einer Aufrufnachricht reisen mit jeder Nachricht, und nach @eq:blöcke wirkt sich ihre Länge unmittelbar auf die Anzahl der Blöcke aus. Zwei Festlegungen halten sie deshalb kurz. Die Argumente werden in der Reihenfolge der Parameter übertragen und nicht unter ihrem Namen. Die Methode wird über eine Kennung fester Länge bezeichnet, die beide Seiten auf dieselbe Weise aus ihrem Namen berechnen, sodass keine Tabelle zwischen Namen und Kennungen gepflegt werden muss.
+
+Beide Festlegungen setzen voraus, dass Client und Server dieselbe Schnittstelle kennen. Damit erreichen sie, was sonst ein schemagebundenes Format leistet, das Bezeichner einmal vorab vereinbart und in der Nachricht nur noch Werte überträgt. Als Vereinbarung dient hier jedoch die gemeinsame Schnittstelle der Objekttypen aus @sec:architektur. Es entsteht kein eigener Übersetzungsschritt, und das Serialisierungsformat bleibt schemafrei.
+
+Fehler in dieser Vereinbarung werden unterschiedlich sichtbar. Eine unbekannte Methodenkennung erkennt der Server und antwortet mit einer Fehlermeldung. Eine abweichende Reihenfolge der Argumente fällt dagegen nur auf, wenn sich dabei ihre Anzahl ändert. Vertauschte Werte gleicher Art werden ohne Fehler ausgeführt.
 
 === Zuordnung von Anfrage und Antwort
 
@@ -272,19 +276,16 @@ Damit stammt die Kennung aus dem Header und ihr Wertebereich folgt aus dessen Br
 // - Trennung von Verteilung und Ausfuehrung: das Objektmodell laesst sich
 //   erweitern, ohne die darunterliegenden Schichten zu beruehren
 
-Die ausführende Seite erhält eine Nachricht mit Methodenname, Argumenten und
+Der Server erhält eine Nachricht mit Methodenname, Argumenten und
 Wirkungsbereich und muss daraus bestimmen, wer den Aufruf ausführt. Die Adressierung ist zweistufig, vergleichbar mit dem Routing in @rest\-Frameworks. Dort ist ein Controller für einen Ressourcentyp zuständig, eine Methode darin für die Operation, und die Kennung der einzelnen Ressource kommt als Parameter an. Hier benennt der Wirkungsbereich die Art des Empfängers, der Methodenname die Operation, und die Referenz des einzelnen Objekts reist als Argument mit.
 
-Der Unterschied liegt im Satz der Operationen. @rest beschränkt ihn auf wenige festgelegte Verben, während hier jede Methode des Objektmodells aufrufbar ist. Die Referenz ist außerdem kein Pfad, sondern eine Kennung, die die ausführende Seite beim Erzeugen des Objekts vergibt. Wie sie gebildet wird, gehört zum Objektmodell und wird in @sec:referenzimplementierung gezeigt.
+Der Unterschied liegt im Satz der Operationen. @rest beschränkt ihn auf wenige festgelegte Verben, während hier jede Methode des Objektmodells aufrufbar ist. Die Referenz ist außerdem kein Pfad, sondern eine Kennung, die der Server beim Erzeugen des Objekts vergibt. Wie sie gebildet wird, gehört zum Objektmodell und wird in @sec:objektmodell gezeigt.
 
-Die Zweistufigkeit hat einen zweiten Nutzen. Methodennamen müssen nur innerhalb eines Wirkungsbereichs eindeutig sein, sodass gleichnamige Methoden auf verschiendenen Arten von Empfängern nebeneinader bestehen können. Eine Zuordnung über Methodennamen alleine müsste sie über alle Empfänger hinweg unterscheiden.
+Die Zweistufigkeit hat einen zweiten Nutzen. Die Kennungen der Methoden müssen nur innerhalb eines Wirkungsbereichs eindeutig sein. Gleichnamige Methoden können auf verschiedenen Arten von Empfängern nebeneinander bestehen, und eine zufällige Übereinstimmung zweier Kennungen stört nur, wenn sie im selben Wirkungsbereich auftritt. Der Server prüft das beim Registrieren eines Empfängers und nicht erst beim Aufruf.
 
 Verteilung und Ausführung bleiben dabei getrennt. Die Verteilung wählt anhand des Wirkungsbereichs aus, die Ausführung liegt beim Emfpänger. Ein weiterer Empfänger wird registriert, ohne dass die Verteilung oder die darunterliegenden Schichten geändert werden müssen. Erst dadurch ist das Objektmodell erweiterbar, ohne dass die darunterliegenden Schichten berührt werden.
 
-Findet sich für einen Wirkungsbereich kein Empfänger, muss der Aufruf mit einer
-Fehlermeldung beantwortet werden. Nach @sec:zuverlaessigkeit wartet die
-aufrufende Seite auf genau eine Antwort, und ein stillschweigendes Verwerfen
-würde sie bis zur Obergrenze warten lassen.
+Findet sich für einen Wirkungsbereich kein Empfänger, muss der Aufruf mit einer Fehlermeldung beantwortet werden. Nach @sec:zuverlaessigkeit wartet der Client auf genau eine Antwort, und ein stillschweigendes Verwerfen würde ihn bis zur Obergrenze warten lassen.
 
 === Anfragegetriebener Rückkanal
 
@@ -293,12 +294,12 @@ würde sie bis zur Obergrenze warten lassen.
 // Ereignisse nach demselben Muster. Preis: die zeitliche Aufloesung haengt am
 // Abfragetakt der Steuereinheit.
 
-Aufgrund der eingeschränkten Kommunikationsrichtung aus @sec:kommunikationsanforderungen kann die ausführende Seite keine Übertragung anstoßen. Ein Ergebnis kann sie deshalb nicht zustellen, sondern nur bereithalten, bis es abgeholt wird. Hinzu kommt, dass die Ausführung noch nicht abgeschlossen ist, wenn der letzte Block des Aufrufs bestätigt wurde. Die aufrufende Seite muss also zunächst feststellen, ob ein Ergebnis vorliegt, und es anschließend abholen. 
+Aufgrund der eingeschränkten Kommunikationsrichtung aus @sec:kommunikationsanforderungen kann der Server keine Übertragung anstoßen. Ein Ergebnis kann er deshalb nicht zustellen, sondern nur bereithalten, bis es abgeholt wird. Hinzu kommt, dass die Ausführung noch nicht abgeschlossen ist, wenn der letzte Block des Aufrufs bestätigt wurde. Der Client muss also zunächst feststellen, ob ein Ergebnis vorliegt, und es anschließend abholen. 
 
-Ereignisse folgen demselben Muster, unterscheiden sich aber in einem Punkt. Ein Ergebnis wird erwartet, weil die aufrufende Seite den zugehörigen Aufruf abgesetzt hat. Ein Ereignis erwartet sie nicht. Sie muss also fragen, ohne zu wissen, ob es etwas abzuholen gibt, und das dauerhaft.
+Ereignisse folgen demselben Muster, unterscheiden sich aber in einem Punkt. Ein Ergebnis wird erwartet, weil der Client den zugehörigen Aufruf abgesetzt hat. Ein Ereignis erwartet er nicht. Er muss also fragen, ohne zu wissen, ob es etwas abzuholen gibt, und das dauerhaft.
 
 Damit hängt die zeitliche Auflösung am Abfragetakt. Ein Ereignis, das zwischen zwei Abfragen auftritt, wird erst bei der nächsten bemerkt. Häufigeres Abfragen verkürzt diese Verzögerung, kostet aber je Abfrage eine Übertragung und damit Zeit, die für Aufrufe fehlt. Selteneres Abfragen spart Übertragungen und verlängert die Verzögerung. Beide Größen lassen sich nicht zugleich verbessern.
 
-Zwischen zwei Abfragen können mehrere Ereignisse auftreten. Die ausführende Seite muss sie puffern, und der Puffer ist nach K5 begrenzt. Läuft er über, gehen Ereignisse verloren. Für diesen Fall muss ein Verhalten festgelegt sein, da ein stilles Verwerfen für die Anwendung nicht erkennbar wäre.
+Zwischen zwei Abfragen können mehrere Ereignisse auftreten. Der Server muss sie puffern, und der Puffer ist nach K5 begrenzt. Läuft er über, gehen Ereignisse verloren. Für diesen Fall muss ein Verhalten festgelegt sein, da ein stilles Verwerfen für die Anwendung nicht erkennbar wäre.
 
 Der anfragegetriebene Rückkanal ist die Stelle, an der die eingeschränkte Kommunikationsrichtung aus @sec:einschraenkungen unmittelbar auf die Anwendung durchschlägt. Ob die erreichbare Antwortzeit die Anforderung K4 einhält, prüft @sec:evaluation. Ansätze, die diesen Weg für einen Teil der Ereignisse vermeiden, greift der Ausblick wieder auf.
