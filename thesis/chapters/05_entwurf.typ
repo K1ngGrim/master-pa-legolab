@@ -182,7 +182,7 @@ Dabei ist zu klären, welche Angaben eine Aufrufnachricht mitführen muss, wie e
 
 === Aufbau einer Aufrufnachricht
 
-Ein @rpc muss so viel mitführen, dass der Server den Aufruf ohne weitere Rückfrage durchführen kann. Dafür sind drei Angaben nötig. Die Methodenkennung legt fest, was ausgeführt wird. Die Argumente liefern die Werte, mit denen es ausgeführt wird. Der Wirkungsbereich bestimmt, welcher Empfänger die Methode ausführt. Wie das funktioniert, beschreibt der übernächste Abschnitt.
+Ein @rpc muss so viel mitführen, dass der Server den Aufruf ohne weitere Rückfrage durchführen kann. Dafür sind drei Angaben nötig. Die Methodenkennung legt fest, was ausgeführt wird. Die Argumente liefern die Werte, mit denen es ausgeführt wird. Der Scope bestimmt, welcher Empfänger die Methode ausführt. Wie das funktioniert, beschreibt der übernächste Abschnitt.
 
 Angaben über Typen oder Signaturen werden nicht mitgeführt. Nach @sec:serialisierung kommt das Format ohne Schema aus, und übertragen werden nur Werte, keine Beschreibungen von Werten. Ob eine Methode existiert oder bestimmte Argumente erwartet, stellt sich erst auf dem Server heraus. Die Prüfung findet also zur Laufzeit statt.
 
@@ -203,15 +203,15 @@ Die Kennung stammt damit aus dem Header, und ihr Wertebereich folgt aus dessen B
 === Verteilung eingehender Aufrufe
 
 Der Server erhält eine Nachricht mit Methodenkennung, Argumenten und
-Wirkungsbereich und muss daraus bestimmen, wer den Aufruf ausführt. Die Adressierung ist zweistufig und mit dem Routing in @rest\-Frameworks vergleichbar. Dort ist ein Controller für einen Ressourcentyp zuständig, eine Methode darin für die Operation, und die Kennung der einzelnen Ressource kommt als Parameter an. Hier benennt der Wirkungsbereich die Art des Empfängers, der Methodenname die Operation, und die Referenz des einzelnen Objekts reist als Argument mit.
+Scope und muss daraus bestimmen, wer den Aufruf ausführt. Die Adressierung ist zweistufig und mit dem Routing in @rest\-Frameworks vergleichbar. Dort ist ein Controller für einen Ressourcentyp zuständig, eine Methode darin für die Operation, und die Kennung der einzelnen Ressource kommt als Parameter an. Hier benennt der Scope die Art des Empfängers, der Methodenname die Operation, und die Referenz des einzelnen Objekts reist als Argument mit.
 
 Der Unterschied liegt im Satz der Operationen. @rest beschränkt ihn auf wenige festgelegte Verben, während hier jede Methode des Objektmodells aufrufbar ist. Die Referenz ist außerdem kein Pfad, sondern eine Kennung, die der Server beim Erzeugen des Objekts vergibt. Wie sie gebildet wird, gehört zum Objektmodell und wird in @sec:objektmodell gezeigt.
 
-Die zweistufige Adressierung hat einen weiteren Vorteil. Die Kennungen der Methoden müssen nur innerhalb eines Wirkungsbereichs eindeutig sein. Gleichnamige Methoden können auf verschiedenen Arten von Empfängern nebeneinander bestehen, und eine zufällige Übereinstimmung zweier Kennungen stört nur, wenn sie im selben Wirkungsbereich auftritt. Der Server prüft das beim Registrieren eines Empfängers und nicht erst beim Aufruf.
+Die zweistufige Adressierung hat einen weiteren Vorteil. Die Kennungen der Methoden müssen nur innerhalb eines Scopes eindeutig sein. Gleichnamige Methoden können auf verschiedenen Arten von Empfängern nebeneinander bestehen, und eine zufällige Übereinstimmung zweier Kennungen stört nur, wenn sie im selben Scope auftritt. Der Server prüft das beim Registrieren eines Empfängers und nicht erst beim Aufruf.
 
-Verteilung und Ausführung bleiben dabei getrennt. Die Verteilung wählt anhand des Wirkungsbereichs den Empfänger aus, die Ausführung liegt beim Empfänger selbst. Ein weiterer Empfänger kann registriert werden, ohne die Verteilung oder die darunterliegenden Schichten zu ändern. Dadurch lässt sich das Objektmodell erweitern.
+Verteilung und Ausführung bleiben dabei getrennt. Die Verteilung wählt anhand des Scopes den Empfänger aus, die Ausführung liegt beim Empfänger selbst. Ein weiterer Empfänger kann registriert werden, ohne die Verteilung oder die darunterliegenden Schichten zu ändern. Dadurch lässt sich das Objektmodell erweitern.
 
-Findet sich für einen Wirkungsbereich kein Empfänger, muss der Aufruf mit einer Fehlermeldung beantwortet werden. Nach @sec:zuverlaessigkeit wartet der Client auf genau eine Antwort, und ein stillschweigendes Verwerfen würde ihn bis zur Obergrenze warten lassen.
+Findet sich für einen Scope kein Empfänger, muss der Aufruf mit einer Fehlermeldung beantwortet werden. Nach @sec:zuverlaessigkeit wartet der Client auf genau eine Antwort, und ein stillschweigendes Verwerfen würde ihn bis zur Obergrenze warten lassen.
 
 === Anfragegetriebener Rückkanal
 

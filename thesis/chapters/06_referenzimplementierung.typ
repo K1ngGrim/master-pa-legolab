@@ -2,6 +2,18 @@
 
 == Laufzeitumgebung <sec:laufzeitumgebung>
 
+Client und Server laufen beide unter MicroPython, allerdings in sehr unterschiedlichen Ausprägungen.
+
+Auf dem Hub läuft Pybricks @Pybricks. Die Firmware ersetzt die Software von LEGO und stellt eine stark reduzierte Variante von MicroPython bereit. Für die Umsetzung sind vier Einschränkungen von Bedeutung. Ganzzahlen sind auf $2^30 - 1$ begrenzt, da die Firmware ohne Unterstützung für lange Ganzzahlen übersetzt ist. Schon eine größere Konstante im Quelltext verhindert das Laden des Moduls. Threads stehen nicht zur Verfügung, ebenso wenig einige Teile der Standardbibliothek wie `memoryview` oder das Modul `warnings`. Außerdem nimmt der Hub nur einzelne Dateien an, keine Pakete mit Unterverzeichnissen.
+
+Grund für die alternative Firmware sind die Einschränkungen von LEGO. Der Hub ist ein geschlossenes System, das nur die von LEGO bereitgestellten Sensoren und Aktoren akzeptiert. Erst die Pybricks-Firmware @Pybricks erlaubt die Anbindung externer Geräte, jedoch auch nur durch die bereitgestellte Schnittstelle LPF2 und PupRemote @PUPRemoteDocumentationAntons @LMSESP32V20Clever2023.
+
+Die Module der Middleware liegen dagegen in einer Paketstruktur. Ein eigenes Werkzeug, der Bundler in `tools/bundler.py`, führt deshalb alle Module, die der Client benötigt, zu einer einzigen Datei `pybricks_bundle.py` zusammen. Er löst die Importe innerhalb des Projekts auf, sortiert die Module so, dass jedes nach seinen Abhängigkeiten steht, und ersetzt dabei `struct` durch das auf dem Hub vorhandene `ustruct`. Das Anwendungsprogramm auf dem Hub importiert anschließend nur noch diese Datei.
+
+Auf dem ESP32 läuft MicroPython mit der Anbindung an @LVGL. Diese Umgebung ist deutlich umfangreicher. Sie bietet lange Ganzzahlen, Threads, `uasyncio` und einen Zufallszahlengenerator. Knapp ist hier vor allem der Arbeitsspeicher, da @LVGL einen großen Teil des Heaps für die Darstellung belegt. Welche Folgen das für die Nebenläufigkeit hat, beschreibt @sec:nebenlaeufigkeit.
+
+Der gemeinsame Code muss in beiden Umgebungen laufen und richtet sich deshalb nach der engeren, also nach Pybricks. Das betrifft vor allem die Transportschicht, den Codec und die Stellvertreter. Code, der nur auf dem Server läuft, darf die Möglichkeiten des ESP32 nutzen. @tab:zuordnung ordnet die Module den Schichten aus @sec:architektur zu.
+
 @tab:zuordnung ordnet die Module der Referenzimplementierung den Schichten aus @sec:architektur zu.
 #figure(
   caption: [Zuordnung der Module zu den Schichten aus @sec:architektur],
@@ -238,7 +250,7 @@ Die Nutzlast einer Nachricht tritt in drei Ausprägungen auf, je nach Richtung u
     columns: (auto, auto, 1fr),
     align: left + top,
     table.header([*Ausprägung*], [*Schlüssel*], [*Inhalt*]),
-    [`CommandPayload`], [`s`, `c`, `a`], [Wirkungsbereich, Methodenkennung, Liste der Argumente],
+    [`CommandPayload`], [`s`, `c`, `a`], [Scope, Methodenkennung, Liste der Argumente],
     [`DataPayload`],    [`d`],           [Rückgabewert],
     [`ErrorPayload`],   [`e`, `k`],      [Fehlerbeschreibung, optional die Fehlerart],
   ),
@@ -259,11 +271,11 @@ Die Schlüssel sind einbuchstabig. Die Argumente stehen als Liste in der Reihenf
 
 Das Verfahren ist eine auf 16 Bit begrenzte Variante des bekannten djb2-Hashs. Die eingebaute Funktion `hash` ist dafür nicht verwendbar, da CPython ihr Ergebnis je Prozess zufällig verändert und MicroPython es anders berechnet. Die Maskierung nach jedem Schritt hält alle Zwischenwerte unter $2^30$. Das ist auf dem Hub aus demselben Grund nötig wie die Begrenzung der Ganzzahlen in @sec:umsetzung-transport. Ein gebräuchlicher 32-Bit-Hash wie FNV würde diese Grenze überschreiten.
 
-Die Breite von 16 Bit ist eine Abwägung. MessagePack kodiert Werte bis 65535 in drei Byte, gegenüber 13 Byte für den Namen `create_label`. Eine Kennung von acht Bit wäre ein Byte kürzer, bei zehn Methoden in einem Wirkungsbereich läge die Wahrscheinlichkeit einer Kollision dann aber bei etwa 16,3 %. Eine Kollision liegt vor, wenn zwei verschiedene Methodennamen denselben Hashwert ergeben. Die Wahrscheinlichkeit dafür steigt mit der Anzahl der Methoden pro Wirkungsbereich. Die folgende Gleichung
+Die Breite von 16 Bit ist eine Abwägung. MessagePack kodiert Werte bis 65535 in drei Byte, gegenüber 13 Byte für den Namen `create_label`. Eine Kennung von acht Bit wäre ein Byte kürzer, bei zehn Methoden in einem Scope läge die Wahrscheinlichkeit einer Kollision dann aber bei etwa 16,3 %. Eine Kollision liegt vor, wenn zwei verschiedene Methodennamen denselben Hashwert ergeben. Die Wahrscheinlichkeit dafür steigt mit der Anzahl der Methoden pro Scope. Die folgende Gleichung
 
 $ P"Kollision" = 1 - product_(i=0)^(n-1) (1 - i / N) $ <eq:collision_probability>
 
-schätzt die Wahrscheinlichkeit ab, dass bei $n$ Methoden in einem Wirkungsbereich und $N$ möglichen Kennungen mindestens zwei denselben Hashwert liefern. Sie ist nur eine Näherung, da sie gleichverteilte Hashwerte annimmt und djb2 nicht gleichverteilt ist. Nach @eq:collision_probability liegt die Wahrscheinlichkeit einer Kollision bei 16 Bit und zehn Methoden bei etwa 0,069 %, bei 20 Methoden bei etwa 0,29 % und bei 50 Methoden bei 1,852 %.
+schätzt die Wahrscheinlichkeit ab, dass bei $n$ Methoden in einem Scope und $N$ möglichen Kennungen mindestens zwei denselben Hashwert liefern. Sie ist nur eine Näherung, da sie gleichverteilte Hashwerte annimmt und djb2 nicht gleichverteilt ist. Nach @eq:collision_probability liegt die Wahrscheinlichkeit einer Kollision bei 16 Bit und zehn Methoden bei etwa 0,069 %, bei 20 Methoden bei etwa 0,29 % und bei 50 Methoden bei 1,852 %.
 
 Kollisionen sind also möglich, werden aber beim Start des Servers erkannt. Der Server trägt dazu jede Methode in ein Dictionary ein, wobei der Hashwert als Schlüssel dient. Eine zweite Methode mit demselben Hashwert führt zu einer Ausnahme, die den Start verhindert. @lst:index_methods zeigt die Funktion, die die Indizierung vornimmt. Sie liegt in der Basisklasse `RPCDispatcher`, von der alle Empfänger erben. Die genaue Struktur beschreibt @sec:objektmodell.
 
@@ -287,13 +299,13 @@ Kollisionen sind also möglich, werden aber beim Start des Servers erkannt. Der 
   ```
 )<lst:index_methods>
 
-Ergebnis und Fehler unterscheiden sich allein im Schlüssel. Der Client prüft, ob `e` vorhanden ist, und löst in diesem Fall eine Ausnahme aus. Welche Ausnahme das ist, bestimmt die Fehlerart unter `k`, wie @sec:objektmodell beschreibt. Antworten enthalten keinen Wirkungsbereich. Der Server braucht ihn zur Auswahl des Empfängers, eine Antwort geht dagegen immer an den einen Aufrufer zurück, der auf sie wartet.
+Ergebnis und Fehler unterscheiden sich allein im Schlüssel. Der Client prüft, ob `e` vorhanden ist, und löst in diesem Fall eine Ausnahme aus. Welche Ausnahme das ist, bestimmt die Fehlerart unter `k`, wie @sec:objektmodell beschreibt. Antworten enthalten keinen Scope. Der Server braucht ihn zur Auswahl des Empfängers, eine Antwort geht dagegen immer an den einen Aufrufer zurück, der auf sie wartet.
 
 === Verteilung eingehender Aufrufe <sec:umsetzung-verteilung>
 
-Die Zuordnung eines Aufrufs zur ausführenden Methode erfolgt in zwei Stufen. Zunächst wird anhand des Wirkungsbereichs ein Dispatcher ausgewählt. Zur Erinnerung: Der Wirkungsbereich benennt die Art des Empfängers, der den Aufruf ausführt, und wird im `CommandPayload` unter dem Schlüssel `s` mitgeführt. Die Dispatcher sind in einem `RPCDispatcherPool` registriert, wobei jeder einen eigenen Wirkungsbereich bedient. Die Registrierung erfolgt beim Start des Servers, und der Versuch, einen Wirkungsbereich ein zweites Mal zu belegen, löst eine Ausnahme aus.
+Die Zuordnung eines Aufrufs zur ausführenden Methode erfolgt in zwei Stufen. Zunächst wird anhand des Scopes ein Dispatcher ausgewählt. Zur Erinnerung: Der Scope benennt die Art des Empfängers, der den Aufruf ausführt, und wird im `CommandPayload` unter dem Schlüssel `s` mitgeführt. Die Dispatcher sind in einem `RPCDispatcherPool` registriert, wobei jeder einen eigenen Scope bedient. Die Registrierung erfolgt beim Start des Servers, und der Versuch, einen Scope ein zweites Mal zu belegen, löst eine Ausnahme aus.
 
-Anschließend schlägt der ausgewählte Dispatcher die Methodenkennung aus `c` nach und ruft die Methode mit den Argumenten aus `a` auf. Dass diese Kennungen innerhalb eines Wirkungsbereichs eindeutig sind, prüft der Dispatcher beim Aufbau seines Index, wie @lst:index_methods zeigt.
+Anschließend schlägt der ausgewählte Dispatcher die Methodenkennung aus `c` nach und ruft die Methode mit den Argumenten aus `a` auf. Dass diese Kennungen innerhalb eines Scopes eindeutig sind, prüft der Dispatcher beim Aufbau seines Index, wie @lst:index_methods zeigt.
 
 Findet sich eine Kennung nicht im Index, löst der Dispatcher eine Ausnahme aus. Sie wird in eine Fehlermeldung überführt und erreicht den Client, womit die Zusicherung aus @sec:zuverlaessigkeit auch für Aufrufe gilt, die es nicht gibt.
 
@@ -349,7 +361,7 @@ Wie viel Zeit ein Aufruf im Warten auf das Ergebnis verbringt, misst @sec:evalua
 
 == Objektmodell <sec:objektmodell>
 
-Das Objektmodell bildet die grafischen Elemente der Anzeige auf Objekte ab, die die Anwendung auf dem Hub wie lokale Objekte benutzt. Bildschirme, Beschriftungen und Schaltflächen heißen in der Umsetzung Screens, Labels und Buttons. Je Objekttyp gibt es eine Basisklasse in `display/protocol`. Sie wird auf dem Client von einem Stellvertreter erfüllt, der jeden Methodenaufruf weiterleitet, und auf dem Server von einem Adapter, der ihn ausführt. Die Adapter erben zusätzlich von `RPCDispatcher` und werden dadurch über ihren Wirkungsbereich erreichbar, wie @sec:umsetzung-verteilung beschreibt. Die Stellvertreter erben von `RemoteObject`, das die Referenz des Objekts hält und sie jedem Aufruf voranstellt. @abb:objektmodell zeigt diese Beziehungen beispielhaft.
+Das Objektmodell bildet die grafischen Elemente der Anzeige auf Objekte ab, die die Anwendung auf dem Hub wie lokale Objekte benutzt. Bildschirme, Beschriftungen und Schaltflächen heißen in der Umsetzung Screens, Labels und Buttons. Je Objekttyp gibt es eine Basisklasse in `display/protocol`. Sie wird auf dem Client von einem Stellvertreter erfüllt, der jeden Methodenaufruf weiterleitet, und auf dem Server von einem Adapter, der ihn ausführt. Die Adapter erben zusätzlich von `RPCDispatcher` und werden dadurch über ihren Scope erreichbar, wie @sec:umsetzung-verteilung beschreibt. Die Stellvertreter erben von `RemoteObject`, das die Referenz des Objekts hält und sie jedem Aufruf voranstellt. @abb:objektmodell zeigt diese Beziehungen beispielhaft.
 
 #figure(
   image("../figures/objektmodell.png", width: 90%),
@@ -380,7 +392,7 @@ Zehn Bit erlauben 1024 gleichzeitig bestehende Objekte. Der Speicher des ESP32 i
 
 === Lebenszyklus
 
-Objekte entstehen immer innerhalb eines übergeordneten Objekts. Screens werden vom Display erzeugt, Labels und Buttons von einem Screen. Ein Button besteht auf dem Server aus zwei Objekten, dem Button selbst und dem Label für seine Beschriftung. Beide werden getrennt registriert, und der Stellvertreter auf dem Client erhält beide Referenzen. So lässt sich die Beschriftung über den Wirkungsbereich `label` ändern, ohne dass der Button-Adapter dafür eine eigene Methode braucht.
+Objekte entstehen immer innerhalb eines übergeordneten Objekts. Screens werden vom Display erzeugt, Labels und Buttons von einem Screen. Ein Button besteht auf dem Server aus zwei Objekten, dem Button selbst und dem Label für seine Beschriftung. Beide werden getrennt registriert, und der Stellvertreter auf dem Client erhält beide Referenzen. So lässt sich die Beschriftung über den Scope `label` ändern, ohne dass der Button-Adapter dafür eine eigene Methode braucht.
 
 Die Registratur bildet dabei den Objektbaum der Anzeigebibliothek nach. Jeder Eintrag kennt seinen Parent, und `release_tree` gibt ein Objekt zusammen mit allen darin erzeugten Objekten frei. Das ist nötig, weil @LVGL beim Löschen eines Objekts auch dessen Kinder löscht. Ohne den Baum würden deren Einträge in der Registratur bestehen bleiben und auf nicht mehr vorhandene Objekte verweisen.
 
@@ -429,4 +441,72 @@ Die Menge der Aktionen ist absichtlich klein und fest vorgegeben. Sie enthält k
 
 == Ablauf eines vollständigen Aufrufs
 
+Die vorigen Abschnitte haben die Schichten einzeln beschrieben. Dieser Abschnitt verfolgt einen einzelnen Aufruf durch alle Schichten. Als Beispiel dient folgende Zeile
+
+```python
+counter_label.set_text("Counter: {}".format(counter))
+```
+
+aus dem Beispielprogramm des Hubs (siehe @lst:beispielprogramm). Sie ändert den Text eines Labels und liefert keinen Rückgabewert. Der Einfachheit halber gehen wir von `counter = 42`aus. 
+
+*Aufruf auf dem Client.* `counter_label` ist ein Stellvertreter vom Typ `Label`. Seine Methode `set_text` prüft zunächst, ob er zur aktuellen Session gehört, und übergibt den Aufruf dann an `PyBricksInterceptor.call()`. Die Referenz des Labels wird dabei den Argumenten vorangestellt. Die Kommunikationsschicht bildet daraus einen `CommandPayload` mit dem Scope `label`, der Methodenkennung von `set_text` und der Argumentliste aus Referenz und Text. Die Nachricht erhält die nächste freie Kennung.
+
+*Zerlegung.* MessagePack kodiert diese Nutzlast in 32Byte. Bei 13 Byte Nutzlast je Frame zerfällt sie nach @eq:blöcke in drei Frames. Die ersten beiden tragen `DATA`, der letzte `DATA_LAST` mit den verbleibenden sechs Byte. 
+
+*Übertragung.* Der Client sendet jeden Frame einzeln und wartet auf dessen Bestätigung. Jeder Austausch ist ein Aufruf von `remote.call` und damit ein Round Trip über den Bus. Stimmen Kennung oder Position der Antwort nicht, war die Antwort veraltet oder der Frame ist verloren gegangen, und der Client wiederholt seine letzte Übertragung. Der Server legt jeden neuen Frame ab und bestätigt ihn sofort. Mit dem letzten Frame setzt er die Nutzlast zusammen und startet die Ausführung als eigenen Task der Ereignisschleife. Der letzte Frame wird bestätigt, bevor der Aufruf ausgeführt wird.
+
+*Ausführung.* Der Task dekodiert die Nutzlast, wählt über den Scope den Label-Adapter aus und schlägt dort die Methodenkennung nach. `set_text` löst die Referenz in der Registratur auf, prüft dabei Generation und Art und setzt den Text des @LVGL\-Objekts. Sichtbar wird der neue Text erst beim nächsten Durchlauf des Task-Handlers, wie in @sec:ansteuerung beschrieben wurde. Das Ergebnis `None` wird als `DataPayload` kodiert. Der Server legt es anschließend unter der Kennung im Ausgangspuffer ab.
+
+Ein sofortiges Neuzeichnen im Adapter wäre möglich, würde aber die Ereignisschleife für die Dauer der Übertragung zum Display blockieren und damit auch die Bearbeitung weiterer Frames verzögern.
+
+*Abholen.* Der Client fragt mit `READY` nach, ob das Ergebnis bereitliegt. Ob ein Ergebnis schon beim ersten Versuch vorliegt, hängt davon ab, ob die Ereignisschleife des Servers den Task bis dahin ausgeführt hat. Antwortet der Server mit `NACK`, wartet der Client 50 ms und fragt erneut. Auf `DONE` folgt eine Anfrage `NEXT` für Position 0, die den einzigen Ergebnisframe liefert, gekenzeichnet mit `DATA_LAST`, womit der Abholprozess endet. 
+
+*Rückgabe.* Der Client dekodiert die Nutzlast und gibt den Rückgabewert `None` an den Aufrufer zurück, falls das Ergebnis nicht als Fehler gekennzeichnet ist. Andernfalls löst er die passende Ausnahme aus, wie in @sec:objektmodell beschrieben.
+
+Ein Aufruf, der nur einen Text ändert, kostet damit mindestens fünf Round Trips. Nur drei davon transportieren den eigentlichen Aufruf und Nutzdaten. Mindestens zwei weitere sind nötig, um das Ergebnis abzuholen, enthalten also Steuerinformationen. Wie viele Round Trips in der Praxis nötig sind misst @sec:evaluation. 
+
+Das Aufrufschema folgt somit der in @sec:interceptor beschriebenen Abfolge. Das Sequenzdiagramm @abb:interceptor zeigt die generischen Abläufe, die hier mit einem konkreten Beispiel gefüllt wurden. Die Abbildung zeigt auch die beiden Round Trips, die der Client für das Abholen des Ergebnisses benötigt. 
+
 == Nebenläufigkeit und Fehlerbehandlung <sec:nebenlaeufigkeit>
+
+=== Nebenläufigkeit
+
+Auf dem Client gibt es keine möglichkeit zur Nebenläufigkeit. Ein Aufruf blockiert die Anwendung, bis das Ergebnis vorliegt oder eine Obergrenze erreicht ist. Da immer nur ein Aufruf gleichzeitig unterwegs ist, braucht der Client weder Sperren noch Puffer für mehrere offene Aufrufe.
+
+Auf dem Server laufen dagegen drei Tasks nebenläufig. Ein Task ruft etwa jede Millisekunde `process` von PUPRemote auf und beantwortet damit die Anfragen des Clients. @LVGL zeichnet außerdem in einem festen Takt die Anzeige neu und fragt den Touchcontroller ab. Schließlich läuft jeder empfangene Aufruf in einem eigenen Task. Alle drei teilen sich eine einzige Ereignisschleife von `uasyncio` und damit einen Thread. Sie wechseln sich nur an festen Stellen ab, beispielsweise beim Warten eines der anderen Tasks.
+
+Die Ausführung von Aufrufen lief in einer früheren Version in einem eigenen Thread. Das führte zu zwei Fehlern. Der Stack eines Threads wird vom Heap genommen, den @LVGL bereits zum großen Teil belegt. Nach einigen Dutzend Aufrufen ließ sich deshalb kein neuer Thread mehr anlegen. Außerdem ist @LVGL nicht reentrant, und der Task-Handler der Bibliothek lief teilweise im Thread mit seinem kleineren Stack. Dort lief der Stack im Rückruf des Touchcontrollers über. Mit einer gemeinsamen Ereignisschleife treten beide Fehler nicht mehr auf, da nie zwei Stellen gleichzeitig auf @LVGL zugreifen.
+
+Der Preis dafür ist, dass die Ereignisschleife während der Ausführung eines Aufrufs belegt ist. Anfragen des Clients werden in dieser Zeit nicht beantwortet, und die Anzeige wird nicht neu gezeichnet. Da der Client ohnehin auf das Ergebnis wartet, ist das hier unkritisch.
+
+=== Fehlerbehandlung
+
+Fehler werden in der Schicht behandelt, in der sie auftreten. Nach oben gelangen sie nur, wenn die Schicht sie nicht selbst behandeln kann. @tab:fehler fasst die Fälle zusammen.
+
+#figure(
+  caption: [Fehlerfälle und ihre Behandlung],
+  text(size: 9pt)[
+    #table(
+      columns: (1.2fr, 0.8fr, 1.6fr),
+      align: left + top,
+      table.header([*Fehler*], [*Schicht*], [*Behandlung*]),
+      [Veraltete Antwort oder verlorene Bestätigung], [Transport], [Frame erneut senden, höchstens acht Versuche],
+      [Wiederholter Frame auf dem Server], [Transport], [bestätigen, aber nicht erneut ablegen],
+      [Abgebrochene Übertragung], [Transport], [Reste verwerfen, sobald Frame Nr. 0 einer neuen Nachricht eintrifft],
+      [Ergebnis bleibt aus], [Kommunikation], [nach 5000 ms Ausnahme auf dem Client],
+      [Unbekannter Scope oder Methodenkennung], [Kommunikation], [Fehlermeldung an den Client, `RemoteError`],
+      [Veraltete Referenz oder falsche Art], [Objektmodell], [Fehlermeldung mit Fehlerart `StaleReferenceError` oder `WrongKindError`],
+      [Ausnahme in einer Methode des Adapters], [Objektmodell], [Fehlermeldung an den Client, `RemoteError`],
+      [Verbindungsabbruch], [Busanbindung], [Session beenden, `OSError` an die Anwendung],
+      [Fehler beim Lesen des Touchcontrollers], [Anzeige], [als fehlende Berührung werten],
+    )
+  ],
+) <tab:fehler>
+
+In der Transportschicht sind Fehler der Normalfall. Da der Client direkt nach dem Schreiben auch liest, erhält er häufig die Antwort auf die vorherige Anfrage. Er erkennt sie an Kennung, Position und Art des Frames. Er sendet diesen anschließend erneut. Der Server bestätigt eine Wiederholung, legt den Frame aber kein zweites Mal ab. Das gilt auch für den letzten Frame einer Nachricht. Würde dieser bei einer Wiederholung die Ausführung erneut starten, liefe derselbe Aufruf zweimal, beim zweiten Mal mit einer leeren Nachricht. Erst wenn eine Obergrenze aus @tab:rückkanal erreicht ist, gibt der Client auf und löst eine Ausnahme aus, die den betroffenen Frame und den Aufruf nennt.
+
+Für den Server gilt die Zusicherung aus @sec:zuverlaessigkeit. Jeder Aufruf hinterlässt ein Ergebnis oder eine Fehlermeldung. Jede Ausnahme bei der Ausführung wird abgefangen und als `ErrorPayload` im Ausgangspuffer abgelegt. Lässt sich selbst das Ergebnis nicht kodieren, legt er eine kurze Fehlermeldung ab. Anfragen, die der Server nicht zuordnen kann, beantwortet er mit einem Frame der Art `ERR`, etwa wenn nach dem Ergebnis einer unbekannten Nachricht gefragt wird.
+
+Ein Verbindungsabbruch zeigt sich auf dem Client als `OSError: [Errno 19] ENODEV:` von PUPRemote. Der Client beendet dann die Session, da der Server in der Zwischenzeit neu gestartet sein kann, und reicht den Fehler an die Anwendung weiter. Ob sie es erneut versucht oder die Oberfläche neu aufbaut, entscheidet die Anwendung. Alle Stellvertreter aus der alten Session melden danach `StaleReferenceError`, wie @sec:objektmodell beschreibt.
+
+Eine Stelle darf gar keinen Fehler weitergeben, nämlich der Rückruf, mit dem @LVGL den Touchcontroller abfragt. Eine Ausnahme dort beendet die Ereignisschleife von @LVGL dauerhaft. Die Anzeige würde dann nicht mehr neu gezeichnet, obwohl weiterhin Aufrufe ankommen. Ein fehlgeschlagener Lesevorgang wird deshalb als nicht vorhandene Berührung gewertet. Die Anwendung kann das nicht erkennen, da sie keinen Zugriff auf den Touchcontroller hat. Sie kann nur die Ereignisse abfragen, die @LVGL aus der Abfrage erzeugt.
