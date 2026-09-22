@@ -22,9 +22,10 @@ package "display/protocol" {
 package "Hub" {
   class RemoteObject {
     + object_id
+    + scope
     - _session
     + is_valid()
-    - _call(method, args)
+    + call(method, args)
   }
   class Screen
   class Label
@@ -47,8 +48,8 @@ class LvEventHandler {
   + on_event(evt)
 }
 
-RemoteObject <|-- Screen
-RemoteObject <|-- Label
+Screen *-- RemoteObject : hält
+Label  *-- RemoteObject : hält
 ScreenBase <|-- Screen
 LabelBase  <|-- Label
 ScreenBase <|-- EspScreenAdapter

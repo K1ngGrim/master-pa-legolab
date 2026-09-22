@@ -361,7 +361,7 @@ Wie viel Zeit ein Aufruf im Warten auf das Ergebnis verbringt, misst @sec:evalua
 
 == Objektmodell <sec:objektmodell>
 
-Das Objektmodell bildet die grafischen Elemente der Anzeige auf Objekte ab, die die Anwendung auf dem Hub wie lokale Objekte benutzt. Bildschirme, Beschriftungen und Schaltflächen heißen in der Umsetzung Screens, Labels und Buttons. Je Objekttyp gibt es eine Basisklasse in `display/protocol`. Sie wird auf dem Client von einem Stellvertreter erfüllt, der jeden Methodenaufruf weiterleitet, und auf dem Server von einem Adapter, der ihn ausführt. Die Adapter erben zusätzlich von `RPCDispatcher` und werden dadurch über ihren Scope erreichbar, wie @sec:umsetzung-verteilung beschreibt. Die Stellvertreter erben von `RemoteObject`, das die Referenz des Objekts hält und sie jedem Aufruf voranstellt. @abb:objektmodell zeigt diese Beziehungen beispielhaft.
+Das Objektmodell bildet die grafischen Elemente der Anzeige auf Objekte ab, die die Anwendung auf dem Hub wie lokale Objekte benutzt. Bildschirme, Beschriftungen und Schaltflächen heißen in der Umsetzung Screens, Labels und Buttons. Je Objekttyp gibt es eine Basisklasse in `display/protocol`. Sie wird auf dem Client von einem Stellvertreter erfüllt, der jeden Methodenaufruf weiterleitet, und auf dem Server von einem Adapter, der ihn ausführt. Die Adapter erben zusätzlich von `RPCDispatcher` und werden dadurch über ihren Scope erreichbar, wie @sec:umsetzung-verteilung beschreibt. Jeder Stellvertreter hält ein `RemoteObject`, das die Referenz des Objekts führt und sie jedem Aufruf voranstellt. Dass die Stellvertreter es halten und nicht von ihm erben, liegt an Pybricks. Die Laufzeitumgebung unterstützt keine Mehrfachvererbung, und die eine mögliche Basisklasse belegt bereits die gemeinsame Schnittstelle des Objekttyps. @abb:objektmodell zeigt diese Beziehungen beispielhaft.
 
 #figure(
   image("../figures/objektmodell.png", width: 90%),
@@ -422,7 +422,7 @@ Der Touchcontroller wird regelmäßig abgefragt, seine Interrupt-Leitung wird ni
 
 Erkennt @LVGL eine Berührung auf einem Button, löst es ein Ereignis aus. Der Screen-Adapter registriert dafür beim Erzeugen eines Buttons die Methode `on_event` für die Ereignisse `PRESSED` und `RELEASED`. `on_event` ermittelt über die Registratur die Referenz des Buttons, übersetzt den Ereigniscode in einen Namen wie `press` und ergänzt einen Zeitstempel. Das Ergebnis wird im Ereignispuffer des Objekts abgelegt, aus dem der Client es wie in @sec:umsetzung-kommunikation beschrieben abfragt.
 
-Vor dem Ablegen prüft `on_event`, ob für das Ereignis eine Bindung besteht. Eine Bindung legt fest, dass ein Ereignis auf einem Objekt eine Aktion auf einem anderen auslöst. Der Client legt sie einmal mit einem gewöhnlichen Aufruf an. Danach führt der Server die Aktion direkt im Rückruf aus, ohne dass eine Übertragung nötig ist. Der Client erfährt trotzdem von jedem Ereignis, da es unabhängig von der Bindung gepuffert wird.
+Vor dem Ablegen prüft `on_event`, ob für das Ereignis eine Bindung besteht. Eine Bindung legt fest, dass ein Ereignis auf einem Objekt eine Aktion auf einem anderen auslöst. Der Client legt sie einmal mit einem gewöhnlichen Aufruf an. Danach führt der Server die Aktion direkt im Rückruf aus, ohne dass eine Übertragung nötig ist. Das Ereignis wird unabhängig davon gepuffert und steht der nächsten Abfrage zur Verfügung. Der Client erfährt von der ausgeführten Aktion selbst jedoch nichts. Welcher Screen gerade angezeigt wird, weiß er nur, solange er die Ereignisse regelmäßig abfragt und die Bindungen selbst nachhält.
 
 #figure(
   caption: [Aktionen, die an ein Ereignis gebunden werden können],
@@ -493,6 +493,7 @@ Fehler werden in der Schicht behandelt, in der sie auftreten. Nach oben gelangen
       [Veraltete Antwort oder verlorene Bestätigung], [Transport], [Frame erneut senden, höchstens acht Versuche],
       [Wiederholter Frame auf dem Server], [Transport], [bestätigen, aber nicht erneut ablegen],
       [Abgebrochene Übertragung], [Transport], [Reste verwerfen, sobald Frame Nr. 0 einer neuen Nachricht eintrifft],
+      [Nachricht länger als 255 Frames], [Transport], [Aufruf scheitert auf dem Client, bevor etwas gesendet wird],
       [Ergebnis bleibt aus], [Kommunikation], [nach 5000 ms Ausnahme auf dem Client],
       [Unbekannter Scope oder Methodenkennung], [Kommunikation], [Fehlermeldung an den Client, `RemoteError`],
       [Veraltete Referenz oder falsche Art], [Objektmodell], [Fehlermeldung mit Fehlerart `StaleReferenceError` oder `WrongKindError`],
