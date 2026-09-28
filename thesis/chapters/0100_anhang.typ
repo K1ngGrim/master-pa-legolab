@@ -35,7 +35,7 @@ menu_label = menu_screen.create_label(10, 10, 230, 20, "Menue")
 to_menu = main_screen.create_button(10, 60, 100, 40, "Menue")
 to_main = menu_screen.create_button(10, 60, 100, 40, "Zurueck")
 
-# --- Bindungen --------------------------------------------------------------
+# --- Bindings --------------------------------------------------------------
 # Declared once, here. From now on a press switches the screen on the display
 # unit itself. Each of these two calls costs the usual number of transfers -
 # once. Every switch afterwards costs none.
@@ -65,4 +65,9 @@ while True:
 ```
 )<lst:beispielprogramm>
 
-
+#figure(
+  caption: [Schaltplan der Adapterplatine],
+  rotate(90deg, reflow: true)[
+    #image("../figures/pcb_schematic.png", width: 100%)
+  ]
+)<abb:schematic>

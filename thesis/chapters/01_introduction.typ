@@ -33,7 +33,7 @@ Der Entwurf soll die drei genannten Einschränkungen auf wenige Schichten eingre
 
 Ein weiterer Schwerpunkt liegt darauf, den Entwurf vom konkreten Übertragungsweg zu lösen. Er soll dadurch auf andere Verbindungen derselben Klasse übertragbar bleiben.
 
-Die Bewertung stützt sich auf drei Kriterien. Das erste ist der funktionale Nachweis, dass sich eine interaktive Oberfläche über die entwickelte Abstraktion umsetzen lässt. Das zweite ist der Übertragungsaufwand je Aufruf, gemessen in benötigten Paketen und in der daraus folgenden Verzögerung. Das dritte ist der Ressourcenverbrauch auf beiden Seiten der Verbindung.
+Die Bewertung stützt sich auf drei Kriterien. Das erste ist der funktionale Nachweis, dass sich eine interaktive Oberfläche über die entwickelte Abstraktion umsetzen lässt. Das zweite ist der Übertragungsaufwand je Aufruf, gemessen in benötigten Paketen und in der daraus folgenden Verzögerung. Das dritte ist der Ressourcenverbrauch, vor allem auf der Steuereinheit, deren Laufzeitumgebung am stärksten eingeschränkt ist.
 
 == Aufbau der Arbeit
 
@@ -45,4 +45,4 @@ Kapitel 3 analysiert das Zielsystem und leitet die Anforderungen an die Display-
 
 Kapitel 4 beschreibt die Architektur mit ihrem Schichtenmodell, den wiederkehrenden Rollen im Entwurf und dem Kommunikationsmodell. Kapitel 5 vertieft den Entwurf der Transport- und der Kommunikationsschicht. Beide Kapitel bleiben auf der konzeptionellen Ebene.
 
-Kapitel 6 stellt die Referenzimplementierung vor und bildet den Entwurf auf die konkrete Hardware, die Laufzeitumgebungen und den Bus ab. Kapitel 7 bewertet die Lösung hinsichtlich Funktionalität, Übertragungsaufwand und Ressourcenverbrauch. Kapitel 8 diskutiert die Grenzen des Ansatzes und seine Übertragbarkeit auf andere Verbindungen und fasst die Ergebnisse zusammen.
+Kapitel 6 stellt die Referenzimplementierung vor und bildet den Entwurf auf die konkrete Hardware, die Laufzeitumgebungen und den Bus ab. Kapitel 7 bewertet die Lösung hinsichtlich Funktionalität, Übertragungsaufwand und Ressourcenverbrauch. Kapitel 8 diskutiert die Grenzen des Ansatzes und seine Übertragbarkeit auf andere Verbindungen und fasst die Ergebnisse zusammen. Der Anhang enthält das Beispielprogramm der Steuereinheit und den Schaltplan der Adapterplatine.

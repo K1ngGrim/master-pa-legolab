@@ -89,6 +89,12 @@
   ),
 
   (
+    key: "coap",
+    short: "CoAP",
+    long: "Constrained Application Protocol"
+  ),
+
+  (
     key: "rest",
     short: "REST",
     long: "Representational State Transfer"

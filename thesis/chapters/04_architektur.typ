@@ -19,9 +19,9 @@ Das System ist in fünf Schichten gegliedert, die auf beiden Seiten der Verbindu
   caption: [Schichtenmodell der Architektur. Beide Seiten sind gleich aufgebaut und verkehren jeweils nur mit der unmittelbar darunterliegenden Schicht.],
 ) <abb:schichten>
 
-Zwei Eigenschaften dieses Aufbaus sind hervorzuheben. Zum einen ist er symmetrisch. Beide Seiten besitzen dieselben Schichten mit denselben Aufgaben und unterscheiden sich nur in der Richtung, aus der ein Aufruf eintrifft. Zum anderen ist er streng geschichtet. Jede Schicht spricht ausschließlich mit der unmittelbar darunterliegenden, sodass eine Änderung innerhalb einer Schicht die übrigen nicht berührt.
+Zwei Eigenschaften dieses Aufbaus sind hervorzuheben. Zum einen ist er symmetrisch, da beide Seiten dieselben Schichten mit denselben Aufgaben besitzen und sich lediglich in der Richtung unterscheiden, aus der ein Aufruf eintrifft. Zum anderen ist er streng geschichtet, denn jede Schicht spricht ausschließlich mit der unmittelbar darunterliegenden, sodass eine Änderung innerhalb einer Schicht die übrigen nicht berührt.
 
-Die beiden Seiten nehmen dabei feste Rollen ein. Die Steuereinheit ruft Methoden auf und stößt jede Übertragung an. Sie wird im Folgenden als Client bezeichnet. Die Anzeigeeinheit führt die Aufrufe aus und antwortet ausschließlich. Sie wird im Folgenden als Server bezeichnet. Die Rollen decken sich mit der Verteilung auf dem Bus, auf dem der Hub als Master arbeitet. Sie wechseln im Betrieb nicht, auch nicht bei Ereignissen, da auch diese vom Client abgefragt werden.
+Die beiden Seiten nehmen dabei feste Rollen ein. Die Steuereinheit ruft Methoden auf und stößt jede Übertragung an, weshalb sie im Folgenden als Client bezeichnet wird, während die Anzeigeeinheit die Aufrufe ausführt, ausschließlich antwortet und deshalb als Server bezeichnet wird. Die Rollen decken sich mit der Verteilung auf dem Bus, auf dem der Hub als Master arbeitet, und wechseln im Betrieb nicht, auch nicht bei Ereignissen, da auch diese vom Client abgefragt werden.
 
 Die folgenden Abschnitte beschreiben die Schichten von unten nach oben. Für jede Schicht werden ihre Aufgabe, die nach oben angebotene Abstraktion und die Aufgaben benannt, die sie bewusst nicht übernimmt.
 
@@ -47,7 +47,7 @@ Zwei Entwurfsentscheidungen dieser Schicht sind besonders wichtig. Erstens ist d
 
 Die Kommunikationsschicht stellt den entfernten Aufruf her. Auf dem Client bildet sie aus dem Namen einer Methode, deren Argumenten und der Angabe des Scopes eine Nachricht, übergibt diese nach unten und nimmt anschließend das Ergebnis entgegen. Auf dem Server nimmt sie eine Nachricht entgegen, wählt den zuständigen Empfänger, ruft die benannte Methode auf und stellt deren Ergebnis zur Abholung bereit.
 
-In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da der Server nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt das. Nach oben erscheint ein Aufruf als gewöhnlicher, synchroner Methodenaufruf, der zurückkehrt, sobald das Ergebnis vorliegt.
+In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da der Server nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt diesen Umstand, sodass ein Aufruf nach oben als gewöhnlicher, synchroner Methodenaufruf erscheint, der zurückkehrt, sobald das Ergebnis vorliegt.
 
 Die aufgerufenen Objekte kennt diese Schicht nicht. Sie befördert einen Aufruf zu einem benannten Empfänger, ohne zu wissen, was dieser darstellt.
 
@@ -71,7 +71,7 @@ Innerhalb der Schichten treten drei wiederkehrende Rollen auf. Sie sind als Entw
 
 === Interceptor
 
-Der Interceptor bildet die Schnittstelle zwischen Kommunikationsschicht und Busanbindung. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Block zur Gegenseite gelangt und wie die Antwort zurückkommt. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
+Der Interceptor bildet die Schnittstelle zwischen Kommunikationsschicht und Busanbindung und folgt dem gleichnamigen Muster aus @PDFPatternOrientedSoftware. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Block zur Gegenseite gelangt und wie die Antwort zurückkommt. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
 
 Da diese Schnittstelle ohne Bezug auf einen konkreten Übertragungsweg formuliert ist, ist der Interceptor der Ansatzpunkt für die Unabhängigkeit vom Übertragungsweg. Ein anderer Übertragungsweg wird angebunden, indem eine weitere Umsetzung dieser Rolle bereitgestellt wird. Die höheren Schichten bleiben davon unberührt.
 
@@ -89,11 +89,11 @@ Dass beide dieselbe Schnittstelle erfüllen, ist die Grundlage der Aufrufstransp
 
 == Kommunikationsmodell
 
-Aus Sicht der Anwendung ist die Kommunikation synchron. Ein Aufruf kehrt erst zurück, wenn das Ergebnis vorliegt. Intern folgt die Übertragung dem anfragegetriebenen Muster des Übertragungswegs. Jede Übertragung wird vom Client angestoßen, der Server antwortet nur.
+Aus Sicht der Anwendung ist die Kommunikation synchron, da ein Aufruf erst zurückkehrt, wenn das Ergebnis vorliegt. Intern folgt die Übertragung dagegen dem anfragegetriebenen Muster des Übertragungswegs, bei dem jede Übertragung vom Client angestoßen wird und der Server ausschließlich antwortet.
 
 Logisch werden zwei Kanäle unterschieden. Über den ersten Kanal sendet der Client die Pakete eines Aufrufs, und der Server bestätigt jedes Paket. Über den zweiten Kanal fragt der Client den Zustand und das Ergebnis ab. Er prüft zunächst, ob ein Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab.
 
-Ereignisse wie Berührungen werden nach demselben Prinzip behandelt. Der Server puffert sie, und der Client fragt sie bei Bedarf ab. Damit ist auch die Ereignisbehandlung an den Takt des Clients gebunden, was die zeitliche Auflösung begrenzt. Dieser anfragegetriebene Rückkanal ist die Antwort der Architektur auf die eingeschränkte Kommunikationsrichtung.
+Ereignisse wie Berührungen werden nach demselben Prinzip behandelt, indem der Server sie puffert und der Client sie bei Bedarf abfragt. Damit ist auch die Ereignisbehandlung an den Takt des Clients gebunden, was die zeitliche Auflösung begrenzt. Dieser anfragegetriebene Rückkanal ist die Antwort der Architektur auf die eingeschränkte Kommunikationsrichtung.
 
 == Datenfluss im System
 
