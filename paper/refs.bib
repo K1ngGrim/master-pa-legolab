@@ -1,0 +1,206 @@
+% ---------------------------------------------------------------------------
+% refs.bib -- references for the architecture paper.
+% Grouped by topic. Every entry is a standard, a vendor specification or a
+% peer-reviewed publication; no blog posts or forum threads.
+% ---------------------------------------------------------------------------
+
+% --- Remote invocation -----------------------------------------------------
+
+@article{birrell1984rpc,
+  author  = {Birrell, Andrew D. and Nelson, Bruce Jay},
+  title   = {Implementing Remote Procedure Calls},
+  journal = {ACM Transactions on Computer Systems},
+  volume  = {2},
+  number  = {1},
+  pages   = {39--59},
+  year    = {1984},
+  doi     = {10.1145/2080.357392},
+}
+
+@techreport{waldo1994note,
+  author      = {Waldo, Jim and Wyant, Geoff and Wollrath, Ann and Kendall, Sam},
+  title       = {A Note on Distributed Computing},
+  institution = {Sun Microsystems Laboratories},
+  number      = {TR-94-29},
+  year        = {1994},
+}
+
+@book{gamma1995patterns,
+  author    = {Gamma, Erich and Helm, Richard and Johnson, Ralph and Vlissides, John},
+  title     = {Design Patterns: Elements of Reusable Object-Oriented Software},
+  publisher = {Addison-Wesley},
+  year      = {1995},
+}
+
+@book{vansteen2017distributed,
+  author    = {van Steen, Maarten and Tanenbaum, Andrew S.},
+  title     = {Distributed Systems},
+  edition   = {3},
+  publisher = {Maarten van Steen},
+  year      = {2017},
+}
+
+@misc{rfc5531,
+  author = {Thurlow, Robert},
+  title  = {{RPC}: Remote Procedure Call Protocol Specification Version 2},
+  number = {RFC 5531},
+  howpublished = {IETF Request for Comments},
+  year   = {2009},
+  doi    = {10.17487/RFC5531},
+}
+
+@techreport{omg2021corba,
+  author      = {{Object Management Group}},
+  title       = {Common Object Request Broker Architecture ({CORBA}) Specification, Version 3.4},
+  institution = {Object Management Group},
+  year        = {2021},
+}
+
+@misc{grpc,
+  author       = {{The gRPC Authors}},
+  title        = {{gRPC}: A High Performance, Open Source Universal {RPC} Framework},
+  howpublished = {\url{https://grpc.io/}},
+  year         = {2024},
+}
+
+@techreport{slee2007thrift,
+  author      = {Slee, Mark and Agarwal, Aditya and Kwiatkowski, Marc},
+  title       = {Thrift: Scalable Cross-Language Services Implementation},
+  institution = {Facebook},
+  year        = {2007},
+}
+
+% --- Serialization ---------------------------------------------------------
+
+@misc{rfc4506,
+  author = {Eisler, Mike},
+  title  = {{XDR}: External Data Representation Standard},
+  number = {RFC 4506},
+  howpublished = {IETF Request for Comments},
+  year   = {2006},
+  doi    = {10.17487/RFC4506},
+}
+
+@misc{rfc8949,
+  author = {Bormann, Carsten and Hoffman, Paul},
+  title  = {Concise Binary Object Representation ({CBOR})},
+  number = {RFC 8949},
+  howpublished = {IETF Request for Comments},
+  year   = {2020},
+  doi    = {10.17487/RFC8949},
+}
+
+@misc{messagepack,
+  author       = {Furuhashi, Sadayuki},
+  title        = {{MessagePack}: It's Like {JSON}, but Fast and Small},
+  howpublished = {\url{https://msgpack.org/}},
+  year         = {2024},
+}
+
+@misc{protobuf,
+  author       = {{Google LLC}},
+  title        = {Protocol Buffers Documentation},
+  howpublished = {\url{https://protobuf.dev/}},
+  year         = {2024},
+}
+
+% --- Protocols for constrained nodes and networks --------------------------
+
+@misc{rfc7228,
+  author = {Bormann, Carsten and Ersue, Mehmet and Ker{\"a}nen, Ari},
+  title  = {Terminology for Constrained-Node Networks},
+  number = {RFC 7228},
+  howpublished = {IETF Request for Comments},
+  year   = {2014},
+  doi    = {10.17487/RFC7228},
+}
+
+@misc{rfc7252,
+  author = {Shelby, Zach and Hartke, Klaus and Bormann, Carsten},
+  title  = {The Constrained Application Protocol ({CoAP})},
+  number = {RFC 7252},
+  howpublished = {IETF Request for Comments},
+  year   = {2014},
+  doi    = {10.17487/RFC7252},
+}
+
+@misc{rfc7641,
+  author = {Hartke, Klaus},
+  title  = {Observing Resources in the Constrained Application Protocol ({CoAP})},
+  number = {RFC 7641},
+  howpublished = {IETF Request for Comments},
+  year   = {2015},
+  doi    = {10.17487/RFC7641},
+}
+
+@misc{rfc9110,
+  author = {Fielding, Roy T. and Nottingham, Mark and Reschke, Julian},
+  title  = {{HTTP} Semantics},
+  number = {RFC 9110},
+  howpublished = {IETF Request for Comments},
+  year   = {2022},
+  doi    = {10.17487/RFC9110},
+}
+
+@techreport{oasis2019mqtt,
+  author      = {{OASIS}},
+  title       = {{MQTT} Version 5.0, {OASIS} Standard},
+  institution = {OASIS},
+  year        = {2019},
+}
+
+@inproceedings{hunkeler2008mqtts,
+  author    = {Hunkeler, Urs and Truong, Hong Linh and Stanford-Clark, Andy},
+  title     = {{MQTT-S} -- A Publish/Subscribe Protocol for Wireless Sensor Networks},
+  booktitle = {3rd International Conference on Communication Systems Software and Middleware (COMSWARE)},
+  pages     = {791--798},
+  year      = {2008},
+  doi       = {10.1109/COMSWA.2008.4554519},
+}
+
+% --- Request-driven links --------------------------------------------------
+
+@techreport{nxp2021i2c,
+  author      = {{NXP Semiconductors}},
+  title       = {{I2C}-bus Specification and User Manual, {UM10204}, Rev. 7.0},
+  institution = {NXP Semiconductors},
+  year        = {2021},
+}
+
+@techreport{modbus2006serial,
+  author      = {{Modbus Organization}},
+  title       = {{MODBUS} over Serial Line Specification and Implementation Guide V1.02},
+  institution = {Modbus Organization},
+  year        = {2006},
+}
+
+@techreport{bluetooth2023core,
+  author      = {{Bluetooth SIG}},
+  title       = {Bluetooth Core Specification, Version 5.4},
+  institution = {Bluetooth Special Interest Group},
+  year        = {2023},
+}
+
+% --- Dangling references ---------------------------------------------------
+
+@article{lomet1975tombstones,
+  author  = {Lomet, David B.},
+  title   = {Scheme for Invalidating References to Freed Storage},
+  journal = {IBM Journal of Research and Development},
+  volume  = {19},
+  number  = {1},
+  pages   = {26--35},
+  year    = {1975},
+  doi     = {10.1147/rd.191.0026},
+}
+
+@article{fischer1980diagnostics,
+  author  = {Fischer, Charles N. and LeBlanc, Richard J.},
+  title   = {The Implementation of Run-Time Diagnostics in {Pascal}},
+  journal = {IEEE Transactions on Software Engineering},
+  volume  = {SE-6},
+  number  = {4},
+  pages   = {313--319},
+  year    = {1980},
+  doi     = {10.1109/TSE.1980.234494},
+}
