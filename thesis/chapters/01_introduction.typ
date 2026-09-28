@@ -10,16 +10,16 @@ Vor diesem Hintergrund beschäftigt sich die vorliegende Arbeit mit der Frage, w
 
 == Problemstellung <sec:problemstellung>
 
-Die Anbindung zusätzlicher Peripherie an eine solche Plattform wird durch drei technische Einschränkungen erschwert. Sie treten gemeinsam auf und verstärken sich gegenseitig.
+Die Anbindung zusätzlicher Peripherie an eine solche Plattform wird durch drei technische Einschränkungen erschwert, die gemeinsam auftreten und sich gegenseitig verstärken.
 
-Erstens ist die Verbindung zwischen den Systemkomponenten anfragegetrieben. Sie ist zwar in beide Richtungen nutzbar, eine Übertragung kann aber nur die übergeordnete Seite anstoßen. Die untergeordnete Seite antwortet ausschließlich. Zweitens ist die je Paket übertragbare Datenmenge sehr klein und fest vorgegeben, sodass Nachrichten üblicher Größe nicht in ein einzelnes Paket passen. Drittens stehen stark beschränkte Laufzeitumgebungen zur Verfügung, die zumindest auf einer Seite weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellen.
+Erstens ist die Verbindung zwischen den Systemkomponenten anfragegetrieben. Sie ist zwar in beide Richtungen nutzbar, eine Übertragung kann aber nur die übergeordnete Seite anstoßen, während die untergeordnete Seite ausschließlich antwortet. Zweitens ist die je Paket übertragbare Datenmenge sehr klein und fest vorgegeben, sodass Nachrichten üblicher Größe nicht in ein einzelnes Paket passen. Drittens stehen stark beschränkte Laufzeitumgebungen zur Verfügung, die zumindest auf einer Seite weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellen.
 
-Diese Rahmenbedingungen stehen im Gegensatz zu den Anforderungen interaktiver Benutzeroberflächen. Diese setzen eine flexible Übertragung strukturierter Daten und eine zeitnahe Rückmeldung von Benutzereingaben voraus. Gerade die Verarbeitung von Eingaben und die Übertragung zusammengesetzter Zustände sind unter diesen Bedingungen eine Herausforderung.
+Diese Rahmenbedingungen stehen im Gegensatz zu den Anforderungen interaktiver Benutzeroberflächen, die eine flexible Übertragung strukturierter Daten und eine zeitnahe Rückmeldung von Benutzereingaben voraussetzen. Gerade die Verarbeitung von Eingaben und die Übertragung zusammengesetzter Zustände sind unter diesen Bedingungen eine Herausforderung.
 
 Daraus ergibt sich die zentrale Problemstellung dieser Arbeit:
 Wie lässt sich eine Middleware entwerfen, die entfernte Objekte über eine anfragegetriebene Verbindung mit sehr kleiner Paketgröße auf beschränkten Laufzeitumgebungen transparent nutzbar macht?
 
-Die Frage ist dabei nicht an eine bestimmte Plattform gebunden. Die Kombination aus anfragegetriebener Übertragung, kleiner Paketgröße und beschränkter Laufzeitumgebung tritt in verschiedenen Ausprägungen auf, wie @sec:verallgemeinerung zeigt.
+Die Frage ist dabei nicht an eine bestimmte Plattform gebunden, denn die Kombination aus anfragegetriebener Übertragung, kleiner Paketgröße und beschränkter Laufzeitumgebung tritt in verschiedenen Ausprägungen auf, wie @sec:verallgemeinerung zeigt.
 
 == Zielsetzung der Arbeit
 
@@ -31,7 +31,7 @@ Der Entwurf soll die drei genannten Einschränkungen auf wenige Schichten eingre
 - ein anfragegetriebener Rückkanal für Ergebnisse und Ereignisse
 - sowie eine Abstraktion, die entfernte Objekte wie lokale erscheinen lässt.
 
-Ein weiterer Schwerpunkt liegt darauf, den Entwurf vom konkreten Übertragungsweg zu lösen. Er soll dadurch auf andere Verbindungen derselben Klasse übertragbar bleiben.
+Ein weiterer Schwerpunkt liegt darauf, den Entwurf vom konkreten Übertragungsweg zu lösen, damit er auf andere Verbindungen derselben Klasse übertragbar bleibt.
 
 Die Bewertung stützt sich auf drei Kriterien. Das erste ist der funktionale Nachweis, dass sich eine interaktive Oberfläche über die entwickelte Abstraktion umsetzen lässt. Das zweite ist der Übertragungsaufwand je Aufruf, gemessen in benötigten Paketen und in der daraus folgenden Verzögerung. Das dritte ist der Ressourcenverbrauch, vor allem auf der Steuereinheit, deren Laufzeitumgebung am stärksten eingeschränkt ist.
 
@@ -41,8 +41,8 @@ Die vorliegende Arbeit ist wie folgt aufgebaut.
 
 Kapitel 2 führt die Grundlagen zum entfernten Prozeduraufruf, zur Serialisierung und zur Kommunikation eingebetteter Systeme ein. Anschließend ordnet es die Arbeit in bestehende Ansätze ein und benennt die Lücke, die sie schließt.
 
-Kapitel 3 analysiert das Zielsystem und leitet die Anforderungen an die Display-Integration und an die Kommunikation ab. Den Anforderungen werden die Einschränkungen der Plattform gegenübergestellt. Das Kapitel schließt mit einer Verallgemeinerung des Problemraums.
+Kapitel 3 analysiert das Zielsystem und leitet die Anforderungen an die Display-Integration und an die Kommunikation ab. Den Anforderungen werden die Einschränkungen der Plattform gegenübergestellt, bevor das Kapitel mit einer Verallgemeinerung des Problemraums schließt.
 
-Kapitel 4 beschreibt die Architektur mit ihrem Schichtenmodell, den wiederkehrenden Rollen im Entwurf und dem Kommunikationsmodell. Kapitel 5 vertieft den Entwurf der Transport- und der Kommunikationsschicht. Beide Kapitel bleiben auf der konzeptionellen Ebene.
+Kapitel 4 beschreibt die Architektur mit ihrem Schichtenmodell, den wiederkehrenden Rollen im Entwurf und dem Kommunikationsmodell. Kapitel 5 vertieft den Entwurf der Transport- und der Kommunikationsschicht, wobei beide Kapitel auf der konzeptionellen Ebene bleiben.
 
 Kapitel 6 stellt die Referenzimplementierung vor und bildet den Entwurf auf die konkrete Hardware, die Laufzeitumgebungen und den Bus ab. Kapitel 7 bewertet die Lösung hinsichtlich Funktionalität, Übertragungsaufwand und Ressourcenverbrauch. Kapitel 8 diskutiert die Grenzen des Ansatzes und seine Übertragbarkeit auf andere Verbindungen und fasst die Ergebnisse zusammen. Der Anhang enthält das Beispielprogramm der Steuereinheit und den Schaltplan der Adapterplatine.

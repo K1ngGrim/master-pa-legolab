@@ -6,7 +6,7 @@ Dieses Kapitel bildet den Entwurf aus @sec:architektur und @sec:entwurf auf eine
 
 Client und Server laufen beide unter MicroPython, allerdings in sehr unterschiedlichen Ausprägungen.
 
-Auf dem Hub läuft Pybricks @valkPybricks. Die Firmware ersetzt die Software von LEGO und stellt eine stark reduzierte Variante von MicroPython bereit. Für die Umsetzung sind vier Einschränkungen von Bedeutung. Ganzzahlen sind auf $2^30 - 1$ begrenzt, da die Firmware ohne Unterstützung für lange Ganzzahlen übersetzt ist. Schon eine größere Konstante im Quelltext verhindert das Laden des Moduls. Threads stehen nicht zur Verfügung, ebenso wenig einige Teile der Standardbibliothek wie `memoryview` oder das Modul `warnings`. Außerdem nimmt der Hub nur einzelne Dateien an, keine Pakete mit Unterverzeichnissen.
+Auf dem Hub läuft Pybricks @valkPybricks, eine Firmware, die die Software von LEGO ersetzt und eine stark reduzierte Variante von MicroPython bereitstellt. Für die Umsetzung sind vier Einschränkungen von Bedeutung. Ganzzahlen sind auf $2^30 - 1$ begrenzt, da die Firmware ohne Unterstützung für lange Ganzzahlen übersetzt ist, und schon eine größere Konstante im Quelltext verhindert das Laden des Moduls. Threads stehen nicht zur Verfügung, ebenso wenig einige Teile der Standardbibliothek wie `memoryview` oder das Modul `warnings`. Außerdem nimmt der Hub nur einzelne Dateien an, keine Pakete mit Unterverzeichnissen.
 
 Grund für die alternative Firmware sind die Einschränkungen von LEGO. Der Hub ist ein geschlossenes System, das nur die von LEGO bereitgestellten Sensoren und Aktoren akzeptiert. Erst die Pybricks-Firmware @valkPybricks erlaubt die Anbindung externer Geräte, jedoch auch nur durch die bereitgestellte Schnittstelle LPF2 und PupRemote @PUPRemoteDocumentationAntons @LMSESP32V20Clever2023.
 
@@ -39,7 +39,7 @@ Der Aufbau erfüllt die Anforderungen D1 bis D3 und S1 bis S3 aus @sec:zielsyste
 
 Der Aufbau besteht aus drei Teilen. Das LMS-ESP32-Board @LMSESP32V20Clever2023 bildet den Mikrocontroller der Anzeigeeinheit, wird über das Kabel eines LEGO-Sensors direkt an einen Port des Hubs angeschlossen und übernimmt die Busanbindung. Das Displaymodul enthält das @tft\-Display mit dem Controller ILI9341@ILI9341LCDController, einen kapazitiven Touchcontroller sowie einen Steckplatz für eine SD-Karte. Die Adapterplatine verbindet schließlich beide Baugruppen und enthält dabei keine aktiven Bauteile, sondern lediglich Steckverbinder und Leiterbahnen.
 
-Signalseitig benötigt die in @sec:busanbindung beschriebene Anbindung nur eine @uart\-Verbindung auf zwei Leitungen des ESP32, die das LMS-ESP32-Board bereits zum Anschluss des Hubs führt. Die Adapterplatine muss sich deshalb nur um die Signale des Displays kümmern. Versorgt wird der Aufbau über den Port des Hubs. Der ESP32 fordert dafür die 8V-Versorgung an, da das Display mehr Strom benötigt, als die Logikversorgung liefert. Wie @sec:einschraenkungen beschreibt, verkürzt das die zulässige Länge der Kommandonamen auf fünf Zeichen.
+Signalseitig benötigt die in @sec:busanbindung beschriebene Anbindung nur eine @uart\-Verbindung auf zwei Leitungen des ESP32, die das LMS-ESP32-Board bereits zum Anschluss des Hubs führt. Die Adapterplatine muss sich deshalb nur um die Signale des Displays kümmern. Versorgt wird der Aufbau über den Port des Hubs, im beschriebenen Aufbau über Port B, wobei der ESP32 die 8V-Versorgung anfordert, da das Display mehr Strom benötigt, als die Logikversorgung liefert. Wie @sec:einschraenkungen beschreibt, verkürzt das die zulässige Länge der Kommandonamen auf fünf Zeichen.
 
 === Signalzuordnung und Aufbau der Adapterplatine
 
@@ -47,13 +47,13 @@ Das Display wird über @spi angesteuert, der Touchcontroller über @i2c, wobei @
 
 Die Hintergrundbeleuchtung ist nicht an den ESP32 geführt und leuchtet dauerhaft. Die Interrupt-Leitung des Touchcontrollers ist zwar verbunden, wird jedoch nicht genutzt, da der Controller abgefragt wird (@sec:ansteuerung). Gleiches gilt für die Auswahlleitung der SD-Karte, die ebenfalls an den ESP32 geführt ist, während die SD-Karte selbst in dieser Arbeit nicht verwendet wird.
 
-Bei der Pinbelegung ist GPIO 12 zu beachten. Der Pin wird beim Start des ESP32 ausgelesen und legt die Spannung des Flash-Speichers fest. Solange nur das Display an MISO hängt, ist das unkritisch, da die Leitung beim Start kaum getrieben wird. Wird die SD-Karte genutzt, teilt sie sich diese Leitung und kann sie über ihren Pull-up-Widerstand beim Start auf High ziehen. Der ESP32 startet dann nicht mehr zuverlässig. Für eine spätere Nutzung der SD-Karte müsste MISO deshalb auf einen anderen Pin gelegt werden. 
+Bei der Pinbelegung ist GPIO 12 zu beachten. Der Pin wird beim Start des ESP32 ausgelesen und legt die Spannung des Flash-Speichers fest. Solange nur das Display an MISO hängt, ist das unkritisch, da die Leitung beim Start kaum getrieben wird. Wird die SD-Karte genutzt, teilt sie sich diese Leitung und kann sie über ihren Pull-up-Widerstand beim Start auf High ziehen, sodass der ESP32 nicht mehr zuverlässig startet. Für eine spätere Nutzung der SD-Karte müsste MISO deshalb auf einen anderen Pin gelegt werden. 
 
-Die Platine wurde mit KiCad entworfen und extern gefertigt. Beide Baugruppen werden aufgesteckt, sodass sie sich ohne Löten tauschen lassen. Eine integrierte Trägerplatine, die ESP32, Display und Versorgung auf einer Platine vereint, war ursprünglich als zweite Ausbaustufe geplant. Sie wurde aus Zeitgründen nicht umgesetzt und wird in @sec:fazit als Erweiterung aufgegriffen.
+Die Platine wurde mit KiCad entworfen und extern gefertigt, wobei beide Baugruppen aufgesteckt werden und sich ohne Löten tauschen lassen. Eine integrierte Trägerplatine, die ESP32, Display und Versorgung auf einer Platine vereint, war ursprünglich als zweite Ausbaustufe geplant. Sie wurde aus Zeitgründen nicht umgesetzt und wird in @sec:fazit als Erweiterung aufgegriffen.
 
 == Busanbindung <sec:busanbindung>
 
-Die Busanbindung wird nicht entworfen, sondern vorgefunden. Beide Seiten verwenden PUPRemote @PUPRemoteDocumentationAntons, auf dem Hub als `PUPRemoteHub` und auf dem ESP32 als `PUPRemoteSensor`. Die Bibliothek setzt das @lpf2\-Protokoll um, über das der Hub mit angeschlossenen Sensoren kommuniziert.
+Die Busanbindung wird nicht entworfen, sondern vorgefunden, denn beide Seiten verwenden PUPRemote @PUPRemoteDocumentationAntons in Version 1.6, auf dem Hub als `PUPRemoteHub` und auf dem ESP32 als `PUPRemoteSensor`. Die Bibliothek setzt das @lpf2\-Protokoll um, über das der Hub mit angeschlossenen Sensoren kommuniziert.
 
 Gegenüber dem Hub gibt sich der ESP32 als Ultraschallsensor aus, da der Hub nur Geräte mit bekannter Kennung annimmt. Beim Verbindungsaufbau handeln beide Seiten zunächst bei 2400 Baud die Eigenschaften des Geräts aus und wechseln anschließend auf 115200 Baud. Danach überwacht die Bibliothek die Verbindung selbstständig und baut sie nach einem Abbruch neu auf. Zusätzlich fordert der ESP32 die 8-V-Versorgung am Port an, da das Display mehr Strom benötigt, als die Logikversorgung liefert.
 
@@ -85,7 +85,7 @@ Die Transportschicht setzt den Entwurf aus @sec:frame-struktur in konkrete Feldb
 
 === Frame
 
-Die Blockgröße ist durch die Busanbindung vorgegeben. Die Firmware des Hubs begrenzt einen Modus auf 16 Byte. Damit steht die in @sec:nutzlastlaenge eingeführte @mtu fest, und alle weiteren Größen leiten sich daraus ab.
+Die Blockgröße ist durch die Busanbindung vorgegeben, da die Firmware des Hubs einen Modus auf 16 Byte begrenzt. Damit steht die in @sec:nutzlastlaenge eingeführte @mtu fest, und alle weiteren Größen leiten sich daraus ab.
 
 Der Header belegt drei Byte.
 
@@ -102,11 +102,11 @@ Der Header belegt drei Byte.
   ),
 ) <tab:header>
 
-@tab:header zeigt den Aufbau des Headers. Für die Nutzlast verbleiben damit 13 Byte je Frame.
+@tab:header zeigt den Aufbau des Headers, der für die Nutzlast 13 Byte je Frame übrig lässt.
 
-Diese Aufteilung erfüllt die Bedingungen aus @sec:nutzlastlaenge. Bei einem Header von drei Byte ergibt @eq:payload eine Nutzlast von 13 Byte, und @eq:laengenfeld verlangt dafür ein vier Bit breites Längenfeld. Die obere Hälfte des dritten Bytes enthält die Art des Frames, die untere Hälfte die Länge der Nutzlast. Das Längenfeld vergrößert den Header damit nicht. Ein Header von zwei Byte wäre nur möglich, wenn Kennung oder Position schmaler ausfielen. Das würde die Anzahl unterscheidbarer Nachrichten oder die maximale Nachrichtenlänge verringern.
+Diese Aufteilung erfüllt die Bedingungen aus @sec:nutzlastlaenge. Bei einem Header von drei Byte ergibt @eq:payload eine Nutzlast von 13 Byte, und @eq:laengenfeld verlangt dafür ein vier Bit breites Längenfeld. Die obere Hälfte des dritten Bytes enthält die Art des Frames, die untere Hälfte die Länge der Nutzlast, sodass das Längenfeld den Header nicht vergrößert. Ein Header von zwei Byte wäre nur möglich, wenn Kennung oder Position schmaler ausfielen, was die Anzahl unterscheidbarer Nachrichten oder die maximale Nachrichtenlänge verringern würde.
 
-@tab:frame_from_bytes zeigt die Umwandlung von Bytes in einen Frame. Dabei wird auch eine zu kurze Eingabe abgefangen und das dritte Byte in Art und Länge aufgeteilt.
+@tab:frame_from_bytes zeigt die Umwandlung von Bytes in einen Frame, bei der auch eine zu kurze Eingabe abgefangen und das dritte Byte in Art und Länge aufgeteilt wird.
 
 #figure(
   caption: [Funktion zur Erzeugung eines Frames aus Bytes],
@@ -140,9 +140,9 @@ Gültig bleibt die Aufteilung, solange die Nutzlast 15 Byte nicht überschreitet
   ```
 )<tab:frame_to_bytes>
 
-Die Position hat durch ihre Breite von acht Bit einen Wertebereich von 0 bis 255. Der Wert `0xFF` ist für Frames reserviert, die sich auf keine Position innerhalb einer Nachricht beziehen. Für Nutzlastframes stehen damit 255 Werte zur Verfügung. Nach @eq:maxlen begrenzt das die Länge einer Nachricht auf $13 dot 255 = 3315$ Byte. Dieser Wert ist zugleich die nach K5 geforderte Obergrenze des Puffers.
+Die Position hat durch ihre Breite von acht Bit einen Wertebereich von 0 bis 255. Der Wert `0xFF` ist für Frames reserviert, die sich auf keine Position innerhalb einer Nachricht beziehen. Für Nutzlastframes stehen damit 255 Werte zur Verfügung, was nach @eq:maxlen die Länge einer Nachricht auf $13 dot 255 = 3315$ Byte begrenzt. Dieser Wert ist zugleich die nach K5 geforderte Obergrenze des Puffers.
 
-Für die Art des Frames sind von 16 darstellbaren Werten acht belegt (siehe @tab:opcodes). Acht Werte kämen gerade noch mit drei Bit aus, allerdings bliebe dann kein Wert für eine weitere Art frei. Das eingesparte Bit würde außerdem nichts bringen. Im Längenfeld könnte es Werte bis 31 darstellen, obwohl die Nutzlast 13 Byte nie überschreitet. In der Position würde es über die Bytegrenze hinausreichen und Bitoperationen über zwei Byte erfordern. Die Breite von vier Bit ist daher eine pragmatische Entscheidung.
+Für die Art des Frames sind von 16 darstellbaren Werten acht belegt (siehe @tab:opcodes). Acht Werte kämen gerade noch mit drei Bit aus, allerdings bliebe dann kein Wert für eine weitere Art frei. Das eingesparte Bit würde außerdem nichts bringen, denn im Längenfeld könnte es Werte bis 31 darstellen, obwohl die Nutzlast 13 Byte nie überschreitet. In der Position würde es über die Bytegrenze hinausreichen und Bitoperationen über zwei Byte erfordern. Die Breite von vier Bit ist daher eine pragmatische Entscheidung.
 
 #figure(
   caption: [Werte für die Art des Frames und ihre Bedeutung],
@@ -192,7 +192,7 @@ Die Zerlegung ist als Funktion über Position und Nutzlast umgesetzt. In einer f
   ```
 )<tab:message_frames>
 
-Für das Einsammeln eingehender Frames gibt es zwei Wege, die sich in Speicherbedarf und Zusicherung unterscheiden. `collect_frame` behält jeden Frame, bis die Nachricht vollständig ist, und sortiert die Frames nach ihrer Position. Diese Variante ist von der Reihenfolge der Ankunft unabhängig, hält aber alle Frames einer Nachricht gleichzeitig im Speicher. `append_frame` hängt die Nutzlast direkt an und verwirft den Frame. Das spart Speicher, setzt aber die richtige Reihenfolge voraus. `get_payload` liefert in beiden Fällen die vollständige Nutzlast.
+Für das Einsammeln eingehender Frames gibt es zwei Wege, die sich in Speicherbedarf und Zusicherung unterscheiden. `collect_frame` behält jeden Frame, bis die Nachricht vollständig ist, und sortiert die Frames nach ihrer Position. Diese Variante ist von der Reihenfolge der Ankunft unabhängig, hält aber alle Frames einer Nachricht gleichzeitig im Speicher. `append_frame` hängt die Nutzlast direkt an und verwirft den Frame, was Speicher spart, aber die richtige Reihenfolge voraussetzt. `get_payload` liefert in beiden Fällen die vollständige Nutzlast.
 
 Der Rückkanal verwendet den sammelnden Weg, der Hinweg den anhängenden. Die in @sec:fragmentierung beschriebene Unabhängigkeit von der Reihenfolge ist damit nur auf dem Rückkanal umgesetzt. Für den hier betrachteten Bus genügt das, da er sequenziell arbeitet. Bei einem Übertragungsweg, der umsortiert, müsste auch der Hinweg auf den sammelnden Weg wechseln.
 
@@ -211,13 +211,13 @@ ausdrücken. Das Zeichen $compose$ bezeichnet die Hintereinanderausführung, wob
 
 $D$ umfasst dabei nur die Werte, die das jeweilige Format unterstützt. Für die hier eingesetzte MessagePack-Umsetzung sind das Wahrheitswerte, Ganzzahlen im Bereich von 16 Bit, Zeichenketten, Bytefolgen sowie Listen und Abbildungen über diesen Typen. Außerhalb von $D$ gilt die Eigenschaft nicht, ein Tupel etwa kommt als Liste zurück. Die Umkehrung gilt ebenfalls nicht, da sich derselbe Wert auf mehrere Arten kodieren lässt und eine fremde Bytefolge deshalb nicht zwingend unverändert zurückkommt.
 
-Die MessagePack-Umsetzung deckt bewusst nur den Teil des Formats ab, den das System tatsächlich austauscht. Fließkommazahlen fehlen ebenso wie die Erweiterungstypen des Formats. Übertragen werden Pixelkoordinaten, Objektreferenzen und kurze Texte, und jeder weggelassene Typ verkleinert den Decoder, der auf beiden Seiten läuft. Das ist das dritte Kriterium aus @sec:serialisierung, angewandt auf die konkrete Umsetzung.
+Die MessagePack-Umsetzung deckt bewusst nur den Teil des Formats ab, den das System tatsächlich austauscht. Fließkommazahlen fehlen ebenso wie die Erweiterungstypen des Formats. Übertragen werden Pixelkoordinaten, Objektreferenzen und kurze Texte, und jeder weggelassene Typ verkleinert den Decoder, der auf beiden Seiten läuft, was dem dritten Kriterium aus @sec:serialisierung entspricht.
 
-Enger als im Format vorgesehen ist auch der Wertebereich der Ganzzahlen. Er endet bei 16 Bit, obwohl MessagePack auch 32 und 64 Bit kennt. Der Grund liegt in der Laufzeitumgebung des Hubs. Sie ist ohne Unterstützung für lange Ganzzahlen übersetzt, sodass sich dort keine Konstante oberhalb von $2^30 - 1$ darstellen lässt. Die Zweige des Encoders für größere Werte enthielten solche Konstanten und verhinderten das Laden des gesamten Moduls, unabhängig davon, ob je ein so großer Wert übertragen wird. Für die hier auftretenden Werte reichen 16 Bit aus.
+Enger als im Format vorgesehen ist auch der Wertebereich der Ganzzahlen. Er endet bei 16 Bit, obwohl MessagePack auch 32 und 64 Bit kennt. Der Grund liegt in der Laufzeitumgebung des Hubs, die ohne Unterstützung für lange Ganzzahlen übersetzt ist, sodass sich dort keine Konstante oberhalb von $2^30 - 1$ darstellen lässt. Die Zweige des Encoders für größere Werte enthielten solche Konstanten und verhinderten das Laden des gesamten Moduls, unabhängig davon, ob je ein so großer Wert übertragen wird. Für die hier auftretenden Werte reichen 16 Bit aus.
 
 Welcher Codec verwendet wird, legt eine einzige Zuweisung fest. Möglich ist dieser Wechsel nur, weil die Rahmung die Länge der Nutzlast ausdrücklich mitführt. Die binäre Kodierung erzeugt Nullbytes, und ohne Längenfeld würde das Abschneiden von Füllbytes Teile der Nutzlast entfernen.
 
-Zusätzlich steht ein JSON-Codec zur Verfügung. Er ist bei der Fehlersuche hilfreich, da ein mitgeschnittener Frame seine Nutzlast dann im Klartext zeigt. Wie sich die beiden Formate auf die Anzahl der Übertragungen auswirken, vergleicht @sec:evaluation.
+Zusätzlich steht ein JSON-Codec zur Verfügung, der bei der Fehlersuche hilfreich ist, da ein mitgeschnittener Frame seine Nutzlast dann im Klartext zeigt. Wie sich die beiden Formate auf die Anzahl der Übertragungen auswirken, vergleicht @sec:evaluation.
 
 == Kommunikationsschicht <sec:umsetzung-kommunikation>
 
@@ -254,7 +254,7 @@ Die Nutzlast einer Nachricht tritt in drei Ausprägungen auf, je nach Richtung u
   ```
 )<lst:name_hash>
 
-Das Verfahren ist eine auf 16 Bit begrenzte Variante des bekannten djb2-Hashs @CseyorkucaOzHashhtml. Die eingebaute Funktion `hash` ist dafür nicht verwendbar, da CPython ihr Ergebnis je Prozess zufällig verändert und MicroPython es anders berechnet. Die Maskierung nach jedem Schritt hält alle Zwischenwerte unter $2^30$. Das ist auf dem Hub aus demselben Grund nötig wie die Begrenzung der Ganzzahlen in @sec:umsetzung-transport. Ein gebräuchlicher 32-Bit-Hash wie FNV würde diese Grenze überschreiten.
+Das Verfahren ist eine auf 16 Bit begrenzte Variante des bekannten djb2-Hashs @CseyorkucaOzHashhtml. Die eingebaute Funktion `hash` ist dafür nicht verwendbar, da CPython ihr Ergebnis je Prozess zufällig verändert und MicroPython es anders berechnet. Die Maskierung nach jedem Schritt hält alle Zwischenwerte unter $2^30$, was auf dem Hub aus demselben Grund nötig ist wie die Begrenzung der Ganzzahlen in @sec:umsetzung-transport. Ein gebräuchlicher 32-Bit-Hash wie FNV würde diese Grenze überschreiten.
 
 Die Breite von 16 Bit stellt eine Abwägung dar, denn MessagePack kodiert Werte bis 65535 in drei Byte, gegenüber 13 Byte für den Namen `create_label`. Eine Kennung von acht Bit wäre zwar ein Byte kürzer, bei zehn Methoden in einem Scope läge die Wahrscheinlichkeit einer Kollision dann jedoch bei etwa 16,3 %. Eine Kollision liegt vor, wenn zwei verschiedene Methodennamen denselben Hashwert ergeben, wobei die Wahrscheinlichkeit dafür mit der Anzahl der Methoden pro Scope steigt. Die folgende Gleichung
 
@@ -284,11 +284,11 @@ Kollisionen sind somit möglich, werden jedoch beim Start des Servers erkannt. D
   ```
 )<lst:index_methods>
 
-Ergebnis und Fehler unterscheiden sich allein im Schlüssel. Der Client prüft, ob `e` vorhanden ist, und löst in diesem Fall eine Ausnahme aus. Welche Ausnahme das ist, bestimmt die Fehlerart unter `k`, wie @sec:objektmodell beschreibt. Antworten enthalten keinen Scope. Der Server braucht ihn zur Auswahl des Empfängers, eine Antwort geht dagegen immer an den einen Aufrufer zurück, der auf sie wartet.
+Ergebnis und Fehler unterscheiden sich allein im Schlüssel. Der Client prüft, ob `e` vorhanden ist, und löst in diesem Fall eine Ausnahme aus. Welche Ausnahme das ist, bestimmt die Fehlerart unter `k`, wie @sec:objektmodell beschreibt. Antworten enthalten keinen Scope, denn der Server braucht ihn zur Auswahl des Empfängers, während eine Antwort immer an den einen Aufrufer zurückgeht, der auf sie wartet.
 
 === Verteilung eingehender Aufrufe <sec:umsetzung-verteilung>
 
-Die Zuordnung eines Aufrufs zur ausführenden Methode erfolgt in zwei Stufen. Zunächst wird anhand des Scopes ein Dispatcher ausgewählt. Zur Erinnerung: Der Scope benennt die Art des Empfängers, der den Aufruf ausführt, und wird im `CommandPayload` unter dem Schlüssel `s` mitgeführt. Die Dispatcher sind in einem `RPCDispatcherPool` registriert, wobei jeder einen eigenen Scope bedient. Die Registrierung erfolgt beim Start des Servers, und der Versuch, einen Scope ein zweites Mal zu belegen, löst eine Ausnahme aus.
+Die Zuordnung eines Aufrufs zur ausführenden Methode erfolgt in zwei Stufen. Zunächst wird anhand des Scopes ein Dispatcher ausgewählt, wobei der Scope die Art des Empfängers benennt, der den Aufruf ausführt, und im `CommandPayload` unter dem Schlüssel `s` mitgeführt wird. Die Dispatcher sind in einem `RPCDispatcherPool` registriert, wobei jeder einen eigenen Scope bedient. Die Registrierung erfolgt beim Start des Servers, und der Versuch, einen Scope ein zweites Mal zu belegen, löst eine Ausnahme aus.
 
 Anschließend schlägt der ausgewählte Dispatcher die Methodenkennung aus `c` nach und ruft die Methode mit den Argumenten aus `a` auf. Dass diese Kennungen innerhalb eines Scopes eindeutig sind, prüft der Dispatcher beim Aufbau seines Index, wie @lst:index_methods zeigt.
 
@@ -298,7 +298,7 @@ Aufrufbar ist damit jede öffentliche Methode eines Adapters. Das ist enger als 
 
 === Rückkanal
 
-Nach der Bestätigung des letzten Frames ist ein Aufruf zwar vollständig übertragen, aber noch nicht ausgeführt. Der Server muss das Ergebnis erst berechnen. Anschließend legt er es in einem Ausgangspuffer ab, bis der Client es abholt.
+Nach der Bestätigung des letzten Frames ist ein Aufruf zwar vollständig übertragen, aber noch nicht ausgeführt. Der Server muss das Ergebnis erst berechnen und legt es anschließend in einem Ausgangspuffer ab, bis der Client es abholt.
 
 Das Abholen erfolgt über denselben anfragegetriebenen Kanal wie die Übertragung der Aufrufe. Der Client fragt in einem festen Intervall mit `READY` an, ob ein Ergebnis bereitliegt. Der Server antwortet mit `DONE`, wenn das der Fall ist, und sonst mit `NACK`. Liegt das Ergebnis vor, holt der Client es mit `NEXT` Frame für Frame ab, wobei jede Anfrage die Position des nächsten Frames angibt. Der Server beantwortet jede Anfrage mit `frame_at(index)`, sodass eine wiederholte Anfrage denselben Frame liefert. @lst:rückkanal zeigt die Beantwortung beider Anfragen. 
 
@@ -340,7 +340,7 @@ Die Grenzen dieses Ablaufs sind als Konstanten festgelegt.
   ),
 ) <tab:rückkanal>
 
-Der Server behält nur die jüngsten Ergebnisse. Ältere werden verworfen, wodurch der Speicherbedarf nach K5 begrenzt bleibt. Da der Client streng nacheinander aufruft, fragt er ohnehin nur nach dem Ergebnis seines letzten Aufrufs. Ereignisse nutzen keinen eigenen Mechanismus. Der Server legt sie je Objekt in der Registratur ab und hält dort die letzten zehn vor, wobei bei Überlauf das älteste Ereignis verworfen und gezählt wird. Abgefragt werden sie über einen gewöhnlichen Aufruf wie `is_button_pressed`, der den Puffer dabei leert und die Anzahl der verworfenen Ereignisse mitliefert. Jede Abfrage kostet einen vollständigen Aufruf mit Übertragung, Wartezeit und Abholung. Ein Verlust ist für die Anwendung damit erkennbar, wie @sec:kommunikationsschicht es verlangt.
+Der Server behält nur die jüngsten Ergebnisse und verwirft ältere, wodurch der Speicherbedarf nach K5 begrenzt bleibt. Da der Client streng nacheinander aufruft, fragt er ohnehin nur nach dem Ergebnis seines letzten Aufrufs. Ereignisse nutzen keinen eigenen Mechanismus. Der Server legt sie je Objekt in der Registratur ab und hält dort die letzten zehn vor, wobei bei Überlauf das älteste Ereignis verworfen und gezählt wird. Abgefragt werden sie über einen gewöhnlichen Aufruf wie `is_button_pressed`, der den Puffer dabei leert und die Anzahl der verworfenen Ereignisse mitliefert. Jede Abfrage kostet einen vollständigen Aufruf mit Übertragung, Wartezeit und Abholung. Ein Verlust ist für die Anwendung damit erkennbar, wie @sec:kommunikationsschicht es verlangt.
 
 Wie viel Zeit ein Aufruf im Warten auf das Ergebnis verbringt, misst @sec:evaluation. Reaktionen, die ohne diesen Weg auskommen, weil der Server sie selbst ausführt, behandelt @sec:ansteuerung.
 
@@ -371,13 +371,13 @@ Eine Referenz ist eine Ganzzahl von 16 Bit, die der Server beim Erzeugen eines O
   ```
 ) <lst:slot>
 
-Ein Slot speichert neben dem Objekt und seiner Generation auch die Art des Objekts und die Referenz seines Parents. Die Art ist `screen`, `label` oder `button`. Jede Methode eines Adapters gibt beim Nachschlagen an, welche Art sie erwartet. Übergibt die Anwendung etwa die Referenz eines Screens an `set_text`, wird das erkannt, bevor auf das Objekt zugegriffen wird.
+Ein Slot speichert neben dem Objekt und seiner Generation auch die Art des Objekts und die Referenz seines Parents. Die Art ist `screen`, `label` oder `button`, und jede Methode eines Adapters gibt beim Nachschlagen an, welche Art sie erwartet. Übergibt die Anwendung etwa die Referenz eines Screens an `set_text`, wird das erkannt, bevor auf das Objekt zugegriffen wird.
 
 Zehn Bit erlauben 1024 gleichzeitig bestehende Objekte, wobei der Speicher des ESP32 bereits bei deutlich weniger Objekten erschöpft ist und diese Grenze in der Praxis somit nicht erreicht wird. Die Breite von 16 Bit folgt aus @sec:umsetzung-transport, da der Codec Ganzzahlen nur bis zu dieser Größe überträgt und MessagePack eine Referenz damit in höchstens drei Byte kodiert. Eine Referenz in Textform wie `obj_12` belegt dagegen sieben Byte.
 
 === Lebenszyklus
 
-Objekte entstehen immer innerhalb eines übergeordneten Objekts. Screens werden vom Display erzeugt, Labels und Buttons von einem Screen. Ein Button besteht auf dem Server aus zwei Objekten, dem Button selbst und dem Label für seine Beschriftung. Beide werden getrennt registriert, und der Stellvertreter auf dem Client erhält beide Referenzen. So lässt sich die Beschriftung über den Scope `label` ändern, ohne dass der Button-Adapter dafür eine eigene Methode braucht.
+Objekte entstehen immer innerhalb eines übergeordneten Objekts, wobei Screens vom Display und Labels sowie Buttons von einem Screen erzeugt werden. Ein Button besteht auf dem Server aus zwei Objekten, dem Button selbst und dem Label für seine Beschriftung. Beide werden getrennt registriert, und der Stellvertreter auf dem Client erhält beide Referenzen. So lässt sich die Beschriftung über den Scope `label` ändern, ohne dass der Button-Adapter dafür eine eigene Methode braucht.
 
 Die Registratur bildet dabei den Objektbaum der Anzeigebibliothek nach. Jeder Eintrag kennt seinen Parent, und `release_tree` gibt ein Objekt zusammen mit allen darin erzeugten Objekten frei. Das ist nötig, weil @LVGL beim Löschen eines Objekts auch dessen Kinder löscht. Ohne den Baum würden deren Einträge in der Registratur bestehen bleiben und auf nicht mehr vorhandene Objekte verweisen.
 
@@ -387,11 +387,11 @@ Gelöscht wird über die Methode `delete()`, die jeder Objekttyp anbietet. Der A
 
 === Veraltete Referenzen
 
-Nach dem Löschen eines Objekts kann dessen Stellvertreter auf dem Client weiter bestehen. Seine Referenz ist dann veraltet. Da freie Slots wiederverwendet werden, kann derselbe Slot inzwischen ein neues Objekt enthalten. Ohne Generation würde ein Aufruf über den alten Stellvertreter unbemerkt das neue Objekt verändern. Mit Generation passt die Referenz nicht mehr zum Slot, und der Aufruf wird abgewiesen.
+Nach dem Löschen eines Objekts kann dessen Stellvertreter auf dem Client weiter bestehen, wobei seine Referenz dann veraltet ist. Da freie Slots wiederverwendet werden, kann derselbe Slot inzwischen ein neues Objekt enthalten. Ohne Generation würde ein Aufruf über den alten Stellvertreter unbemerkt das neue Objekt verändern. Mit Generation passt die Referenz nicht mehr zum Slot, und der Aufruf wird abgewiesen.
 
 Die Prüfung geschieht an zwei Stellen. Auf dem Server prüft die Registratur jede Referenz wie in @lst:slot. Auf dem Client führt der `PyBricksInterceptor` eine Session, die bei `clear()` und bei einem Verbindungsabbruch endet. Jeder Stellvertreter merkt sich die Session, in der er entstanden ist. Gehört er zu einer früheren Session, löst er den Fehler aus, ohne eine Übertragung zu starten. Nach einem Verbindungsabbruch ist das die einzige verlässliche Prüfung, denn der ESP32 kann in der Zwischenzeit neu gestartet sein und seine Registratur von vorn aufbauen. Damit eine alte Referenz auch in diesem Fall nicht zufällig passt, beginnen die Generationen nach einem Start bei einem zufälligen Wert.
 
-Beide Prüfungen melden denselben Fehler, wobei die Fehlernutzlast neben der Beschreibung unter `e` eine Fehlerart unter `k` trägt und der Client anhand dieser Art die passende Ausnahme auslöst. `StaleReferenceError` steht dabei für ein nicht mehr vorhandenes Objekt, `WrongKindError` für eine Referenz der falschen Art, während alle übrigen Fehler als `RemoteError` ankommen. Alle drei erben von `RuntimeError`. Die Anwendung kann dadurch gezielt auf eine veraltete Referenz reagieren und beispielsweise die Oberfläche neu aufbauen, ohne den Fehlertext auswerten zu müssen.
+Beide Prüfungen melden denselben Fehler, wobei die Fehlernutzlast neben der Beschreibung unter `e` eine Fehlerart unter `k` trägt und der Client anhand dieser Art die passende Ausnahme auslöst. `StaleReferenceError` steht dabei für ein nicht mehr vorhandenes Objekt, `WrongKindError` für eine Referenz der falschen Art, während alle übrigen Fehler als `RemoteError` ankommen. Alle drei erben von `RuntimeError`, wodurch die Anwendung gezielt auf eine veraltete Referenz reagieren und beispielsweise die Oberfläche neu aufbauen kann, ohne den Fehlertext auswerten zu müssen.
 
 Ganz ausgeschlossen sind Verwechslungen allerdings nicht. Nach 64 Freigaben desselben Slots wiederholt sich die Generation, und ein Stellvertreter, der die ganze Zeit bestanden hat, passt wieder. Löscht die Anwendung einen Screen, bleiben außerdem die Stellvertreter der Elemente darauf auf dem Client gültig, da der Client sie nicht kennt. Ihr nächster Aufruf erreicht den Server und wird erst dort abgewiesen.
 
@@ -411,7 +411,7 @@ Aufgebaut wird die Anzeige vom `ESPDisplayAdapter`, der die @i2c\-Verbindung öf
 
 Das Zeichnen ist von der Ausführung der Aufrufe getrennt. Der Treiber startet beim Initialisieren eine Ereignisschleife, die in festem Takt über einen Hardware-Timer den Task-Handler von @LVGL einplant, welcher geänderte Bereiche neu zeichnet und die Eingabegeräte abfragt. Gemessen liegt dieser Takt bei 40 ms, siehe @sec:reaktionszeit. Ein Adapter ändert somit lediglich den Zustand eines Objekts, beispielsweise den Text eines Labels, wobei die Änderung erst beim nächsten Durchlauf des Task-Handlers sichtbar wird. Ein Aufruf kann deshalb bereits abgeschlossen sein, bevor die Änderung auf dem Display erscheint.
 
-Der Touchcontroller wird regelmäßig abgefragt, seine Interrupt-Leitung dagegen nicht genutzt. @LVGL ruft dazu bei jedem Durchlauf die Funktion `touch_read_cb` auf, die das Registerabbild des Controllers liest, wobei jede Abfrage eine @i2c\-Transaktion kostet, auch wenn keine Berührung vorliegt. Die Funktion darf zudem keine Ausnahme weitergeben, da sich die Ereignisschleife bei einer unbehandelten Ausnahme dauerhaft beendet und die Anzeige danach nicht mehr neu gezeichnet würde, obwohl weiterhin Aufrufe ankommen. Ein fehlgeschlagener Lesevorgang wird deshalb als fehlende Berührung gemeldet.
+Der Touchcontroller wird regelmäßig abgefragt, seine Interrupt-Leitung dagegen nicht genutzt. @LVGL ruft dazu bei jedem Durchlauf die Funktion `touch_read_cb` auf, die das Registerabbild des Controllers liest, wobei jede Abfrage eine @i2c\-Transaktion kostet, auch wenn keine Berührung vorliegt. Die Funktion darf zudem keine Ausnahme weitergeben, weshalb ein fehlgeschlagener Lesevorgang als fehlende Berührung gemeldet wird, wie @sec:nebenlaeufigkeit begründet.
 
 Erkennt @LVGL eine Berührung auf einem Button, löst es ein Ereignis aus. Der Screen-Adapter registriert dafür beim Erzeugen eines Buttons die Methode `on_event` für die Ereignisse `PRESSED` und `RELEASED`. `on_event` ermittelt über die Registratur die Referenz des Buttons, übersetzt den Ereigniscode in einen Namen wie `press` und ergänzt einen Zeitstempel. Das Ergebnis wird im Ereignispuffer des Objekts abgelegt, aus dem der Client es wie in @sec:umsetzung-kommunikation beschrieben abfragt.
 
@@ -436,21 +436,21 @@ Die Menge der Aktionen ist absichtlich klein und fest vorgegeben, da sie weder B
 
 == Ablauf eines vollständigen Aufrufs
 
-Die vorigen Abschnitte haben die Schichten einzeln beschrieben. Dieser Abschnitt verfolgt einen einzelnen Aufruf durch alle Schichten. Als Beispiel dient folgende Zeile
+Nachdem die vorigen Abschnitte die Schichten einzeln beschrieben haben, verfolgt dieser Abschnitt einen einzelnen Aufruf durch alle Schichten. Als Beispiel dient folgende Zeile
 
 ```python
 counter_label.set_text("Counter: {}".format(counter))
 ```
 
-aus dem Beispielprogramm des Hubs (siehe @lst:beispielprogramm). Sie ändert den Text eines Labels und liefert keinen Rückgabewert. Der Einfachheit halber gehen wir von `counter = 42`aus. 
+aus dem Beispielprogramm des Hubs (siehe @lst:beispielprogramm). Sie ändert den Text eines Labels und liefert keinen Rückgabewert, wobei der Einfachheit halber `counter = 42` angenommen wird. 
 
 *Aufruf auf dem Client.* `counter_label` ist ein Stellvertreter vom Typ `Label`, dessen Methode `set_text` zunächst prüft, ob er zur aktuellen Session gehört, und den Aufruf anschließend an `PyBricksInterceptor.call()` übergibt. Die Referenz des Labels wird dabei den Argumenten vorangestellt. Die Kommunikationsschicht bildet daraus einen `CommandPayload` mit dem Scope `label`, der Methodenkennung von `set_text` und der Argumentliste aus Referenz und Text, wobei die Nachricht die nächste freie Kennung erhält.
 
-*Zerlegung.* MessagePack kodiert diese Nutzlast in 32 Byte. Bei 13 Byte Nutzlast je Frame zerfällt sie nach @eq:blöcke in drei Frames. Die ersten beiden tragen `DATA`, der letzte `DATA_LAST` mit den verbleibenden sechs Byte. 
+*Zerlegung.* MessagePack kodiert diese Nutzlast in 32 Byte, die bei 13 Byte Nutzlast je Frame nach @eq:blöcke in drei Frames zerfallen. Die ersten beiden tragen `DATA`, der letzte `DATA_LAST` mit den verbleibenden sechs Byte. 
 
 *Übertragung.* Der Client sendet jeden Frame einzeln und wartet auf dessen Bestätigung. Jeder Austausch ist ein Aufruf von `remote.call` und damit ein Round Trip über den Bus. Stimmen Kennung oder Position der Antwort nicht, war die Antwort veraltet oder der Frame ist verloren gegangen, und der Client wiederholt seine letzte Übertragung. Der Server legt jeden neuen Frame ab und bestätigt ihn sofort. Mit dem letzten Frame setzt er die Nutzlast zusammen und startet die Ausführung als eigenen Task der Ereignisschleife. Der letzte Frame wird bestätigt, bevor der Aufruf ausgeführt wird.
 
-*Ausführung.* Der Task dekodiert die Nutzlast, wählt über den Scope den Label-Adapter aus und schlägt dort die Methodenkennung nach. `set_text` löst die Referenz in der Registratur auf, prüft dabei Generation und Art und setzt den Text des @LVGL\-Objekts. Sichtbar wird der neue Text erst beim nächsten Durchlauf des Task-Handlers, wie in @sec:ansteuerung beschrieben wurde. Das Ergebnis `None` wird als `DataPayload` kodiert. Der Server legt es anschließend unter der Kennung im Ausgangspuffer ab.
+*Ausführung.* Der Task dekodiert die Nutzlast, wählt über den Scope den Label-Adapter aus und schlägt dort die Methodenkennung nach. `set_text` löst die Referenz in der Registratur auf, prüft dabei Generation und Art und setzt den Text des @LVGL\-Objekts. Sichtbar wird der neue Text erst beim nächsten Durchlauf des Task-Handlers, wie in @sec:ansteuerung beschrieben wurde. Das Ergebnis `None` wird als `DataPayload` kodiert, das der Server anschließend unter der Kennung im Ausgangspuffer ablegt.
 
 Ein sofortiges Neuzeichnen im Adapter wäre möglich, würde aber die Ereignisschleife für die Dauer der Übertragung zum Display blockieren und damit auch die Bearbeitung weiterer Frames verzögern.
 
@@ -458,7 +458,7 @@ Ein sofortiges Neuzeichnen im Adapter wäre möglich, würde aber die Ereignissc
 
 *Rückgabe.* Der Client dekodiert die Nutzlast und gibt den Rückgabewert `None` an den Aufrufer zurück, falls das Ergebnis nicht als Fehler gekennzeichnet ist. Andernfalls löst er die passende Ausnahme aus, wie in @sec:objektmodell beschrieben.
 
-Ein Aufruf, der nur einen Text ändert, kostet damit mindestens fünf Round Trips. Nur drei davon transportieren den eigentlichen Aufruf und Nutzdaten. Mindestens zwei weitere sind nötig, um das Ergebnis abzuholen, enthalten also Steuerinformationen. Wie viele Round Trips in der Praxis nötig sind misst @sec:evaluation. 
+Ein Aufruf, der nur einen Text ändert, kostet damit mindestens fünf Round Trips. Nur drei davon transportieren den eigentlichen Aufruf mit seiner Nutzlast, während mindestens zwei weitere nur Steuerinformationen tragen und das Ergebnis abholen. Wie viele Round Trips in der Praxis nötig sind, misst @sec:evaluation. 
 
 Das Aufrufschema folgt somit der in @sec:interceptor beschriebenen Abfolge. Das Sequenzdiagramm @abb:interceptor zeigt die generischen Abläufe, die hier mit einem konkreten Beispiel gefüllt wurden. Die Abbildung zeigt auch die beiden Round Trips, die der Client für das Abholen des Ergebnisses benötigt. 
 
@@ -468,9 +468,9 @@ Die bisherigen Abschnitte beschreiben den Ablauf eines Aufrufs, der gelingt. Die
 
 === Nebenläufigkeit
 
-Auf dem Client gibt es keine möglichkeit zur Nebenläufigkeit. Ein Aufruf blockiert die Anwendung, bis das Ergebnis vorliegt oder eine Obergrenze erreicht ist. Da immer nur ein Aufruf gleichzeitig unterwegs ist, braucht der Client weder Sperren noch Puffer für mehrere offene Aufrufe.
+Auf dem Client gibt es keine Möglichkeit zur Nebenläufigkeit, sodass ein Aufruf die Anwendung blockiert, bis das Ergebnis vorliegt oder eine Obergrenze erreicht ist. Da immer nur ein Aufruf gleichzeitig unterwegs ist, braucht der Client weder Sperren noch Puffer für mehrere offene Aufrufe.
 
-Auf dem Server laufen dagegen drei Tasks nebenläufig. Ein Task ruft etwa jede Millisekunde `process` von PUPRemote auf und beantwortet damit die Anfragen des Clients. @LVGL zeichnet außerdem in einem festen Takt die Anzeige neu und fragt den Touchcontroller ab. Schließlich läuft jeder empfangene Aufruf in einem eigenen Task. Alle drei teilen sich eine einzige Ereignisschleife von `uasyncio` und damit einen Thread. Sie wechseln sich nur an festen Stellen ab, beispielsweise beim Warten eines der anderen Tasks.
+Auf dem Server laufen dagegen drei Tasks nebenläufig. Ein Task ruft etwa jede Millisekunde `process` von PUPRemote auf und beantwortet damit die Anfragen des Clients. @LVGL zeichnet außerdem in einem festen Takt die Anzeige neu und fragt den Touchcontroller ab. Schließlich läuft jeder empfangene Aufruf in einem eigenen Task. Alle drei teilen sich eine einzige Ereignisschleife von `uasyncio` und damit einen Thread, weshalb sie sich nur an festen Stellen abwechseln, beispielsweise beim Warten eines der anderen Tasks.
 
 Die Ausführung von Aufrufen lief in einer früheren Version in einem eigenen Thread. Das führte zu zwei Fehlern. Der Stack eines Threads wird vom Heap genommen, den @LVGL bereits zum großen Teil belegt. Nach einigen Dutzend Aufrufen ließ sich deshalb kein neuer Thread mehr anlegen. Außerdem ist @LVGL nicht reentrant @TimerLv_timerLVGL, und der Task-Handler der Bibliothek lief teilweise im Thread mit seinem kleineren Stack. Dort lief der Stack im Rückruf des Touchcontrollers über. Mit einer gemeinsamen Ereignisschleife treten beide Fehler nicht mehr auf, da nie zwei Stellen gleichzeitig auf @LVGL zugreifen.
 
@@ -478,7 +478,7 @@ Der Preis dafür ist, dass die Ereignisschleife während der Ausführung eines A
 
 === Fehlerbehandlung
 
-Fehler werden in der Schicht behandelt, in der sie auftreten. Nach oben gelangen sie nur, wenn die Schicht sie nicht selbst behandeln kann. @tab:fehler fasst die Fälle zusammen.
+Fehler werden in der Schicht behandelt, in der sie auftreten, und gelangen nach oben nur, wenn die Schicht sie nicht selbst behandeln kann. @tab:fehler fasst die Fälle zusammen.
 
 #figure(
   caption: [Fehlerfälle und ihre Behandlung],
@@ -501,10 +501,10 @@ Fehler werden in der Schicht behandelt, in der sie auftreten. Nach oben gelangen
   ],
 ) <tab:fehler>
 
-In der Transportschicht sind Fehler der Normalfall. Da der Client direkt nach dem Schreiben auch liest, erhält er häufig die Antwort auf die vorherige Anfrage. Er erkennt sie an Kennung, Position und Art des Frames. Er sendet diesen anschließend erneut. Der Server bestätigt eine Wiederholung, legt den Frame aber kein zweites Mal ab. Das gilt auch für den letzten Frame einer Nachricht. Würde dieser bei einer Wiederholung die Ausführung erneut starten, liefe derselbe Aufruf zweimal, beim zweiten Mal mit einer leeren Nachricht. Erst wenn eine Obergrenze aus @tab:rückkanal erreicht ist, gibt der Client auf und löst eine Ausnahme aus, die den betroffenen Frame und den Aufruf nennt.
+In der Transportschicht sind Fehler der Normalfall. Da der Client direkt nach dem Schreiben auch liest, erhält er häufig die Antwort auf die vorherige Anfrage. Er erkennt sie an Kennung, Position und Art des Frames und sendet diesen anschließend erneut. Der Server bestätigt eine Wiederholung, legt den Frame aber kein zweites Mal ab. Das gilt auch für den letzten Frame einer Nachricht. Würde dieser bei einer Wiederholung die Ausführung erneut starten, liefe derselbe Aufruf zweimal, beim zweiten Mal mit einer leeren Nachricht. Erst wenn eine Obergrenze aus @tab:rückkanal erreicht ist, gibt der Client auf und löst eine Ausnahme aus, die den betroffenen Frame und den Aufruf nennt.
 
-Für den Server gilt die Zusicherung aus @sec:zuverlaessigkeit. Jeder Aufruf hinterlässt ein Ergebnis oder eine Fehlermeldung. Jede Ausnahme bei der Ausführung wird abgefangen und als `ErrorPayload` im Ausgangspuffer abgelegt. Lässt sich selbst das Ergebnis nicht kodieren, legt er eine kurze Fehlermeldung ab. Anfragen, die der Server nicht zuordnen kann, beantwortet er mit einem Frame der Art `ERR`, etwa wenn nach dem Ergebnis einer unbekannten Nachricht gefragt wird.
+Für den Server gilt die Zusicherung aus @sec:zuverlaessigkeit, nach der jeder Aufruf ein Ergebnis oder eine Fehlermeldung hinterlässt. Jede Ausnahme bei der Ausführung wird abgefangen und als `ErrorPayload` im Ausgangspuffer abgelegt. Lässt sich selbst das Ergebnis nicht kodieren, legt er eine kurze Fehlermeldung ab. Anfragen, die der Server nicht zuordnen kann, beantwortet er mit einem Frame der Art `ERR`, etwa wenn nach dem Ergebnis einer unbekannten Nachricht gefragt wird.
 
 Ein Verbindungsabbruch zeigt sich auf dem Client als `OSError: [Errno 19] ENODEV:` von PUPRemote. Der Client beendet dann die Session, da der Server in der Zwischenzeit neu gestartet sein kann, und reicht den Fehler an die Anwendung weiter. Ob sie es erneut versucht oder die Oberfläche neu aufbaut, entscheidet die Anwendung. Alle Stellvertreter aus der alten Session melden danach `StaleReferenceError`, wie @sec:objektmodell beschreibt.
 
-Eine Stelle darf gar keinen Fehler weitergeben, nämlich der Rückruf, mit dem @LVGL den Touchcontroller abfragt. Eine Ausnahme dort beendet die Ereignisschleife von @LVGL dauerhaft. Die Anzeige würde dann nicht mehr neu gezeichnet, obwohl weiterhin Aufrufe ankommen. Ein fehlgeschlagener Lesevorgang wird deshalb als nicht vorhandene Berührung gewertet. Die Anwendung kann das nicht erkennen, da sie keinen Zugriff auf den Touchcontroller hat. Sie kann nur die Ereignisse abfragen, die @LVGL aus der Abfrage erzeugt.
+Eine Stelle darf gar keinen Fehler weitergeben, nämlich der Rückruf, mit dem @LVGL den Touchcontroller abfragt. Eine Ausnahme dort beendet die Ereignisschleife von @LVGL dauerhaft, sodass die Anzeige nicht mehr neu gezeichnet würde, obwohl weiterhin Aufrufe ankommen. Ein fehlgeschlagener Lesevorgang wird deshalb als nicht vorhandene Berührung gewertet. Die Anwendung kann das nicht erkennen, da sie keinen Zugriff auf den Touchcontroller hat und nur die Ereignisse abfragen kann, die @LVGL aus der Abfrage erzeugt.

@@ -16,15 +16,15 @@ Eine zweite Einschränkung betrifft den Rückfluss von Ereignissen, dessen Absta
 
 === Latenz und Durchsatz
 
-Die Dauer eines Aufrufs ergibt sich aus der Anzahl der Round Trips mal 114 ms, wovon zwei unabhängig von der Nachrichtenlänge auf das Abholen des Ergebnisses entfallen. Bei kurzen Aufrufen macht dieser feste Anteil bereits die Hälfte der Gesamtzeit aus.
+Die Dauer eines Aufrufs ergibt sich aus der Anzahl der Round Trips multipliziert mit 114 ms, wovon zwei unabhängig von der Nachrichtenlänge auf das Abholen des Ergebnisses entfallen. Bei kurzen Aufrufen macht dieser feste Anteil bereits die Hälfte der Gesamtzeit aus.
 
-Eine Reaktion, die über den Client läuft, benötigt zwei Aufrufe und liegt damit im Mittel bei rund 1480 ms. Die Anforderung K4 von 100 ms wird auf diesem Weg um mehr als das Zehnfache verfehlt. Erreichbar ist sie nur über ein Binding, das der Server selbst ausführt und das nach @tab:reaktion unter 51 ms bleibt. Damit ist die Zahl der Reaktionen, die in der geforderten Zeit möglich sind, durch den kleinen Satz an Aktionen aus @tab:aktionen begrenzt.
+Eine Reaktion, die über den Client läuft, benötigt zwei Aufrufe und liegt damit im Mittel bei rund 1490 ms. Die Anforderung K4 von 100 ms wird auf diesem Weg um mehr als das Zehnfache verfehlt. Erreichbar ist sie nur über ein Binding, das der Server selbst ausführt und das nach @tab:reaktion unter 51 ms bleibt. Damit ist die Zahl der Reaktionen, die in der geforderten Zeit möglich sind, durch den kleinen Satz an Aktionen aus @tab:aktionen begrenzt.
 
 Der Durchsatz war kein Entwurfsziel und fällt entsprechend gering aus, da eine Nachricht von 142 Byte den Bus bereits für 1,5 Sekunden belegt. Für Text und einzelne Bedienelemente reicht das aus, für Bilddaten oder fortlaufende Messwerte jedoch nicht.
 
 === Abstraktionsgrenzen
 
-Die Aufrufstransparenz aus @sec:architektur trägt syntaktisch, nicht zeitlich, denn ein Aufruf sieht zwar wie ein lokaler Aufruf aus, dauert jedoch um Größenordnungen länger. Das entspricht der Einordnung aus @sec:grundlagen-rpc und stellt keine Schwäche der Umsetzung dar, sondern eine grundsätzliche Eigenschaft entfernter Aufrufe.
+Die Aufrufstransparenz aus @sec:architektur trägt syntaktisch, nicht zeitlich, denn ein Aufruf sieht zwar wie ein lokaler Aufruf aus, dauert jedoch um Größenordnungen länger. Das entspricht der Einordnung aus @sec:grundlagen-rpc und ist eine grundsätzliche Eigenschaft entfernter Aufrufe, keine Schwäche der Umsetzung.
 
 Beim Erweitern des Objektmodells bleiben Transport- und Kommunikationsschicht unberührt, das Objektmodell selbst aber nicht. Wie @sec:erweiterung an einem Fortschrittsbalken zeigt, braucht ein neuer Objekttyp eine Basisklasse, einen Stellvertreter, einen Adapter und zusätzlich eine Fabrikmethode in dem Objekt, das ihn erzeugt. Auch das Ereignismodell ist bisher auf Buttons zugeschnitten, da nur dort Rückrufe bei der Anzeigebibliothek angemeldet werden. Erweiterbar ist das Modell also, aber nicht ohne Eingriff an mehreren Stellen.
 
@@ -48,7 +48,7 @@ Die folgenden Erweiterungen setzen an den Grenzen aus @sec:evaluation an, wobei 
 
 Nach @sec:evaluation kostet das Abholen des Ergebnisses unabhängig von der Nachrichtenlänge zwei Round Trips und somit 228 ms je Aufruf. Die meisten Aufrufe sind auf dem Server jedoch in Mikrosekunden ausgeführt, und ihr Ergebnis ist mit vier Byte kürzer als ein einzelner Frame. Statt die Ausführung aufzuschieben und das Ergebnis abfragen zu lassen, könnte der Server den Aufruf deshalb beim letzten Datenframe direkt ausführen und das Ergebnis zusammen mit der Bestätigung zurückgeben.
 
-Der Kanal bliebe dabei anfragegetrieben, da es sich weiterhin um eine Antwort handelt. Passt das Ergebnis nicht in einen Frame, meldet der Server lediglich, dass es bereitliegt, und das Abholen läuft wie bisher ab. Für einen kurzen Aufruf sinkt die Anzahl der Round Trips somit von fünf auf drei und die Dauer entsprechend von 571 ms auf 343 ms.
+Der Kanal bliebe dabei anfragegetrieben, da es sich weiterhin um eine Antwort handelt. Passt das Ergebnis nicht in einen Frame, meldet der Server lediglich, dass es bereitliegt, und das Abholen läuft wie bisher ab. Für einen kurzen Aufruf sinkt die Anzahl der Round Trips somit von fünf auf drei und die Dauer entsprechend von rund 570 ms auf rund 340 ms.
 
 Zwei Punkte sind dabei zu beachten. Zum einen ist der Bus während der Ausführung belegt, was für Aufrufe an die Anzeigebibliothek unkritisch ist, für längere Operationen jedoch ein zusätzliches Kennzeichen erfordern würde. Zum anderen prüft die Sendeschleife des Clients bisher nur die Position der Antwort und müsste zusätzlich die Kennung der Nachricht auswerten, da sonst eine veraltete Antwort das Ergebnis des vorherigen Aufrufs liefern könnte.
 
@@ -64,7 +64,7 @@ Die @json benötigt nach @sec:evaluation das 1,18-fache an Round Trips gegenübe
 
 === Integrierter Hardwareaufbau <sec:standalone>
 
-Der Aufbau aus @sec:hardwareaufbau besteht aus drei Baugruppen und zwei Steckverbindungen. Eine eigenständige Platine, die den Mikrocontroller, das Display und die Versorgung vereint, war als zweite Ausbaustufe geplant, wurde aus Zeitgründen jedoch nicht gebaut. Sie würde den Aufbau mechanisch robuster machen und die Spannungsversorgung sauber lösen, während sich am Protokoll, an der Latenz und an der Software nichts ändern würde. Der folgende Abschnitt umreißt, welche Funktionsgruppen eine solche Platine enthalten müsste, da die bisher verwendeten Baugruppen diese Aufgaben mitbringen und sie beim Wegfall der Baugruppen neu zu lösen sind.
+Der Aufbau aus @sec:hardwareaufbau besteht aus drei Baugruppen und zwei Steckverbindungen. Eine eigenständige Platine, die den Mikrocontroller, das Display und die Versorgung vereint, war als zweite Ausbaustufe geplant, wurde aus Zeitgründen jedoch nicht gebaut. Sie würde den Aufbau mechanisch robuster machen und die Spannungsversorgung sauber lösen, während sich am Protokoll, an der Latenz und an der Software nichts ändern würde. Der folgende Abschnitt umreißt, welche Funktionsgruppen eine solche Platine enthalten müsste, da die bisher verwendeten Baugruppen diese Aufgaben mitbringen und sie bei deren Wegfall neu zu lösen sind.
 
 Ausgangspunkt ist der Sensorport des Hubs. Er führt neben Masse und den beiden Datenleitungen eine Logikversorgung von 3,3 V sowie die höhere Versorgung auf der Leitung M+, die das Gerät nach @sec:busanbindung ausdrücklich anfordert. Die Logikversorgung des Ports ist für die Elektronik eines Sensors ausgelegt und reicht für ein Display mit Hintergrundbeleuchtung nicht aus, weshalb die Platine ihre eigene Spannung aus M+ erzeugen muss.
 
@@ -82,7 +82,7 @@ Ausgangspunkt ist der Sensorport des Hubs. Er führt neben Masse und den beiden 
 
 *Anschluss des Displays.* Das Display wird über die vorhandenen Leitungen für @spi angebunden, der Touchcontroller über @i2c mit den beiden Pull-up-Widerständen, die der Bus verlangt. Die Hintergrundbeleuchtung sollte über einen Transistor geschaltet werden, damit sie sich dimmen und im Leerlauf abschalten lässt. Im heutigen Aufbau leuchtet sie dauerhaft.
 
-Zwei Punkte gehen über die reine Schaltung hinaus. Die Platine muss sich mechanisch in den Aufbau einfügen, also zu den Maßen des Displays und zu den Befestigungspunkten des Hubs passen. Und sie sollte Messpunkte für die Versorgungsspannungen und die beiden Datenleitungen vorsehen, da eine Messung an einem gesteckten Aufbau sonst kaum möglich ist. Der Nutzen bliebe dabei auf Mechanik, Versorgung und Handhabung beschränkt. An der Anzahl der Übertragungen, der Latenz aus @sec:evaluation und der Software würde sich nichts ändern.
+Zwei Punkte gehen über die reine Schaltung hinaus. Die Platine muss sich mechanisch in den Aufbau einfügen, also zu den Maßen des Displays und zu den Befestigungspunkten des Hubs passen. Zudem sollte sie Messpunkte für die Versorgungsspannungen und die beiden Datenleitungen vorsehen, da eine Messung an einem gesteckten Aufbau sonst kaum möglich ist. Der Nutzen bliebe dabei auf Mechanik, Versorgung und Handhabung beschränkt. An der Anzahl der Übertragungen, der Latenz aus @sec:evaluation und der Software würde sich nichts ändern.
 
 === Weitere Peripherieklassen
 

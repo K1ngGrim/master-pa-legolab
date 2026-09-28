@@ -17,13 +17,13 @@ Die Zuordnung zum @osi\-Modell ist dabei bewusst nicht streng. Rahmung und Über
 
 Wie bereits beschrieben, zerlegt die Transportschicht Nachrichten beliebiger Länge in Pakete fester Größe und setzt sie auf der Empfängerseite wieder zusammen. Ein solches Paket wird in diesem Kapitel als Block bezeichnet, sobald es um die Schnittstelle zum Übertragungsweg geht, und als Frame, sobald es die Steuerinformationen der Transportschicht trägt. Dazu muss jedes Paket Steuerinformationen tragen, wie es auch bei bekannten Protokollen wie @tcp oder @udp der Fall ist.
 
-Im Folgenden wird beschrieben, welchen Übertragungsweg die Schicht nach unten voraussetzt, wobei lediglich gefordert ist, dass er Blöcke begrenzter Größe befördert. Welche @osi\-Schichten dieser Weg abdeckt, ist für den Entwurf ohne Belang und je nach System verschieden, beim hier betrachteten Bus sind es Bitübertragung und Sicherung. Anschließend werden die benötigten Steuerinformationen beschrieben, ohne feste Größen und Formate vorzugeben, damit der Entwurf auf andere Systeme übertragbar bleibt. Die konkrete Umsetzung zeigt @sec:umsetzung-transport.
+Im Folgenden wird beschrieben, welchen Übertragungsweg die Schicht nach unten voraussetzt, wobei lediglich gefordert ist, dass er Blöcke begrenzter Größe befördert. Welche @osi\-Schichten dieser Weg abdeckt, ist für den Entwurf ohne Belang und je nach System verschieden, beim hier betrachteten Bus sind es Bitübertragung und Sicherung. Anschließend werden die benötigten Steuerinformationen beschrieben, ohne feste Größen und Formate vorzugeben, damit der Entwurf auf andere Systeme übertragbar bleibt, während @sec:umsetzung-transport die konkrete Umsetzung zeigt.
 
-In verteilten Systemen durchläuft eine Nachricht den Schichtenstapel zweimal, auf der Senderseite abwärts und auf der Empfängerseite aufwärts. Jede Schicht fügt auf dem Weg nach unten eigene Steuerinformationen hinzu, die auf dem Weg nach oben wieder ausgewertet und entfernt werden. Die folgenden Abschnitte betrachten deshalb stets beide Richtungen. Dieses Prinzip wird im Allgemeinen als Kapselung und Entkapselung bezeichnet @HowEncapsulationWorks.
+In verteilten Systemen durchläuft eine Nachricht den Schichtenstapel zweimal, auf der Senderseite abwärts und auf der Empfängerseite aufwärts. Jede Schicht fügt auf dem Weg nach unten eigene Steuerinformationen hinzu, die auf dem Weg nach oben wieder ausgewertet und entfernt werden, was im Allgemeinen als Kapselung und Entkapselung bezeichnet wird @HowEncapsulationWorks. Die folgenden Abschnitte betrachten deshalb stets beide Richtungen.
 
 === Interceptor-Abstraktion <sec:interceptor>
 
-Die Transportschicht setzt nach unten einen Übertragungsweg voraus. Damit die Anforderungen aus @sec:kommunikationsanforderungen erfüllt werden können, darf sie über diesen Weg möglichst wenig wissen. Jede Eigenschaft, die sie voraussetzt, schließt Übertragungswege aus, die diese Eigenschaft nicht bieten. Die Schnittstelle richtet sich deshalb danach, was die betrachtete Verbindungsklasse mindestens leisten muss, und nicht nach den Fähigkeiten eines bestimmten Busses.
+Die Transportschicht setzt nach unten einen Übertragungsweg voraus, über den sie möglichst wenig wissen darf, damit die Anforderungen aus @sec:kommunikationsanforderungen erfüllt werden können. Jede Eigenschaft, die sie voraussetzt, schließt Übertragungswege aus, die diese Eigenschaft nicht bieten. Die Schnittstelle richtet sich deshalb danach, was die betrachtete Verbindungsklasse mindestens leisten muss, und nicht nach den Fähigkeiten eines bestimmten Busses.
 
 Da nur der Client die Übertragung anstoßen kann, lässt sich jede Interaktion auf denselben Ablauf zurückführen:
 
@@ -34,7 +34,7 @@ Da nur der Client die Übertragung anstoßen kann, lässt sich jede Interaktion 
   Client angestoßen.],
 ) <abb:interceptor>
 
-Die Schnittstelle bietet daher eine einzige Operation. Ein Block begrenzter Größe wird übergeben, und im selben Vorgang kommt ein Block zurück. Ob dieser Block Nutzlast, eine Bestätigung oder eine Anfrage nach dem Ergebnis enthält, spielt für die Schnittstelle keine Rolle, da sie ihn nur befördert und nicht liest. Die drei Phasen in @abb:interceptor unterscheiden sich also nur im Inhalt der Blöcke.
+Die Schnittstelle bietet daher eine einzige Operation, bei der ein Block begrenzter Größe übergeben wird und im selben Vorgang ein Block zurückkommt. Ob dieser Block Nutzlast, eine Bestätigung oder eine Anfrage nach dem Ergebnis enthält, spielt für die Schnittstelle keine Rolle, da sie ihn nur befördert und nicht liest. Die drei Phasen in @abb:interceptor unterscheiden sich also nur im Inhalt der Blöcke.
 
 Eine umfangreichere Schnittstelle wäre denkbar, würde aber Übertragungswege ausschließen. Eine Zustellung ohne vorherige Anfrage setzt voraus, dass der Server von sich aus senden kann. Ein Warten auf eine Meldung des Servers setzt zusätzlich voraus, dass er dies zu einem selbst gewählten Zeitpunkt tut. Beides leistet der hier betrachtete Bus nicht, und beides ist auch für die übrigen Vertreter der in @sec:verallgemeinerung beschriebenen Klasse nicht vorauszusetzen. Die Schnittstelle bildet daher die Schnittmenge dessen, was alle Übertragungswege dieser Klasse leisten können.
 
@@ -46,9 +46,9 @@ Den Inhalt der Blöcke wertet die Schnittstelle nicht aus, denn sie kennt weder 
 
 Für die Schnittstelle aus dem vorherigen Abschnitt genügt ein Block ohne weitere Struktur. Die Transportschicht gibt den Blöcken eine Struktur, um aus einer Folge unabhängiger Blöcke eine Nachricht beliebiger Länge zu machen. Dazu benötigt jeder Block neben der Nutzlast Steuerinformationen, die unter anderem die Zugehörigkeit zu einer Nachricht und die Position innerhalb der Nachricht beschreiben. Diese Steuerinformationen werden in einem Header zusammengefasst, der jedem Block vorangestellt wird. Ein Block mit dieser Struktur wird im Folgenden als Frame bezeichnet.
 
-Die folgenden Felder sind für die Rahmung eines Frames notwendig. Größe und Format der Felder werden dabei bewusst nicht vorgegeben, damit der Entwurf auf andere Systeme übertragbar bleibt. Eine konkrete Ausprägung zeigt @sec:umsetzung-transport. @sec:evaluation vergleicht sie mit einer früheren Fassung, die dieselbe Aufgabe mit deutlich mehr Steuerinformationen löste.
+Die folgenden Felder sind für die Rahmung eines Frames notwendig. Größe und Format der Felder werden dabei bewusst nicht vorgegeben, damit der Entwurf auf andere Systeme übertragbar bleibt. Eine konkrete Ausprägung zeigt @sec:umsetzung-transport, und @sec:evaluation vergleicht sie mit einer früheren Fassung, die dieselbe Aufgabe mit deutlich mehr Steuerinformationen löste.
 
-*Zugehörigkeit:* Ohne Kennung der Nachricht lässt sich nicht entscheiden, ob ein eintreffender Block zu einer laufenden Übertragung gehört. Das ist auch bei einem rein synchronen Austausch nötig, bei dem immer nur eine Nachricht gleichzeitig unterwegs ist. Da direkt nach dem Absetzen einer Anfrage gelesen wird, hat die Gegenseite diese unter Umständen noch nicht verarbeitet. Gelesen wird dann die Antwort auf die vorangegangene Anfrage. Erst die Kennung macht solche veralteten Antworten erkennbar.
+*Zugehörigkeit:* Ohne Kennung der Nachricht lässt sich nicht entscheiden, ob ein eintreffender Block zu einer laufenden Übertragung gehört. Das ist auch bei einem rein synchronen Austausch nötig, bei dem immer nur eine Nachricht gleichzeitig unterwegs ist. Da direkt nach dem Absetzen einer Anfrage gelesen wird, hat die Gegenseite diese unter Umständen noch nicht verarbeitet. Gelesen wird dann die Antwort auf die vorangegangene Anfrage, und erst die Kennung macht solche veralteten Antworten erkennbar.
 
 *Position:* Die Blöcke müssen in der richtigen Reihenfolge zusammengesetzt werden. Dazu muss die Position jedes Blocks innerhalb der Nachricht bekannt sein. Über die Position lassen sich außerdem Wiederholungen erkennen und verwerfen, die durch Übertragungsfehler oder Paketverlust entstehen.
 
@@ -60,9 +60,9 @@ Die folgenden Felder sind für die Rahmung eines Frames notwendig. Größe und F
 
 === Nutzlastlänge und Formatunabhängigkeit <sec:nutzlastlaenge>
 
-Neben den Steuerinformationen trägt ein Block die Nutzlast. Der Übertragungsweg liefert Blöcke fester Größe, die Länge der Nutzlast in einem Block ist aber nicht immer gleich. Eine fehlende Längenangabe ist unproblematisch, solange sich das Ende der Nutzlast aus ihrem Format ergibt. Bei textbasierten Formaten wie @json oder @xml ist das der Fall. Sie enthalten keine Nullbytes, sodass Füllbytes am Ende eines Blocks eindeutig erkannt und entfernt werden können. Binäre Formate wie @cbor oder das in der Referenzimplementierung verwendete MessagePack besitzen diese Eigenschaft nicht.
+Neben den Steuerinformationen trägt ein Block die Nutzlast. Der Übertragungsweg liefert Blöcke fester Größe, die Länge der Nutzlast in einem Block ist aber nicht immer gleich. Eine fehlende Längenangabe ist unproblematisch, solange sich das Ende der Nutzlast aus ihrem Format ergibt. Bei textbasierten Formaten wie @json oder @xml ist das der Fall, denn sie enthalten keine Nullbytes, sodass Füllbytes am Ende eines Blocks eindeutig erkannt und entfernt werden können. Binäre Formate wie @cbor oder das in der Referenzimplementierung verwendete MessagePack besitzen diese Eigenschaft nicht.
 
-Ohne Längenfeld ist die Transportschicht also an textbasierte Formate gebunden. Ein Wechsel des Formats oder die freie Wahl des Formats durch die Entwickler ist dann nicht möglich. Formatunabhängigkeit ist dabei keine ungewöhnliche Anforderung. Protokolle wie @http erlauben es beispielsweise, den Inhaltstyp der Nutzlast anzugeben, um verschiedene Formate zu unterstützen @RFC9110HTTP.
+Ohne Längenfeld ist die Transportschicht also an textbasierte Formate gebunden. Ein Wechsel des Formats oder die freie Wahl des Formats durch die Entwickler ist dann nicht möglich. Formatunabhängigkeit ist dabei keine ungewöhnliche Anforderung, denn Protokolle wie @http erlauben es beispielsweise, den Inhaltstyp der Nutzlast anzugeben, um verschiedene Formate zu unterstützen @RFC9110HTTP.
 
 Um Formatunabhängigkeit zu erreichen, muss die Länge der Nutzlast
 ausdrücklich angegeben werden. Dazu nimmt der Header ein Längenfeld auf, das angibt, wie viele Bytes des Blocks tatsächlich zur Nutzlast gehören.
@@ -94,7 +94,7 @@ $ eta = L / (N dot "MTU") $ <eq:effizienz>
 
 Daran lässt sich ablesen, wie stark Headergröße und Blockgröße die Effizienz beeinflussen. Wird der Header bei gleicher Blockgröße um ein Byte verkleinert, wächst $P$ um eins, was nach @eq:blöcke bereits $N$ um einen ganzen Block verringern kann. Eingespart wird dann eine vollständige Übertragung und somit ein Round Trip.
 
-Neben Blockgröße und Headerbreite beeinflusst auch die Länge der Nutzlast $L$ die Effizienz, die selbst bei gleichem Inhalt vom gewählten Serialisierungsformat abhängt. Wie sich zwei verschiedene Formate auswirken, vergleicht @sec:evaluation. Die Nutzlasteffizienz hängt also von drei Faktoren ab, nämlich von Blockgröße, Headerbreite und Länge der Nutzlast.
+Neben Blockgröße und Headerbreite beeinflusst auch die Länge der Nutzlast $L$ die Effizienz, die selbst bei gleichem Inhalt vom gewählten Serialisierungsformat abhängt, wobei @sec:evaluation vergleicht, wie sich zwei verschiedene Formate auswirken. Die Nutzlasteffizienz hängt also von drei Faktoren ab, nämlich von Blockgröße, Headerbreite und Länge der Nutzlast.
 
 Headerbreite und Nutzlastlänge wirken über dieselbe Aufrundung, jedoch auf unterschiedliche Weise, denn eine kürzere Nutzlast senkt $N$ nur dann, wenn sie eine Blockgrenze unterschreitet, während ein kleinerer Header alle Blockgrenzen zugleich verschiebt. Bei kleiner @mtu ist deshalb zu erwarten, dass die Rahmung stärker auf die Anzahl der Übertragungen wirkt als die Wahl des Serialisierungsformats, obwohl das Format die Nutzlast direkter verkleinert. @sec:evaluation prüft diese Erwartung.
 
@@ -105,14 +105,14 @@ Die Zerlegung einer Nachricht folgt unmittelbar aus den bisherigen Festlegungen.
 Wichtig ist, dass diese Zuordnung eindeutig ist, denn zu einer Nachricht und einer Position gehört immer derselbe Block. Die Zerlegung ist damit wiederholbar und nicht an einen Fortschritt gebunden, also idempotent, sodass die Wiederholung einer Übertragung das Ergebnis nicht verändert.
 
 ==== Wann ist eine Nachricht vollständig? <pg:vollstaendig>
-Die Gesamtlänge einer Nachricht ist dem Empfänger nicht bekannt, er kann die Vollständigkeit also nicht durch einen Vergleich mit ihr feststellen. Erkennbar ist sie nur an den eingetroffenen Blöcken. Trägt der Block an Position $n$ die Endmarkierung, besteht die Nachricht aus $n + 1$ Blöcken. Vollständig ist sie, sobald jede Position von $0$ bis $n$ mindestens einmal eingetroffen ist.
+Die Gesamtlänge einer Nachricht ist dem Empfänger nicht bekannt, er kann die Vollständigkeit also nicht durch einen Vergleich mit ihr feststellen, sondern nur an den eingetroffenen Blöcken erkennen. Trägt der Block an Position $n$ die Endmarkierung, besteht die Nachricht aus $n + 1$ Blöcken. Vollständig ist sie, sobald jede Position von $0$ bis $n$ mindestens einmal eingetroffen ist.
 
 Die Steuerinformationen haben dabei verschiedene Aufgaben, denn Endmarkierung und Position bestimmen, wie viele Blöcke zur Nachricht gehören, während das Längenfeld angibt, wie viele Bytes eines Blocks dazugehören. Die Prüfung auf Vollständigkeit kommt somit ohne Kenntnis des Inhalts aus.
 
 ==== Was passiert bei Übertragungswiederholungen? <pg:wiederholung>
 Ein Block wird erneut übertragen, wenn die zugehörige Bestätigung ausbleibt. Das kann daran liegen, dass er den Empfänger nicht erreicht hat, dass ihn eine Prüfsumme des Übertragungswegs als beschädigt verworfen hat oder dass die Bestätigung selbst verloren ging. Für den Sender sind diese Fälle nicht unterscheidbar, weshalb er in allen gleich reagiert und den Block erneut sendet. Die Mechanismen dafür werden in @sec:zuverlaessigkeit beschrieben.
 
-Da die Zerlegung eindeutig ist, hat der wiederholte Block denselben Inhalt wie der ursprüngliche, was dem Empfänger allein jedoch nicht hilft, denn hängt er den Block ein zweites Mal an, entsteht eine falsche Nachricht. Die Rekonstruktion muss Wiederholungen deshalb selbst abfangen und Blöcke verwerfen, deren Position bereits vorliegt. Erst dadurch ist auch sie idempotent.
+Da die Zerlegung eindeutig ist, hat der wiederholte Block denselben Inhalt wie der ursprüngliche, was dem Empfänger allein jedoch nicht hilft, denn hängt er den Block ein zweites Mal an, entsteht eine falsche Nachricht. Die Rekonstruktion muss Wiederholungen deshalb selbst abfangen und Blöcke verwerfen, deren Position bereits vorliegt, wodurch auch sie idempotent wird.
 
 ==== Was passiert bei einer abgebrochenen Übertragung? <pg:abbruch>
 Bricht eine Übertragung ab, bevor die Nachricht vollständig ist, bleiben die bereits eingetroffenen Blöcke liegen. Der Empfänger kann nicht entscheiden, ob die Übertragung noch fortgesetzt wird, da er weder die Gesamtzahl der Blöcke noch einen Zeitpunkt kennt, zu dem er aufgeben dürfte. Erkennbar wird der Abbruch erst daran, dass eine neue Übertragung beginnt, also ein Block an Position $0$ eintrifft. Die Position ist dafür verlässlicher als die Kennung, da sich die Kennung nach einer festen Anzahl von Nachrichten wiederholt.
@@ -122,10 +122,10 @@ Für den Umgang mit den liegengebliebenen Blöcken bestehen zwei Möglichkeiten:
 - Die unvollständige Nachricht wird verworfen, sobald eine neue beginnt. Das ist der einfachere Weg, setzt aber voraus, dass nie mehr als eine Nachricht gleichzeitig übertragen wird.
 - Die unvollständige Nachricht bleibt erhalten und kann später fortgesetzt werden. Das erlaubt mehrere gleichzeitige Übertragungen, verlangt aber einen Puffer je Kennung, eine Regel, wann eine Nachricht endgültig aufgegeben wird, und eine Laufzeitumgebung, die mehrere Übertragungen nebenläufig verwalten kann.
 
-Der Entwurf wählt die erste Möglichkeit. Die betrachtete Verbindungsklasse ist anfragegetrieben, sodass der Client ohnehin nur eine Nachricht zugleich senden kann. Hinzu kommt, dass die in @sec:einschraenkungen beschriebene Laufzeitumgebung die für die zweite Möglichkeit nötige Nebenläufigkeit nicht bereitstellt.
+Der Entwurf wählt die erste Möglichkeit, da die betrachtete Verbindungsklasse anfragegetrieben ist und der Client ohnehin nur eine Nachricht zugleich senden kann. Hinzu kommt, dass die in @sec:einschraenkungen beschriebene Laufzeitumgebung die für die zweite Möglichkeit nötige Nebenläufigkeit nicht bereitstellt.
 
 ==== Wie viel Speicher benötigt die Rekonstruktion? <pg:speicher>
-Der Empfänger muss alle Blöcke einer Nachricht halten, bis sie vollständig ist. Anforderung K5 verlangt dafür eine zur Entwurfszeit bekannte Obergrenze. Sie ergibt sich aus den bisherigen Festlegungen. Ist $b_"pos"$ die Breite des Positionsfelds in Bit, lassen sich $2^(b_"pos")$ Positionen unterscheiden, und die längste übertragbare Nachricht umfasst höchstens
+Der Empfänger muss alle Blöcke einer Nachricht halten, bis sie vollständig ist. Anforderung K5 verlangt dafür eine zur Entwurfszeit bekannte Obergrenze, die sich aus den bisherigen Festlegungen ergibt. Ist $b_"pos"$ die Breite des Positionsfelds in Bit, lassen sich $2^(b_"pos")$ Positionen unterscheiden, und die längste übertragbare Nachricht umfasst höchstens
 
 $ L_"max" = 2^(b_"pos") dot P $ <eq:maxlen>
 
@@ -133,14 +133,14 @@ Bytes. Dieser Wert ist zugleich die Obergrenze des Puffers, den die Gegenseite b
 
 === Serialisierung <sec:serialisierung>
 
-Die in @sec:grundlagen-serialisierung eingeführte Serialisierung überführt einen strukturierten Wert in eine Bytefolge und liest ihn auf der Gegenseite wieder aus. Sie liegt damit zwischen der Kommunikationsschicht, die mit Werten arbeitet, und der Fragmentierung, die mit Bytes arbeitet. Aus @sec:nutzlastlaenge folgt dabei eine Reihenfolge. Das Format kann erst dann frei gewählt werden, wenn die Rahmung die Länge der Nutzlast ausdrücklich mitführt.
+Die in @sec:grundlagen-serialisierung eingeführte Serialisierung überführt einen strukturierten Wert in eine Bytefolge und liest ihn auf der Gegenseite wieder aus. Sie liegt damit zwischen der Kommunikationsschicht, die mit Werten arbeitet, und der Fragmentierung, die mit Bytes arbeitet. Aus @sec:nutzlastlaenge folgt dabei eine Reihenfolge, denn das Format kann erst dann frei gewählt werden, wenn die Rahmung die Länge der Nutzlast ausdrücklich mitführt.
 
-Für die Transportschicht ist die Nutzlast ohne Struktur. Sie nimmt eine Bytefolge entgegen, zerlegt sie und setzt sie auf der Gegenseite wieder zusammen. Welche Werte darin vorkommen und wie sie angeordnet sind, wertet sie nicht aus. Das Format ist damit austauschbar, ohne dass die Rahmung geändert werden muss.
+Für die Transportschicht ist die Nutzlast ohne Struktur. Sie nimmt eine Bytefolge entgegen, zerlegt sie und setzt sie auf der Gegenseite wieder zusammen. Welche Werte darin vorkommen und wie sie angeordnet sind, wertet sie nicht aus, sodass das Format austauschbar ist, ohne dass die Rahmung geändert werden muss.
 
 Die Wahl des Formats ist an drei Bedingungen gebunden, die sich aus den bisherigen Abschnitten ergeben.
 
 Erstens muss das Format kompakt sein. Nach @eq:blöcke bestimmt die Länge der
-Nutzdaten unmittelbar die Anzahl der Blöcke, in die eine Nachricht zerfällt,
+Nutzlast unmittelbar die Anzahl der Blöcke, in die eine Nachricht zerfällt,
 und damit die Anzahl der Übertragungen.
 
 Zweitens muss es ohne Schema auskommen. Welche Objekte und Methoden es gibt,
@@ -164,21 +164,21 @@ Für diese Fälle wird Stop-and-Wait @arq @tanenbaumComputernetzwerke2012 verwen
 
 Die drei genannten Fehlerfälle sind für den Sender nicht unterscheidbar, da er in allen Fällen dasselbe sieht, nämlich eine ausbleibende Bestätigung. Eine Unterscheidung würde zudem nichts bringen, weil die Reaktion immer dieselbe ist. Der Empfänger erkennt die Wiederholung an der Position und verwirft sie, wie in @sec:fragmentierung beschrieben.
 
-Wiederholungen brauchen eine Obergrenze. Ohne sie wartet der Client endlos, sobald der Server dauerhaft nicht antwortet. Aus einem Fehler auf der einen Seite wird dann ein Stillstand der Anwendung auf der anderen. Mit einer Obergrenze scheitert der Aufruf nach einer bekannten Zeit und die Anwendung behält die Kontrolle. Das ist zugleich die Voraussetzung dafür, dass K4 geprüft werden kann, denn eine Antwortzeit lässt sich nur angeben, wenn sie nach oben begrenzt ist.
+Wiederholungen brauchen eine Obergrenze, denn ohne sie wartet der Client endlos, sobald der Server dauerhaft nicht antwortet. Aus einem Fehler auf der einen Seite wird dann ein Stillstand der Anwendung auf der anderen. Mit einer Obergrenze scheitert der Aufruf nach einer bekannten Zeit und die Anwendung behält die Kontrolle. Das ist zugleich die Voraussetzung dafür, dass K4 geprüft werden kann, denn eine Antwortzeit lässt sich nur angeben, wenn sie nach oben begrenzt ist.
 
 Dieselbe Überlegung gilt für das Abholen des Ergebnisses, denn der Client fragt so lange nach, bis ein Ergebnis vorliegt, und benötigt auch dafür eine Obergrenze. Für den Server folgt daraus die Zusicherung, dass jeder Aufruf ein Ergebnis oder eine Fehlermeldung hinterlassen muss, auch wenn die Ausführung selbst fehlschlägt. Bleibt beides aus, wartet der Client auf etwas, das nie eintrifft. Die Fehlerbehandlung ist damit Teil des Protokolls und wird nicht der Umsetzung überlassen.
 
-Drei Aufgaben übernimmt die Schicht ausdrücklich nicht. Sie korrigiert keine Fehler, sondern verlässt sich auf die Prüfsumme des Übertragungswegs und wiederholt den betroffenen Block. Sie sichert die Reihenfolge nicht gesondert ab, da der Kanal sequenziell arbeitet, wobei das Positionsfeld die Rekonstruktion gleichwohl von der Reihenfolge unabhängig macht. Außerdem betreibt sie keine Stauvermeidung. Auf einer Punkt-zu-Punkt-Verbindung mit einem Master und einer einzigen Nachricht gleichzeitig kann kein Stau entstehen.
+Drei Aufgaben übernimmt die Schicht ausdrücklich nicht. Sie korrigiert keine Fehler, sondern verlässt sich auf die Prüfsumme des Übertragungswegs und wiederholt den betroffenen Block. Sie sichert die Reihenfolge nicht gesondert ab, da der Kanal sequenziell arbeitet, wobei das Positionsfeld die Rekonstruktion gleichwohl von der Reihenfolge unabhängig macht. Außerdem betreibt sie keine Stauvermeidung, da auf einer Punkt-zu-Punkt-Verbindung mit einem Master und einer einzigen Nachricht gleichzeitig kein Stau entstehen kann.
 
 == Kommunikationsschicht <sec:kommunikationsschicht>
 
 Mit der Transportschicht lassen sich Nachrichten beliebiger Länge übertragen, was für eine Anwendung jedoch noch keine geeignete Schnittstelle darstellt, da sie mit Methodenaufrufen arbeitet. Diese Lücke schließt die Kommunikationsschicht, indem sie einen Aufruf auf eine Nachricht abbildet, ihn über die Transportschicht befördert und das Ergebnis an die aufrufende Stelle zurückgibt.
 
-Von der Transportschicht kennt sie nur zwei Vorgänge. Eine Nachricht wird gesendet, und eine Nachricht kommt zurück. In wie viele Blöcke die Nachricht dabei zerfällt, wie oft ein Block wiederholt wird und in welchem Format die Nutzlast vorliegt, bleibt verborgen.
+Von der Transportschicht kennt sie nur zwei Vorgänge, nämlich das Senden einer Nachricht und das Eintreffen einer Antwort. In wie viele Blöcke die Nachricht dabei zerfällt, wie oft ein Block wiederholt wird und in welchem Format die Nutzlast vorliegt, bleibt verborgen.
 
-Die Schicht stellt einen @rpc her, wie er in @sec:relatedwork eingeführt wurde. Die Anwendung ruft eine Methode auf, die auf einem anderen Gerät ausgeführt wird, und erhält deren Rückgabewert, wobei an der Aufrufstelle nicht erkennbar ist, dass eine Übertragung stattgefunden hat. Dieses Verhalten wird als Aufrufstransparenz bezeichnet.
+Die Schicht stellt einen @rpc her, wie er in @sec:relatedwork eingeführt wurde. Die Anwendung ruft eine Methode auf, die auf einem anderen Gerät ausgeführt wird, und erhält deren Rückgabewert, wobei an der Aufrufstelle nicht erkennbar ist, dass eine Übertragung stattgefunden hat, was als Aufrufstransparenz bezeichnet wird.
 
-Die dort betrachteten Rahmenwerke setzen dafür Eigenschaften voraus, die diese Verbindung nicht bietet. Sie erwarten einen Transport, der Nachrichten beliebiger Länge zuverlässig befördert, und einen Rückkanal, über den der Server sein Ergebnis von sich aus zustellt. Beides ist hier nicht gegeben. Die folgenden Abschnitte entwickeln deshalb einen eigenen Aufrufmechanismus, der mit den Mitteln der Transportschicht auskommt.
+Die dort betrachteten Rahmenwerke setzen dafür Eigenschaften voraus, die diese Verbindung nicht bietet. Sie erwarten einen Transport, der Nachrichten beliebiger Länge zuverlässig befördert, und einen Rückkanal, über den der Server sein Ergebnis von sich aus zustellt. Beides ist hier nicht gegeben, weshalb die folgenden Abschnitte einen eigenen Aufrufmechanismus entwickeln, der mit den Mitteln der Transportschicht auskommt.
 
 Dabei ist zu klären, welche Angaben eine Aufrufnachricht mitführen muss, wie eine Antwort ihrer Anfrage zugeordnet wird, wie der Server den zuständigen Empfänger auswählt und auf welchem Weg ein Ergebnis zurückgelangt.
 
@@ -188,7 +188,7 @@ Ein @rpc muss so viel mitführen, dass der Server den Aufruf ohne weitere Rückf
 
 Angaben über Typen oder Signaturen werden nicht mitgeführt, denn nach @sec:serialisierung kommt das Format ohne Schema aus und überträgt nur Werte, keine Beschreibungen von Werten. Ob eine Methode existiert oder bestimmte Argumente erwartet, stellt sich somit erst auf dem Server und damit zur Laufzeit heraus.
 
-Das Ergebnis nimmt denselben Weg zurück. Es ist ebenfalls eine Nachricht und trägt entweder den Rückgabewert oder eine Fehlermeldung. Welcher der beiden Fälle vorliegt, ist am Schlüssel zu erkennen, unter dem der Inhalt steht. Das folgt aus der Zusicherung in @sec:zuverlaessigkeit, denn der Client wartet auf genau eine Antwort und muss auch im Fehlerfall eine erhalten.
+Das Ergebnis nimmt denselben Weg zurück und ist ebenfalls eine Nachricht, die entweder den Rückgabewert oder eine Fehlermeldung trägt. Welcher der beiden Fälle vorliegt, ist am Schlüssel zu erkennen, unter dem der Inhalt steht. Das folgt aus der Zusicherung in @sec:zuverlaessigkeit, denn der Client wartet auf genau eine Antwort und muss auch im Fehlerfall eine erhalten.
 
 Diese Angaben werden mit jedem Aufruf übertragen, und nach @eq:blöcke wirkt sich ihre Länge direkt auf die Anzahl der Blöcke aus. Zwei Festlegungen halten sie deshalb kurz. Die Argumente werden in der Reihenfolge der Parameter übertragen, ohne ihre Namen. Die Methode wird über eine Kennung fester Länge bezeichnet, die beide Seiten auf dieselbe Weise aus ihrem Namen berechnen, sodass keine Tabelle zwischen Namen und Kennungen gepflegt werden muss.
 
@@ -200,7 +200,7 @@ Fehler in dieser Vereinbarung fallen unterschiedlich auf. Eine unbekannte Method
 
 Jede Antwort muss der Anfrage zugeordnet werden, zu der sie gehört. Der Frame führt nach @sec:frame-struktur bereits eine Kennung je Nachricht mit, und ein Aufruf entspricht genau einer Nachricht. Diese Kennung identifiziert also zugleich den Aufruf, und eine zweite Angabe in der Nutzlast ist nicht nötig.
 
-Die Kennung stammt damit aus dem Header, und ihr Wertebereich folgt aus dessen Breite. Sie wiederholt sich nach einer festen Anzahl von Aufrufen. Das ist zulässig, solange zwischen zwei gleichen Kennungen kein älteres Ergebnis mehr unterwegs sein kann. Eine eigene Kennung der Kommunikationsschicht wäre von der Headerbreite unabhängig, müsste aber in jeder Nachricht zusätzlich übertragen werden und würde nach @eq:blöcke die Anzahl der Übertragungen erhöhen. Die Übernahme der Kennung aus dem Header ist also eine Abwägung zwischen doppelten Steuerinformationen und einer strengen Trennung der Schichten.
+Die Kennung stammt damit aus dem Header, und ihr Wertebereich folgt aus dessen Breite. Sie wiederholt sich nach einer festen Anzahl von Aufrufen, was zulässig ist, solange zwischen zwei gleichen Kennungen kein älteres Ergebnis mehr unterwegs sein kann. Eine eigene Kennung der Kommunikationsschicht wäre von der Headerbreite unabhängig, müsste aber in jeder Nachricht zusätzlich übertragen werden und würde nach @eq:blöcke die Anzahl der Übertragungen erhöhen. Die Übernahme der Kennung aus dem Header ist also eine Abwägung zwischen doppelten Steuerinformationen und einer strengen Trennung der Schichten.
 
 === Verteilung eingehender Aufrufe
 
@@ -221,8 +221,8 @@ Aufgrund der eingeschränkten Kommunikationsrichtung aus @sec:einschraenkungen k
 
 Ereignisse folgen demselben Muster, unterscheiden sich jedoch in einem Punkt. Ein Ergebnis erwartet der Client, weil er den zugehörigen Aufruf abgesetzt hat, ein Ereignis dagegen nicht, sodass er regelmäßig nachfragen muss, ohne zu wissen, ob es etwas abzuholen gibt.
 
-Die zeitliche Auflösung hängt damit vom Abfragetakt ab, denn ein Ereignis, das zwischen zwei Abfragen auftritt, wird erst bei der nächsten bemerkt. Häufigeres Abfragen verkürzt zwar diese Verzögerung, kostet jedoch je Abfrage eine Übertragung und damit Zeit, die für Aufrufe fehlt, während selteneres Abfragen Übertragungen spart und die Verzögerung verlängert. Beides lässt sich nicht gleichzeitig verbessern.
+Die zeitliche Auflösung hängt damit vom Abfragetakt ab, denn ein Ereignis, das zwischen zwei Abfragen auftritt, wird erst bei der nächsten bemerkt. Häufigeres Abfragen verkürzt zwar diese Verzögerung, kostet jedoch je Abfrage eine Übertragung und damit Zeit, die für Aufrufe fehlt, während selteneres Abfragen Übertragungen spart und die Verzögerung verlängert. Beide Ziele lassen sich also nicht zugleich erreichen.
 
-Zwischen zwei Abfragen können mehrere Ereignisse auftreten, die der Server puffern muss, wobei der Puffer nach K5 begrenzt ist. Läuft er über, gehen Ereignisse verloren. Für diesen Fall muss ein Verhalten festgelegt sein, da ein stilles Verwerfen für die Anwendung nicht erkennbar wäre.
+Zwischen zwei Abfragen können mehrere Ereignisse auftreten, die der Server puffern muss, wobei der Puffer nach K5 begrenzt ist. Läuft er über, gehen Ereignisse verloren, weshalb für diesen Fall ein Verhalten festgelegt sein muss, da ein stilles Verwerfen für die Anwendung nicht erkennbar wäre.
 
 Am anfragegetriebenen Rückkanal wirkt sich die eingeschränkte Kommunikationsrichtung direkt auf die Anwendung aus. Ob die erreichbare Antwortzeit die Anforderung K4 einhält, prüft @sec:evaluation. Eine Möglichkeit, diesen Weg für reine Darstellungsreaktionen zu umgehen, zeigt @sec:ansteuerung.

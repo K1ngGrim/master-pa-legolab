@@ -2,7 +2,7 @@
 
 Dieses Kapitel bewertet die Referenzimplementierung anhand der drei in @sec:einleitung genannten Kriterien. Zunächst wird geprüft, ob sich eine interaktive Oberfläche über die entwickelte Abstraktion umsetzen lässt, bevor der Übertragungsaufwand je Aufruf und die Reaktionszeit auf eine Berührung gemessen werden. Daran schließen sich der Speicherbedarf, eine kurze Bewertung des Hardwareaufbaus sowie die Diskussion der Ergebnisse an.
 
-Gemessen wird mit zwei eigenen Programmen. Das erste läuft auf dem Client und ruft `set_text` mit Texten wachsender Länge auf, wobei es für jeden Aufruf eine Zeile mit der Länge der Nutzlast, der Anzahl der Frames, der Anzahl der Round Trips, den Wiederholungen sowie den Zeiten für Senden, Warten und Abholen ausgibt. Je Textlänge werden 20 Aufrufe gemessen, denen drei Aufrufe zum Aufwärmen vorausgehen. Das zweite Programm misst die Reaktion auf eine Berührung und wird dabei durch Zeitstempel auf dem Server ergänzt.
+Gemessen wird mit zwei eigenen Programmen. Das erste läuft auf dem Client und ruft `set_text` mit Texten wachsender Länge auf. Je Aufruf gibt es eine Zeile mit der Länge der Nutzlast, der Anzahl der Frames, der Anzahl der Round Trips, den Wiederholungen sowie den Zeiten für Senden, Warten und Abholen aus. Je Textlänge werden 20 Aufrufe gemessen, denen drei Aufrufe zum Aufwärmen vorausgehen. Das zweite Programm misst die Reaktion auf eine Berührung und wird dabei durch Zeitstempel auf dem Server ergänzt.
 
 Angegeben ist jeweils der Median, da die Verteilungen durch feste Takte nicht symmetrisch sind. Beide Seiten laufen auf dem Logging-Level INFO, da die Ausgabe synchron über die serielle Verbindung erfolgt und andernfalls die Messung bestimmen würde. Vor jedem Lauf wird zudem der Server neu gestartet. Da Client und Server keine gemeinsame Zeitbasis besitzen, wird auf jedem Gerät für sich gemessen und erst in der Auswertung zusammengerechnet.
 
@@ -24,7 +24,7 @@ Die Messläufe ergänzen das um die Dauer, denn über 640 aufeinanderfolgende Au
       [K1], [Strukturierte Nachrichten unbestimmter Länge], [erfüllt], [Nachrichten bis 3315 Byte, gemessen bis 164 Byte über 24 Frames],
       [K2], [Aufrufe mit zuordenbarem Ergebnis], [erfüllt], [Zuordnung über die Kennung der Nachricht, kein falsch zugeordnetes Ergebnis in 640 Aufrufen],
       [K3], [Rückfluss von Ereignissen], [erfüllt], [der Puffer wird beim Abfragen geleert, ein Überlauf wird gemeldet, siehe @sec:reaktionszeit],
-      [K4], [Antwortzeit unter 100 ms], [teilweise], [über ein Binding höchstens 51 ms, über den Client rund 1480 ms],
+      [K4], [Antwortzeit unter 100 ms], [teilweise], [über ein Binding höchstens 51 ms, über den Client rund 1490 ms],
       [K5], [Begrenzter Speicherbedarf], [erfüllt], [feste Obergrenzen für Nachrichtenlänge, Ergebnisse und Ereignisse, siehe @tab:rückkanal],
       [K6], [Unabhängigkeit vom Übertragungsweg], [erfüllt], [alle wegabhängigen Anteile liegen in der Busanbindung, siehe @sec:interceptor],
     )
@@ -61,7 +61,7 @@ Die Anzahl der Round Trips folgt unmittelbar aus @eq:blöcke. Sie setzt sich zus
 
 Die beiden Einflussgrößen lassen sich daran trennen. Gegenüber dem heutigen Stand mit 13 Byte und MessagePack braucht die Fassung mit 7 Byte das 1,56-fache an Round Trips, die Fassung mit der @json das 1,18-fache und beides zusammen das 2,09-fache. Die Rahmung wiegt also deutlich schwerer als das Format. Der Grund ist in den Daten sichtbar. Die @json erzeugt bei denselben Aufrufen eine um 22 bis 23 Byte längere Nutzlast, was nach @eq:blöcke nicht bei jeder Textlänge eine Blockgrenze überschreitet. Ein kleinerer Header verschiebt dagegen alle Blockgrenzen zugleich. Die Erwartung aus @sec:kosten wird damit bestätigt.
 
-Die Nutzlasteffizienz nach @eq:effizienz fällt dabei niedrig aus. Ein Aufruf mit 21 Byte Nutzlast belegt zwei Frames und somit 32 übertragene Byte, was einem Wert von 0,66 entspricht, während sich bei 142 Byte über elf Frames 0,81 ergeben und damit der höchste bei einem Header von drei Byte erreichbare Wert. Für die Dauer eines Aufrufs bleibt gleichwohl die Anzahl der Frames maßgeblich und nicht ihre Füllung.
+Die Nutzlasteffizienz nach @eq:effizienz fällt dabei niedrig aus. Ein Aufruf mit 21 Byte Nutzlast belegt zwei Frames und somit 32 übertragene Byte, was einem Wert von 0,66 entspricht. Bei 142 Byte über elf Frames ergeben sich 0,81 und damit der höchste bei einem Header von drei Byte erreichbare Wert. Für die Dauer eines Aufrufs bleibt gleichwohl die Anzahl der Frames maßgeblich und nicht ihre Füllung.
 
 Unabhängig von der Nachrichtenlänge kostet jeder Aufruf zwei zusätzliche Round Trips für das Abholen des Ergebnisses und somit 228 ms, was beim kürzesten Aufruf bereits die Hälfte der gesamten Dauer ausmacht. Auffällig ist zudem, dass das Abfrageintervall von 50 ms nie zum Tragen kommt, da die gemessene Wartezeit stets genau 114 ms und damit einen einzigen Round Trip beträgt. Der Server ist folglich mit der Ausführung fertig, bevor der Client zum ersten Mal nachfragt.
 

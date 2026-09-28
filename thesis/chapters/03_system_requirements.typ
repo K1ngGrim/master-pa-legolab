@@ -41,7 +41,7 @@ Bevor konkrete Hardwarekomponenten betrachtet werden, lassen sich aus der Zielse
 - *D2 -- Berührungseingabe.* Es soll zugleich Benutzereingaben über einen Touchscreen entgegennehmen.
 - *D3 -- Embedded-typische Auslegung.* Auflösung, Größe und Energieaufnahme orientieren sich an typischen Embedded-Anwendungen. Damit kommen kleine @tft\-Displays mit einer Auflösung von etwa 240 × 320 Pixeln in Frage.
 
-Solche Displays sind in unterschiedlichen Ausführungen verfügbar. Im Embedded-Bereich weit verbreitet sind Module mit ILI9341-Display-Controller @ilitekILI9341Datasheet2011. Sie unterstützen eine Auflösung von 240 × 320 Pixeln bei einer Farbtiefe von 18 Bit und werden über @spi angesteuert. Für die Erkennung von Berührungen kommen typischerweise kapazitive Touchcontroller wie der FT6x06 @focaltechFT6x06Datasheet2014 zum Einsatz, die über @i2c angebunden werden und neben Einzelberührungen auch Mehrfingergesten erfassen können. Solche Module sind kostengünstig verfügbar und werden in der Maker- und Embedded-Community häufig in Verbindung mit Mikrocontrollern der ESP32-Familie eingesetzt.
+Solche Displays sind in unterschiedlichen Ausführungen verfügbar, wobei im Embedded-Bereich Module mit ILI9341-Display-Controller @ilitekILI9341Datasheet2011 weit verbreitet sind. Sie unterstützen eine Auflösung von 240 × 320 Pixeln bei einer Farbtiefe von 18 Bit und werden über @spi angesteuert. Für die Erkennung von Berührungen kommen typischerweise kapazitive Touchcontroller wie der FT6x06 @focaltechFT6x06Datasheet2014 zum Einsatz, die über @i2c angebunden werden und neben Einzelberührungen auch Mehrfingergesten erfassen können. Solche Module sind kostengünstig verfügbar und werden in der Maker- und Embedded-Community häufig in Verbindung mit Mikrocontrollern der ESP32-Familie eingesetzt.
 
 === Anforderungen an einen externen Mikrocontroller
 
@@ -83,11 +83,11 @@ Steuer- und Anzeigeeinheit sind über einen Sensorport des Hubs und das @lpf2\-P
 === Eingeschränkte Kommunikationsrichtung
 
 Das @lpf2\-Protokoll arbeitet nach dem Master-Slave-Prinzip @LeJOSEV3Wiki.
-Der Hub ist dabei der Master. Er wählt den aktiven Modus des angeschlossenen Geräts aus und stößt jede Übertragung an. Das Gerät meldet sich als Sensor an und stellt Werte bereit, die der Hub abruft. Von sich aus senden kann es nicht.
+Der Hub ist dabei der Master. Er wählt den aktiven Modus des angeschlossenen Geräts aus und stößt jede Übertragung an. Das Gerät meldet sich als Sensor an und stellt Werte bereit, die der Hub abruft, während es von sich aus nicht senden kann.
 
 Die in @sec:relatedwork beschriebene Bibliothek PUPRemote bildet das direkt ab und bietet ein einziges Zugriffsmuster an. Die Steuereinheit schreibt Daten in einen Modus und liest im selben Vorgang die Antwort zurück. Jede Übertragung besteht damit aus Anfrage und Antwort, und die Anzeigeeinheit antwortet ausschließlich.
 
-Für die Anforderungen bedeutet das, dass sich weder Ergebnisse (K2) noch Ereignisse (K3) zustellen lassen. Beides kann nur bereitgehalten und abgefragt werden. Entsteht ein Ergebnis erst nach der letzten Anfrage, ist eine weitere Anfrage nötig, und eine Berührung zwischen zwei Anfragen muss bis zur nächsten Anfrage zwischengespeichert werden. Wann eine Rückmeldung eintrifft, bestimmt damit die Seite, die sie abholt. Die zeitliche Auflösung von Ereignissen ist dadurch durch den Abfragetakt der Steuereinheit begrenzt, was sich direkt auf K4 auswirkt.
+Für die Anforderungen bedeutet das, dass sich weder Ergebnisse (K2) noch Ereignisse (K3) zustellen lassen, sondern beides nur bereitgehalten und abgefragt werden kann. Entsteht ein Ergebnis erst nach der letzten Anfrage, ist eine weitere Anfrage nötig, und eine Berührung zwischen zwei Anfragen muss bis zur nächsten Anfrage zwischengespeichert werden. Wann eine Rückmeldung eintrifft, bestimmt damit die Seite, die sie abholt. Die zeitliche Auflösung von Ereignissen ist dadurch durch den Abfragetakt der Steuereinheit begrenzt, was sich direkt auf K4 auswirkt.
 
 === Begrenzte Paketgröße
 
@@ -139,7 +139,7 @@ Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem v
 
 == Verallgemeinerung des Problemraums <sec:verallgemeinerung>
 
-Die im vorigen Abschnitt beschriebenen Einschränkungen wurden am konkreten Zielsystem hergeleitet. Sie sind jedoch nicht an dieses System gebunden. Das ist für die weitere Arbeit wichtig, denn davon hängt ab, ob der folgende Entwurf eine Einzellösung ist oder für eine ganze Klasse von Verbindungen gilt.
+Die im vorigen Abschnitt beschriebenen Einschränkungen wurden am konkreten Zielsystem hergeleitet, sind jedoch nicht an dieses System gebunden. Das ist für die weitere Arbeit wichtig, denn davon hängt ab, ob der folgende Entwurf eine Einzellösung ist oder für eine ganze Klasse von Verbindungen gilt.
 
 Die drei Eigenschaften lassen sich von der Plattform ablösen und als allgemeine Merkmale einer Verbindung formulieren. Erstens ist die Übertragung anfragegetrieben, das heißt, nur eine der beiden Seiten kann eine Übertragung anstoßen. Zweitens ist die Nutzlast je Übertragung klein und fest vorgegeben. Drittens steht auf mindestens einer Seite eine Laufzeitumgebung zur Verfügung, die weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellt.
 

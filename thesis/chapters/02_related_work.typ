@@ -55,7 +55,7 @@ JSON-RPC verfolgt eine deutlich schlankere Idee @JSONRPC20Specification, da die 
 
 Am anderen Ende des Spektrums steht @g_RPC @GRPC. Das Rahmenwerk verbindet Protocol Buffers als schemagebundene Serialisierung mit @http/2 als Transport und unterstützt unter anderem Datenströme in beide Richtungen. Diese Leistungsfähigkeit erfordert jedoch einen vollständigen @http/2-Stack und setzt eine bidirektionale Verbindung voraus. Für den betrachteten LEGO-Bus und die eingesetzten Laufzeitumgebungen ist @g_RPC zu schwergewichtig und zu stark an seinen Transport gebunden.
 
-Zusammengefasst setzen die etablierten Rahmenwerke entweder einen leistungsfähigen Transport voraus oder standardisieren nur die Nachrichtenebene. Rahmung, Fragmentierung und der Rückkanal bleiben dann offen. Genau diese darunterliegende Schicht behandelt die vorliegende Arbeit.
+Zusammengefasst setzen die etablierten Rahmenwerke entweder einen leistungsfähigen Transport voraus oder standardisieren nur die Nachrichtenebene. Rahmung, Fragmentierung und der Rückkanal bleiben dann offen, und genau diese darunterliegende Schicht behandelt die vorliegende Arbeit.
 
 == Serialisierung für ressourcenarme Geräte <sec:serialisierung-geraete>
 
@@ -65,7 +65,7 @@ In der vorliegenden Arbeit wurde zunächst die @json verwendet, wofür es zwei p
 
 Mit zunehmender Reife der Umsetzung änderte sich diese Gewichtung. Bei einer Nutzlast von wenigen Byte je Paket wirkt sich jedes zusätzliche Zeichen direkt auf die Anzahl der zu übertragenden Pakete und damit auf die Dauer eines Aufrufs aus. Im weiteren Verlauf wurde deshalb auf MessagePack @MessagePackItsJSON gewechselt. Das Format bildet dasselbe Datenmodell ab, kommt ebenfalls ohne vorab geteiltes Schema aus und stellt die Daten binär und damit deutlich kürzer dar. Die Lesbarkeit geht dabei verloren. Sie lässt sich bei der Fehlersuche aber zurückgewinnen, indem auf die textbasierte Kodierung umgeschaltet wird, da beide Formate hinter derselben Schnittstelle liegen.
 
-Das Kodieren und Dekodieren der Nutzlast ist dafür an einer einzigen Stelle gebündelt. Ein Wechsel der Kodierung betrifft diese Stelle und die Rahmung, die dafür eine ausdrückliche Längenangabe je Paket benötigt. Der entfernte Aufruf und das Objektmodell bleiben unverändert. Der beschriebene Wechsel zeigt zugleich, dass diese Trennung in der Praxis funktioniert. Die Evaluation vergleicht beide Kodierungen und gibt den Overhead in benötigten Paketen je Aufruf an.
+Das Kodieren und Dekodieren der Nutzlast ist dafür an einer einzigen Stelle gebündelt. Ein Wechsel der Kodierung betrifft diese Stelle und die Rahmung, die dafür eine ausdrückliche Längenangabe je Paket benötigt. Der entfernte Aufruf und das Objektmodell bleiben unverändert, und der beschriebene Wechsel zeigt, dass diese Trennung in der Praxis funktioniert. Die Evaluation vergleicht beide Kodierungen und gibt den Overhead in benötigten Paketen je Aufruf an.
 
 == Protokolle für eingebettete Systeme und Sensornetze
 
