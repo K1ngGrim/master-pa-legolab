@@ -14,9 +14,7 @@ Die Module der Middleware liegen dagegen in einer Paketstruktur. Ein eigenes Wer
 
 Auf dem ESP32 läuft MicroPython mit der Anbindung an @LVGL, wobei diese Umgebung deutlich umfangreicher ausfällt und lange Ganzzahlen, Threads, `uasyncio` sowie einen Zufallszahlengenerator bietet. Knapp ist hier vor allem der Arbeitsspeicher, da @LVGL einen großen Teil des Heaps für die Darstellung belegt. Welche Folgen das für die Nebenläufigkeit hat, beschreibt @sec:nebenlaeufigkeit.
 
-Der gemeinsame Code muss in beiden Umgebungen laufen und richtet sich deshalb nach der engeren, also nach Pybricks. Das betrifft vor allem die Transportschicht, den Codec und die Stellvertreter. Code, der nur auf dem Server läuft, darf die Möglichkeiten des ESP32 nutzen. @tab:zuordnung ordnet die Module den Schichten aus @sec:architektur zu.
-
-@tab:zuordnung ordnet die Module der Referenzimplementierung den Schichten aus @sec:architektur zu.
+Der gemeinsame Code muss in beiden Umgebungen laufen und richtet sich deshalb nach der engeren, also nach Pybricks. Das betrifft vor allem die Transportschicht, den Codec und die Stellvertreter. Code, der nur auf dem Server läuft, darf die Möglichkeiten des ESP32 nutzen. @tab:zuordnung ordnet die Module der Referenzimplementierung den Schichten aus @sec:architektur zu.
 #figure(
   caption: [Zuordnung der Module zu den Schichten aus @sec:architektur],
   table(

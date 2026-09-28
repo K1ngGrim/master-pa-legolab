@@ -123,15 +123,12 @@ Der Speicherbedarf auf dem Server wurde dagegen nicht gemessen, da dort die Anze
 
 Die Adapterplatine ist ein Zwischenschritt weg vom Steckbrett, auf dem der Aufbau in einer ersten Vorführung noch beruhte. Da sich Display und Mikrocontroller aufstecken lassen, beschränkt sich die Hardware auf das Nötigste, nämlich auf die Verbindung beider Baugruppen. Die Platine führt alle benötigten Leitungen auf Buchsenleisten, die sich ohne besondere Ausrüstung löten lassen. Dadurch lassen sich weitere Exemplare zügig aufbauen, und die aufgesteckten Baugruppen bleiben für andere Zwecke verwendbar.
 
-Steckverbindungen sind allerdings keine gute Wahl für die Signalintegrität und zählen im Betrieb zu den häufigsten Fehlerquellen. Für einen Aufbau, der im Labor erprobt und zwischen Versuchen umgesteckt wird, ist das vertretbar, für einen dauerhaften Einsatz dagegen nicht. Eine dreidimensionale Darstellung beider Seiten der Platine aus dem Entwurfswerkzeug findet sich im Anhang. Neben den Buchsenleisten sind dort die Versionsnummer der Platine sowie die Bezeichnungen der Bauteile aufgedruckt, was die Bestückung und die spätere Zuordnung erleichtert.
+Steckverbindungen sind allerdings keine gute Wahl für die Signalintegrität und zählen im Betrieb zu den häufigsten Fehlerquellen. Für einen Aufbau, der im Labor erprobt und zwischen Versuchen umgesteckt wird, ist das vertretbar, für einen dauerhaften Einsatz dagegen nicht. @abb:platine zeigt beide Seiten der Platine als dreidimensionale Darstellung aus dem Entwurfswerkzeug. Neben den Buchsenleisten sind dort die Versionsnummer der Platine sowie die Bezeichnungen der Bauteile aufgedruckt, was die Bestückung und die spätere Zuordnung erleichtert.
 
-// TODO: Render der Platine als figures/pcb_render.png ablegen, dann diesen
-// Block einkommentieren und den Verweis oben pruefen.
-//
-// #figure(
-//   image("../figures/pcb_render.png", width: 90%),
-//   caption: [Vorder- und Rückseite der Adapterplatine als dreidimensionale Darstellung],
-// ) <abb:platine>
+#figure(
+   image("../figures/3d_render.png"),
+   caption: [Vorderseite (rechts) und Rückseite (links) der Adapterplatine als 3D Rendering],
+ ) <abb:platine>
 
 == Diskussion der Ergebnisse <sec:diskussion>
 
