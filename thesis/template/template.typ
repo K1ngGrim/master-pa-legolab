@@ -166,10 +166,16 @@
     #if it.level == 1 [
       #colbreak(weak: true)
     ]#pad(bottom: 0.5em)[#it]]
+  // Ein Verweis auf eine Überschrift der obersten Ebene ist ein Kapitel, kein
+  // Abschnitt. Ohne diese Zuordnung setzt Typst durchgehend "Abschnitt".
+  show heading.where(level: 1): set heading(supplement: [Kapitel])
   show heading.where(level: 4): set heading(outlined: false, supplement: [Absatz])
   show heading.where(level: 4): it => {
     parbreak()
-    text(weight: "bold")[#it.body.]
+    // Kein angehaengter Punkt: die Ueberschriften dieser Ebene sind Fragen und
+    // tragen ihr eigenes Satzzeichen, sonst entstuende "vollstaendig?.".
+    text(weight: "bold")[#it.body]
+    h(0.5em)
   }
   set math.equation(numbering: "(1)", supplement: [Formel])
   show math.equation: set text(weight: 400)
@@ -307,8 +313,11 @@
     #text(11pt)[
       #par(justify: true)[
         Bei der Erstellung dieser Arbeit wurden KI-Werkzeuge unterstützend
-        eingesetzt, insbesondere für Teile des Programmcodes sowie für
-        Textentwürfe. Alle inhaltlichen und konzeptionellen Entscheidungen,
+        eingesetzt, namentlich Claude (Anthropic), und zwar für Textentwürfe
+        und sprachliche Überarbeitung des Fließtextes, für Teile des
+        Programmcodes sowie für die Auswertungsskripte der Messungen. Nicht
+        eingesetzt wurden sie für den Entwurf der Architektur, die Durchführung
+        der Messungen und die Interpretation der Ergebnisse. Alle inhaltlichen und konzeptionellen Entscheidungen,
         die Durchführung und Auswertung, die Überprüfung sämtlicher Ergebnisse
         sowie die endgültige Fassung des Textes wurden von dem Autor selbst
         erstellt und geprüft.
@@ -318,10 +327,11 @@
         Bei der Nutzung wurden die allgemein anerkannten Standards guter
         wissenschaftlicher Praxis sowie die einschlägigen Vorgaben des
         Fachbereichs zum Umgang mit KI-generierten Inhalten beachtet.
-        Jede wesentliche Behauptung wurde eigenständig auf Plausibilität und
-        Richtigkeit geprüft und durch geeignete Quellen belegt. Es wurden keine
+        Jede übernommene Aussage wurde eigenständig auf Plausibilität und
+        Richtigkeit geprüft; wo eine Aussage nicht durch eine Quelle oder eine
+        eigene Messung belegt ist, ist das im Text vermerkt. Es wurden keine
         personenbezogenen, urheberrechtlich geschützten oder vertraulichen Daten
-        an die KI-Systeme übermittelt. Die eigenständige Leistung der Autor:innen
+        an die KI-Systeme übermittelt. Die eigenständige Leistung des Autors
         ist durchgängig gewahrt.
       ]
     ]

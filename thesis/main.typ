@@ -44,7 +44,7 @@
 
 #page(
   grid(
-    [= Abbildungs- und Tabellenverzeichnis],
+    [#heading(numbering: none, level: 1)[Abbildungs- und Tabellenverzeichnis]],
     inset: (x: 0pt, y: 20pt),
     outline(
       title: [Abbildungsverzeichnis],
@@ -63,7 +63,7 @@
 )
 
 #pagebreak()
-= Abkürzungsverzeichnis
+#heading(numbering: none, level: 1)[Abkürzungsverzeichnis]
 
 #print-glossary(entry-list, disable-back-references: true)
 

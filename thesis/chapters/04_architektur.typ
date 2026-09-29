@@ -71,7 +71,7 @@ Innerhalb der Schichten treten drei wiederkehrende Rollen auf. Sie sind als Entw
 
 === Interceptor
 
-Der Interceptor bildet die Schnittstelle zwischen Kommunikationsschicht und Busanbindung und folgt dem gleichnamigen Muster aus @PDFPatternOrientedSoftware. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Block zur Gegenseite gelangt und wie die Antwort zurückkommt. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
+Der Interceptor bildet die Schnittstelle zwischen Kommunikationsschicht und Busanbindung. Der Name ist an das gleichnamige Muster aus @PDFPatternOrientedSoftware angelehnt, das dort einen festgelegten Punkt beschreibt, an dem sich ein Rahmenwerk um eigene Dienste erweitern lässt. Gemeinsam ist beiden der eine festgelegte Punkt, an dem eingegriffen wird. Hier wird jedoch nicht ein Dienst ergänzt, sondern der Übertragungsweg ausgetauscht. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Block zur Gegenseite gelangt und wie die Antwort zurückkommt. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
 
 Da diese Schnittstelle ohne Bezug auf einen konkreten Übertragungsweg formuliert ist, ist der Interceptor der Ansatzpunkt für die Unabhängigkeit vom Übertragungsweg. Ein anderer Übertragungsweg wird angebunden, indem eine weitere Umsetzung dieser Rolle bereitgestellt wird, ohne dass die höheren Schichten davon berührt werden.
 

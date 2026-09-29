@@ -34,7 +34,7 @@ Schließlich führt das schemafreie Format keine Typinformationen mit, sodass si
 
 == Übertragbarkeit auf andere Verbindungsklassen
 
-Der Entwurf nimmt in den Kapiteln @sec:architektur und @sec:entwurf durchgehend auf die Merkmale der Verbindungsklasse aus @sec:verallgemeinerung Bezug und nicht auf den LEGO-Bus. Alles Wegabhängige liegt unterhalb der Interceptor-Schnittstelle, die lediglich aus einer einzigen Operation besteht, sodass eine andere Verbindung angebunden wird, indem genau diese Operation neu umgesetzt wird.
+Der Entwurf nimmt in @sec:architektur und @sec:entwurf durchgehend auf die Merkmale der Verbindungsklasse aus @sec:verallgemeinerung Bezug und nicht auf den LEGO-Bus. Alles Wegabhängige liegt unterhalb der Interceptor-Schnittstelle, die lediglich aus einer einzigen Operation besteht, sodass eine andere Verbindung angebunden wird, indem genau diese Operation neu umgesetzt wird.
 
 Prüfen lässt sich das an den Größen, die von der Verbindung abhängen, also an der Blockgröße und den daraus abgeleiteten Werten für die Nutzlast je Frame, die Breite des Längenfelds und die maximale Nachrichtenlänge. Alle vier stehen als Konstanten an einer Stelle, und @sec:evaluation zeigt mit dem Wechsel von 13 auf 7 Byte, dass eine Änderung tatsächlich nur dort stattfindet. Für @i2c oder Modbus im @rtu\-Modus wäre derselbe Weg gangbar, sofern die Gegenseite Blöcke fester Größe auf Anfrage austauschen kann.
 
@@ -50,7 +50,7 @@ Nach @sec:evaluation kostet das Abholen des Ergebnisses unabhängig von der Nach
 
 Der Kanal bliebe dabei anfragegetrieben, da es sich weiterhin um eine Antwort handelt. Passt das Ergebnis nicht in einen Frame, meldet der Server lediglich, dass es bereitliegt, und das Abholen läuft wie bisher ab. Für einen kurzen Aufruf sinkt die Anzahl der Round Trips somit von fünf auf drei und die Dauer entsprechend von rund 570 ms auf rund 340 ms.
 
-Zwei Punkte sind dabei zu beachten. Zum einen ist der Bus während der Ausführung belegt, was für Aufrufe an die Anzeigebibliothek unkritisch ist, für längere Operationen jedoch ein zusätzliches Kennzeichen erfordern würde. Zum anderen prüft die Sendeschleife des Clients bisher nur die Position der Antwort und müsste zusätzlich die Kennung der Nachricht auswerten, da sonst eine veraltete Antwort das Ergebnis des vorherigen Aufrufs liefern könnte.
+Zwei Punkte sind dabei zu beachten. Zum einen ist der Bus während der Ausführung belegt, was für Aufrufe an die Anzeigebibliothek unkritisch ist, für längere Operationen jedoch ein zusätzliches Kennzeichen erfordern würde. Zum anderen prüft die Sendeschleife des Clients bisher nur Position und Art der Antwort, wie @sec:nebenlaeufigkeit beschreibt, und müsste zusätzlich die Kennung der Nachricht auswerten. Trägt die Bestätigung das Ergebnis, ist eine veraltete Antwort kein verworfener Frame mehr, sondern ein falscher Rückgabewert.
 
 === Ereignisgetriebener Rückkanal
 

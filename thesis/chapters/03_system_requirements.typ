@@ -91,7 +91,7 @@ Für die Anforderungen bedeutet das, dass sich weder Ergebnisse (K2) noch Ereign
 
 === Begrenzte Paketgröße
 
-Ein Modus des Busses überträgt eine feste, vorab vereinbarte Anzahl von Bytes. Zusammen mit der auf dem Hub eingesetzten Firmware @valkPybricks liegt die nutzbare Obergrenze bei 16 Byte je Übertragung, oberhalb dieses Werts treten Prüfsummenfehler auf. Dieser Wert ist nicht dokumentiert, sondern wurde im Rahmen dieser Arbeit durch Ausprobieren bestimmt.
+Ein Modus des Busses überträgt eine feste, vorab vereinbarte Anzahl von Bytes. Zusammen mit der auf dem Hub eingesetzten Firmware @valkPybricks liegt die nutzbare Obergrenze bei 16 Byte je Übertragung, oberhalb dieses Werts treten Prüfsummenfehler auf. Die Umsetzung von @lpf2 in PUPRemote nennt denselben Wert und gibt bei einem Prüfsummenfehler den Hinweis aus, die Paketgröße unter Pybricks auf 16 Byte zu senken @PUPRemoteDocumentationAntons. Die eigenen Versuche bestätigen das.
 Da jedes Paket zusätzlich Steuerinformationen für das Zusammensetzen tragen muss, bleibt für die Nachricht selbst noch weniger übrig. In der Referenzimplementierung sind es 13 nutzbare Byte je Paket, wie @sec:referenzimplementierung zeigt.
 
 Schon eine einfache Aufrufnachricht mit Objektreferenz, Methodenname und wenigen Argumenten überschreitet diesen Rahmen deutlich. K1 lässt sich mit einem einzelnen Paket also nicht erfüllen, und Nachrichten müssen in mehrere Pakete zerlegt werden. Hinzu kommt, dass die Steuerinformationen bei einer Nutzlast von wenigen Byte einen großen Anteil der Übertragung ausmachen.
@@ -132,7 +132,7 @@ Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem v
       [K3], [Rückfluss von Ereignissen], [Keine eigenständige Übertragung durch die Anzeigeeinheit], [Ereignisse werden zwischengespeichert und von der Steuereinheit abgeholt],
       [K4], [Antwortzeit], [Alle drei Einschränkungen gemeinsam], [Anzahl der Übertragungen je Aufruf wird zur bestimmenden Größe],
       [K5], [Begrenzter Speicherbedarf], [Beschränkter Arbeitsspeicher beider Seiten], [Feste Obergrenzen für alle Puffer, festgelegtes Verhalten beim Überlauf],
-      [K6], [Unabhängigkeit vom Übertragungsweg], [Eigenheiten von Bus und PUPRemote], [Alle wegabhängigen Anteile in einer austauschbaren Schicht bündeln],
+      [K6], [Unabhängigkeit vom Übertragungsweg], [Eigenheiten von Bus und #box[PUPRemote]], [Alle wegabhängigen Anteile in einer austauschbaren Schicht bündeln],
     )
   ],
 ) <tab:konflikt>

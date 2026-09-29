@@ -22,16 +22,58 @@ Die Messläufe ergänzen das um die Dauer, denn über 640 aufeinanderfolgende Au
       align: left + top,
       table.header([*Nr.*], [*Anforderung*], [*Stand*], [*Begründung*]),
       [K1], [Strukturierte Nachrichten unbestimmter Länge], [erfüllt], [Nachrichten bis 3315 Byte, gemessen bis 164 Byte über 13 Frames],
-      [K2], [Aufrufe mit zuordenbarem Ergebnis], [erfüllt], [Zuordnung über die Kennung der Nachricht, kein falsch zugeordnetes Ergebnis in 640 Aufrufen],
-      [K3], [Rückfluss von Ereignissen], [erfüllt], [der Puffer wird beim Abfragen geleert, ein Überlauf wird gemeldet, siehe @sec:reaktionszeit],
+      [K2], [Aufrufe mit zuordenbarem Ergebnis], [erfüllt], [das Ergebnis wird unter der Kennung des Aufrufs angefordert, kein falsch zugeordnetes Ergebnis in 640 Aufrufen],
+      [K3], [Rückfluss von Ereignissen], [erfüllt], [der Puffer wird beim Abfragen geleert, siehe @sec:reaktionszeit, der Überlauf wird gemeldet, siehe @sec:testumgebung],
       [K4], [Antwortzeit unter 100 ms], [teilweise], [über ein Binding höchstens 51 ms, über den Client rund 1490 ms],
-      [K5], [Begrenzter Speicherbedarf], [erfüllt], [feste Obergrenzen für Nachrichtenlänge, Ergebnisse und Ereignisse, siehe @tab:rückkanal],
-      [K6], [Unabhängigkeit vom Übertragungsweg], [erfüllt], [alle wegabhängigen Anteile liegen in der Busanbindung, siehe @sec:interceptor],
+      [K5], [Begrenzter Speicherbedarf], [teilweise], [feste Obergrenzen für Nachrichtenlänge, Ergebnisse und Ereignisse, siehe @tab:rückkanal, auf dem Server nicht gemessen],
+      [K6], [Unabhängigkeit vom Übertragungsweg], [erfüllt], [zweiter Übertragungsweg in der Testumgebung, siehe @sec:testumgebung],
     )
   ],
 ) <tab:anforderungen>
 
 K3 und K4 werden in @sec:reaktionszeit belegt und in @sec:diskussion eingeordnet.
+
+== Nachweis durch die Testumgebung <sec:testumgebung>
+
+Drei Eigenschaften lassen sich am laufenden Aufbau nur schwer zeigen, weil sie
+eine zweite Verbindung, einen gezielt herbeigeführten Fehler oder einen
+Überlauf voraussetzen. Für sie existiert eine Testumgebung, die unter CPython
+läuft und dieselben Adapter, Stellvertreter und Interceptoren verwendet wie die
+Anzeigeeinheit. Ersetzt sind nur die Hardware, die Anzeigebibliothek und die
+beiden Laufzeitumgebungen.
+
+*Unabhängigkeit vom Übertragungsweg (K6).* Die Testumgebung enthält eine
+zweite Busanbindung, also eine zweite Umsetzung genau der einen Operation, die
+die Interceptor-Schnittstelle aus @sec:interceptor nach unten verlangt. Sie
+befördert einen Block nicht über den Bus, sondern übergibt ihn im selben
+Prozess an die Gegenseite und liefert deren Antwort zurück. Oberhalb davon ist
+nichts angepasst: derselbe Interceptor, dieselben Stellvertreter, dieselbe
+Rahmung, derselbe Codec, dasselbe Objektmodell. Damit läuft der Entwurf
+nachweislich über zwei verschiedene Übertragungswege, und die Anforderung ist
+nicht nur begründet, sondern gezeigt. Was der Nachweis nicht leistet, ist eine
+Aussage über einen zweiten realen Bus, denn die Testverbindung verliert keine
+Blöcke und kennt keine Laufzeit.
+
+*Zuverlässigkeit.* Fehler, die im Betrieb selten auftreten, werden dort gezielt
+erzeugt. Eine Betriebsart der Testverbindung liefert jede $n$-te Antwort als
+die vorangegangene und stellt damit genau die veralteten Antworten nach, die
+@sec:zuverlaessigkeit behandelt. Geprüft wird, dass der Aufruf trotzdem
+gelingt, dass Wiederholungen auftreten und dass ein wiederholter letzter Frame
+die Ausführung kein zweites Mal auslöst. Eine zweite Betriebsart lässt jede
+Übertragung scheitern und bildet den Verbindungsabbruch nach; geprüft wird,
+dass der Aufruf mit einem Fehler endet und die Session endet, sodass jeder
+bestehende Stellvertreter ungültig wird.
+
+*Ereignisverlust (K3).* Der Überlauf des Ereignispuffers tritt in den Messungen
+nicht auf, weil er mehr Berührungen zwischen zwei Abfragen verlangt, als von
+Hand auszulösen sind. In der Testumgebung wird der Puffer über seine Grenze
+hinaus gefüllt. Geprüft wird, dass der Verlust gemeldet und der Zähler mit der
+Abfrage zurückgesetzt wird, dass also die in @sec:kommunikationsschicht
+geforderte Erkennbarkeit auch im Grenzfall gilt.
+
+Die Testumgebung deckt damit die Stellen ab, an denen die Messungen nichts
+aussagen können, und die Messungen decken ab, was sich nur am echten Bus zeigt.
+@tab:verzeichnisse im Anhang nennt das Verzeichnis, in dem beide liegen.
 
 == Übertragungsaufwand
 
@@ -136,7 +178,7 @@ Die Messungen bestätigen die Annahme, auf der der gesamte Entwurf beruht, denn 
 
 Erklärungsbedürftig sind die 114 ms selbst, denn bei 115200 Baud dauert die Übertragung eines Blocks von 16 Byte deutlich weniger als eine Millisekunde. Die Zeit entsteht folglich nicht auf der Leitung, sondern in den beteiligten Bibliotheken und Ereignisschleifen, zumal auf dem Server die Verarbeitung der Transportbibliothek etwa jede Millisekunde aufgerufen wird und je Durchlauf höchstens ein Kommando bearbeitet. Wie viel Zeit dabei auf welche Seite entfällt, lässt sich mit den vorhandenen Daten nicht beantworten, dafür wäre eine Messung innerhalb der Busanbindung nötig.
 
-Für K4 ergibt sich ein zweigeteiltes Bild, denn über ein Binding liegt die Reaktion mit höchstens 51 ms sicher innerhalb der geforderten 100 ms, über den Client dagegen um fast das Fünfzehnfache darüber. Die lokalen Bindings sind somit nicht nur eine Abkürzung, sondern die einzige Möglichkeit, eine Reaktion in der geforderten Zeit anzuzeigen. Dass ihr Satz an Aktionen klein ist, begrenzt zugleich, welche Reaktionen in dieser Zeit überhaupt möglich sind.
+Für K4 ergibt sich ein zweigeteiltes Bild, denn über ein Binding liegt die Reaktion mit höchstens 51 ms sicher innerhalb der geforderten 100 ms, über den Client dagegen um fast das Fünfzehnfache darüber. Die lokalen Bindings sind somit nicht nur eine Abkürzung, sondern unter den in dieser Arbeit umgesetzten Mechanismen der einzige Weg, eine Reaktion in der geforderten Zeit anzuzeigen. Dass ihr Satz an Aktionen klein ist, begrenzt zugleich, welche Reaktionen in dieser Zeit überhaupt möglich sind.
 
 K3 war in der gemessenen Fassung nicht erfüllt, weil nur das jüngste Ereignis je Objekt geliefert wurde. Der Abstand zwischen zwei Abfragen ist durch die Dauer eines Aufrufs nach unten begrenzt, und in dieser Zeit endete eine kurze Berührung, ohne dass die Anwendung davon erfuhr. Mit dem geleerten Puffer und dem gemeldeten Überlauf ist die Anforderung erfüllt. Offen bleibt, dass jeder Button einzeln abgefragt wird, sodass die Anzahl der Aufrufe mit der Anzahl der Bedienelemente wächst. @sec:fazit greift das auf.
 

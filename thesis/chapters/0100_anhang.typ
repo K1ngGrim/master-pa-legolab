@@ -1,5 +1,34 @@
 #heading(numbering: none, level: 1)[Anhang]
 
+== Quelltext und Testumgebung
+
+Der vollständige Quelltext liegt unter
+#link("https://github.com/mat-mv/legolab-tft-display")[github.com/mat-mv/legolab-tft-display].
+Die folgenden Verzeichnisse sind für das Nachvollziehen der Arbeit die
+wichtigsten.
+
+#figure(
+  caption: [Aufbau des Quelltextverzeichnisses],
+  table(
+    columns: (auto, 1fr),
+    align: left + top,
+    table.header([*Pfad*], [*Inhalt*]),
+    [`src/middleware/`], [Transport- und Kommunikationsschicht, Registratur, Codec],
+    [`src/display/`], [Objektmodell, getrennt nach `protocol`, `client` und `server`],
+    [`src/hub/`], [Beispielprogramm der Steuereinheit],
+    [`src/tests/`], [Testumgebung aus @sec:testumgebung mit drei Testläufen],
+    [`src/tools/`], [Bundler, Konfigurationsprüfung, Auswertung der Messungen],
+    [`src/measurements/`], [Rohdaten aller Messläufe als CSV],
+    [`pcb/`], [Entwurf der Adapterplatine],
+  ),
+) <tab:verzeichnisse>
+
+Die Testumgebung wird mit `python3 tests/test_all.py`, `tests/test_events.py`
+und `tests/test_poll.py` ausgeführt und benötigt weder Hardware noch
+zusätzliche Pakete. `tests/fake_env.py` enthält die zweite Umsetzung der
+Interceptor-Schnittstelle sowie die Attrappen für Anzeigebibliothek und
+Laufzeitumgebungen.
+
 #figure(
   caption: [Beispielprogramm auf dem Hub],
   ```python
