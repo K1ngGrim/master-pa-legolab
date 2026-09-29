@@ -29,12 +29,10 @@ Da nur der Client die Übertragung anstoßen kann, lässt sich jede Interaktion 
 
 #figure(
   image("../figures/interceptor_ablauf.png", width: 85%),
-  caption: [Ablauf eines Aufrufs an der Interceptor-Schnittstelle. Jede der drei
-  Phasen besteht aus Wiederholungen derselben Operation, und jede wird vom
-  Client angestoßen.],
+  caption: [Ablauf eines Aufrufs an der Interceptor-Schnittstelle],
 ) <abb:interceptor>
 
-Die Schnittstelle bietet daher eine einzige Operation, bei der ein Block begrenzter Größe übergeben wird und im selben Vorgang ein Block zurückkommt. Ob dieser Block Nutzlast, eine Bestätigung oder eine Anfrage nach dem Ergebnis enthält, spielt für die Schnittstelle keine Rolle, da sie ihn nur befördert und nicht liest. Die drei Phasen in @abb:interceptor unterscheiden sich also nur im Inhalt der Blöcke.
+Die Schnittstelle bietet daher eine einzige Operation, bei der ein Block begrenzter Größe übergeben wird und im selben Vorgang ein Block zurückkommt. Ob dieser Block Nutzlast, eine Bestätigung oder eine Anfrage nach dem Ergebnis enthält, spielt für die Schnittstelle keine Rolle, da sie ihn nur befördert und nicht liest. Die drei Phasen in @abb:interceptor bestehen deshalb aus Wiederholungen derselben Operation, unterscheiden sich nur im Inhalt der Blöcke und werden alle vom Client angestoßen.
 
 Eine umfangreichere Schnittstelle wäre denkbar, würde aber Übertragungswege ausschließen. Eine Zustellung ohne vorherige Anfrage setzt voraus, dass der Server von sich aus senden kann. Ein Warten auf eine Meldung des Servers setzt zusätzlich voraus, dass er dies zu einem selbst gewählten Zeitpunkt tut. Beides leistet der hier betrachtete Bus nicht, und beides ist auch für die übrigen Vertreter der in @sec:verallgemeinerung beschriebenen Klasse nicht vorauszusetzen. Die Schnittstelle bildet daher die Schnittmenge dessen, was alle Übertragungswege dieser Klasse leisten können.
 
