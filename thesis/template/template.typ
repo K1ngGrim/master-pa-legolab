@@ -310,7 +310,7 @@
         eingesetzt, insbesondere für Teile des Programmcodes sowie für
         Textentwürfe. Alle inhaltlichen und konzeptionellen Entscheidungen,
         die Durchführung und Auswertung, die Überprüfung sämtlicher Ergebnisse
-        sowie die endgültige Fassung des Textes wurden von den Autor:innen selbst
+        sowie die endgültige Fassung des Textes wurden von dem Autor selbst
         erstellt und geprüft.
       ]
       #v(0.5em)

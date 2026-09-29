@@ -25,7 +25,7 @@
    institution: "Hochschule Karlsruhe",
    study_program: "Informatik Master",
    custom_front_page: [],
-   examiner: "Uwe Haneke, Matthias Mruzek-Vering",
+   examiner: "Prof. Dr. Uwe Haneke, Matthias Mruzek-Vering",
    zusammenfassung: [#AbstractGerman],
    ai_usage_disclosure: true,
    statutory_declaration: [Hiermit erkläre ich, dass ich die vorliegende Arbeit eigenständig und ohne unerlaubte fremde Hilfe angefertigt habe. Textpassagen, die wörtlich oder dem Sinn nach auf Publikationen oder Vorträgen anderer Autoren beruhen, sind als solche kenntlich gemacht. Der Einsatz von KI-Werkzeugen erfolgte ausschließlich im Rahmen der nachstehenden Erklärung zur Nutzung von KI-Werkzeugen. Die Arbeit wurde bisher keiner anderen Prüfungsbehörde vorgelegt und auch noch nicht veröffentlicht.],
