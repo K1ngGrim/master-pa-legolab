@@ -14,9 +14,39 @@ Aus diesen Zielen ergibt sich ein geschichteter Aufbau nach dem Vorbild einer Mi
 
 Das System ist in fünf Schichten gegliedert, die auf beiden Seiten der Verbindung vorhanden sind, wie @abb:schichten zeigt.
 
+#let schicht(inhalt) = rect(
+  width: 100%, inset: 0.45em, radius: 2pt,
+  stroke: 0.5pt, fill: none,
+)[#align(center)[#inhalt]]
+
+#let gegenstueck = align(horizon, line(
+  length: 100%, stroke: (paint: luma(140), thickness: 0.5pt, dash: "dotted"),
+))
+
 #figure(
-  image("../figures/schichtenmodell.png", width: 62%),
-  caption: [Schichtenmodell der Architektur. Beide Seiten sind gleich aufgebaut und verkehren jeweils nur mit der unmittelbar darunterliegenden Schicht.],
+  kind: image,
+  supplement: [Abbildung],
+  block(width: 92%)[
+    #grid(
+      columns: (1fr, 3.2em, 1fr),
+      rows: 6,
+      row-gutter: 0.4em,
+      align: center + horizon,
+      text(size: 0.9em, weight: "bold")[Steuereinheit (Client)], [],
+      text(size: 0.9em, weight: "bold")[Anzeigeeinheit (Server)],
+
+      schicht[Anwendung], gegenstueck, schicht[Anzeige und Eingabe],
+      schicht[Objektmodell], gegenstueck, schicht[Objektmodell],
+      schicht[Kommunikationsschicht], gegenstueck, schicht[Kommunikationsschicht],
+      schicht[Transportschicht], gegenstueck, schicht[Transportschicht],
+      schicht[Busanbindung], gegenstueck, schicht[Busanbindung],
+    )
+    #v(0.4em)
+    #rect(width: 100%, inset: 0.45em, radius: 2pt, stroke: 0.5pt)[
+      #align(center)[Bus mit fester Blockgröße, anfragegetrieben]
+    ]
+  ],
+  caption: [Schichtenmodell der Architektur. Die gepunktete Linie verbindet die Gegenstücke beider Seiten.],
 ) <abb:schichten>
 
 Zwei Eigenschaften dieses Aufbaus sind hervorzuheben. Zum einen ist er symmetrisch, da beide Seiten dieselben Schichten mit denselben Aufgaben besitzen und sich lediglich in der Richtung unterscheiden, aus der ein Aufruf eintrifft. Zum anderen ist er streng geschichtet, denn jede Schicht spricht ausschließlich mit der unmittelbar darunterliegenden, sodass eine Änderung innerhalb einer Schicht die übrigen nicht berührt.
@@ -41,7 +71,7 @@ Ihre erste Aufgabe ist die Serialisierung, bei der eine strukturierte Nachricht 
 
 Nach oben verbirgt diese Schicht die Paketgröße vollständig, sodass höhere Schichten mit Nachrichten arbeiten, deren Länge sie nicht zu beachten brauchen.
 
-Zwei Entwurfsentscheidungen dieser Schicht sind besonders wichtig. Erstens ist die Rahmung vom Serialisierungsformat getrennt, und beide sind an je einer Stelle gebündelt, sodass sich das Format wechseln lässt, ohne die Rahmung anzutasten. Zweitens muss die Rahmung die Länge der Nutzlast ausdrücklich mitführen und darf sie nicht aus dem Inhalt ableiten, etwa durch das Entfernen von Füllbytes am Ende. Andernfalls schränkt die Rahmung die zulässigen Inhalte ein und bindet die Schicht an ein textbasiertes Format. Bei einer Nutzlast von wenigen Byte je Paket sind die Steuerinformationen außerdem ein wesentlicher Kostenfaktor der gesamten Übertragung.
+Zwei Entwurfsentscheidungen dieser Schicht wirken über sie hinaus. Die Rahmung ist vom Serialisierungsformat getrennt, und die Rahmung führt die Länge der Nutzlast ausdrücklich mit. Beide zusammen entscheiden darüber, welche Serialisierungsformate die Schicht überhaupt tragen kann. @sec:nutzlastlaenge begründet das im Einzelnen, @sec:kosten beziffert, was die Steuerinformationen bei wenigen Byte Nutzlast je Paket kosten.
 
 === Kommunikationsschicht
 
@@ -103,4 +133,4 @@ In der zweiten Phase überträgt der Client die Pakete. Der Server bestätigt je
 
 In der letzten Phase fragt der Client ab, ob das Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab. Die Kommunikationsschicht setzt die Antwort zusammen, liest die Nutzlast aus und gibt das Ergebnis an den Stellvertreter zurück, der es an die Anwendung weiterreicht.
 
-An diesem Ablauf zeigt sich das Verhältnis von Nutzlast und Steuerverkehr. Ein einzelner Aufruf zerfällt in eine Folge von Paketen, die jeweils einzeln bestätigt werden, gefolgt von wiederholten Abfragen nach dem Ergebnis. Die Dauer eines Aufrufs hängt damit vor allem von der Anzahl der Übertragungen ab und weniger von der Geschwindigkeit des Übertragungswegs, was die Evaluation aufgreift und beziffert.
+An diesem Ablauf zeigt sich, wofür die Übertragungen aufgewendet werden. Ein einzelner Aufruf zerfällt in eine Folge von Paketen, die jeweils einzeln bestätigt werden, gefolgt von wiederholten Abfragen nach dem Ergebnis. Nutzlast trägt davon nur der erste Teil. Was das nach der in @sec:einschraenkungen abgeleiteten Kostenrechnung bedeutet, beziffert @sec:kosten.

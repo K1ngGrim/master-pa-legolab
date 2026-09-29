@@ -24,7 +24,7 @@ Die Messläufe ergänzen das um die Dauer, denn über 640 aufeinanderfolgende Au
       [K1], [Strukturierte Nachrichten unbestimmter Länge], [erfüllt], [Nachrichten bis 3315 Byte, gemessen bis 164 Byte über 13 Frames],
       [K2], [Aufrufe mit zuordenbarem Ergebnis], [erfüllt], [das Ergebnis wird unter der Kennung des Aufrufs angefordert, kein falsch zugeordnetes Ergebnis in 640 Aufrufen],
       [K3], [Rückfluss von Ereignissen], [erfüllt], [der Puffer wird beim Abfragen geleert, siehe @sec:reaktionszeit, der Überlauf wird gemeldet, siehe @sec:testumgebung],
-      [K4], [Antwortzeit unter 100 ms], [teilweise], [über ein Binding höchstens 51 ms, über den Client rund 1490 ms],
+      [K4], [Antwortzeit unter 100 ms], [teilweise], [über ein Binding höchstens 57 ms, über den Client rund 1490 ms],
       [K5], [Begrenzter Speicherbedarf], [teilweise], [feste Obergrenzen für Nachrichtenlänge, Ergebnisse und Ereignisse, siehe @tab:rückkanal, auf dem Server nicht gemessen],
       [K6], [Unabhängigkeit vom Übertragungsweg], [erfüllt], [zweiter Übertragungsweg in der Testumgebung, siehe @sec:testumgebung],
     )
@@ -60,9 +60,9 @@ die vorangegangene und stellt damit genau die veralteten Antworten nach, die
 @sec:zuverlaessigkeit behandelt. Geprüft wird, dass der Aufruf trotzdem
 gelingt, dass Wiederholungen auftreten und dass ein wiederholter letzter Frame
 die Ausführung kein zweites Mal auslöst. Eine zweite Betriebsart lässt jede
-Übertragung scheitern und bildet den Verbindungsabbruch nach; geprüft wird,
-dass der Aufruf mit einem Fehler endet und die Session endet, sodass jeder
-bestehende Stellvertreter ungültig wird.
+Übertragung scheitern und bildet den Verbindungsabbruch nach. Geprüft wird
+dort, dass der Aufruf mit einem Fehler endet und die Session endet, sodass
+jeder bestehende Stellvertreter ungültig wird.
 
 *Ereignisverlust (K3).* Der Überlauf des Ereignispuffers tritt in den Messungen
 nicht auf, weil er mehr Berührungen zwischen zwei Abfragen verlangt, als von
@@ -77,7 +77,7 @@ aussagen können, und die Messungen decken ab, was sich nur am echten Bus zeigt.
 
 == Übertragungsaufwand
 
-Gemessen wird in vier Konfigurationen, die jeweils eine Größe verändern. Die Nutzlast je Frame beträgt 13 Byte im aktuellsten Stand und 7 Byte in der früheren Fassung mit dem größeren Header, während als Serialisierung MessagePack@MessagePackItsJSON und die @json zum Einsatz kommen. Der Vergleich trennt somit die Wirkung der Rahmung von der Wirkung des Formats.
+Gemessen wird in vier Konfigurationen, die jeweils eine Größe verändern. Die Nutzlast je Frame beträgt 13 Byte im aktuellsten Stand und 7 Byte in der früheren Fassung mit dem größeren Header, während als Serialisierung MessagePack @MessagePackItsJSON und die @json zum Einsatz kommen. Der Vergleich trennt somit die Wirkung der Rahmung von der Wirkung des Formats.
 
 #import "@preview/lilaq:0.4.0" as lq
 
@@ -97,7 +97,22 @@ Gemessen wird in vier Konfigurationen, die jeweils eine Größe verändern. Die 
   ),
 ) <abb:roundtrips>
 
-Der wichtigste Befund ergibt sich aus dem Vergleich mit den gemessenen Zeiten. Ein Round Trip kostet in jeder Konfiguration und bei jeder Nachrichtenlänge 114,2 ms, wobei die Standardabweichung über alle 640 Aufrufe lediglich 0,3 ms beträgt. Die Dauer eines Aufrufs ist somit das Produkt aus der Anzahl der Round Trips und einer festen Zeit je Round Trip, da sich weder die Länge der Nutzlast noch die Wahl des Formats darüber hinaus auswirken. Jeder Wert aus @abb:roundtrips lässt sich deshalb unmittelbar in eine Dauer umrechnen, sodass der kürzeste gemessene Aufruf mit 4 Round Trips 457 ms benötigt und der längste mit 27 Round Trips 3082 ms.
+@tab:streuung fasst die vier Konfigurationen zusammen. Innerhalb einer Konfiguration und einer Textlänge ist die Anzahl der Round Trips über alle 20 Wiederholungen identisch, was aus @eq:blöcke folgt und durch die ausgebliebenen Wiederholungen bestätigt wird. Die Streuung liegt also allein in den Zeiten, nicht im Ablauf.
+
+#figure(
+  caption: [Streuung der vier Konfigurationen, je 160 Aufrufe],
+  table(
+    columns: (auto, auto, auto, auto, auto),
+    align: (left, right, right, right, right),
+    table.header([*Konfiguration*], [*Round Trips*], [*Median*], [*Minimum*], [*Maximum*]),
+    [MessagePack, 13 Byte], [4 bis 13], [920 ms], [457 ms], [1499 ms],
+    [MessagePack, 7 Byte], [5 bis 23], [1434 ms], [571 ms], [2642 ms],
+    [JSON, 13 Byte], [6 bis 15], [1085 ms], [685 ms], [1716 ms],
+    [JSON, 7 Byte], [10 bis 27], [1891 ms], [1142 ms], [3098 ms],
+  ),
+) <tab:streuung>
+
+Der wichtigste Befund ergibt sich aus dem Vergleich mit den gemessenen Zeiten. Ein Round Trip kostet in jeder Konfiguration und bei jeder Nachrichtenlänge 114,2 ms. Über alle 640 Aufrufe liegen das untere und das obere Quartil bei 114,1 ms und 114,2 ms, das Minimum bei 114,0 ms und die Standardabweichung bei 0,3 ms. Nur 20 der 640 Aufrufe liegen über 115 ms, der höchste bei 117,0 ms. Die Dauer eines Aufrufs ist somit das Produkt aus der Anzahl der Round Trips und einer festen Zeit je Round Trip, da sich weder die Länge der Nutzlast noch die Wahl des Formats darüber hinaus auswirken. Jeder Wert aus @abb:roundtrips lässt sich deshalb unmittelbar in eine Dauer umrechnen, sodass der kürzeste gemessene Aufruf mit 4 Round Trips 457 ms benötigt und der längste mit 27 Round Trips 3082 ms.
 
 Die Anzahl der Round Trips folgt unmittelbar aus @eq:blöcke. Sie setzt sich zusammen aus einem Round Trip je Frame der Nachricht, einer Anfrage `READY` und einem Round Trip je Frame des Ergebnisses. Für die gemessenen Aufrufe mit einem Ergebnis von vier Byte sind das $N + 2$ Round Trips.
 
@@ -111,25 +126,27 @@ Unabhängig von der Nachrichtenlänge kostet jeder Aufruf zwei zusätzliche Roun
 
 Die zweite Messung betrachtet den Weg von einer Berührung bis zur sichtbaren Reaktion und vergleicht dabei die beiden Wege aus @sec:ansteuerung. Über ein Binding führt der Server die Reaktion selbst aus, während über den Client das Ereignis abgefragt und mit einem zweiten Aufruf beantwortet wird. Auf dem Server werden dafür drei Zeitpunkte je Berührung festgehalten, nämlich die erste erkannte Berührung, das verarbeitete Ereignis und das abgeschlossene Neuzeichnen, auf dem Client hingegen die Zeit vom Beginn eines Abfragedurchlaufs bis zum Ende der Reaktion.
 
-Der Touchcontroller wird von der Anzeigebibliothek alle 40 ms abgefragt. Eine Berührung wird deshalb im Mittel nach 20 ms und spätestens nach 40 ms bemerkt. Von dort bis zum verarbeiteten Ereignis vergehen 4 ms. Das Neuzeichnen dauert anschließend 6 ms, wenn ein Binding die Anzeige verändert hat, und 7 ms, wenn die Änderung von einem Aufruf des Clients stammt. Über ein Binding ist die Reaktion damit 13 ms nach der erkannten Berührung sichtbar, im ungünstigsten Fall 17 ms.
+Der Touchcontroller wird von der Anzeigebibliothek alle 40 ms abgefragt, gemessen über 39 Berührungen mit Werten zwischen 38 und 42 ms. Eine Berührung wird deshalb im Mittel nach 20 ms und spätestens nach 40 ms bemerkt. Von dort bis zum verarbeiteten Ereignis vergehen 4 ms. Das Neuzeichnen dauert anschließend 6 ms, wenn ein Binding die Anzeige verändert hat, und 7 ms, wenn die Änderung von einem Aufruf des Clients stammt. Über ein Binding ist die Reaktion damit 13 ms nach der erkannten Berührung sichtbar, im Bereich von 10 bis 17 ms. Zusammen mit der Erkennung ergibt das im Mittel 33 ms und im ungünstigsten Fall 57 ms.
 
 Auf dem Weg über den Client dauert allein die Reaktion 1161 ms, da sie aus zwei Aufrufen mit je 5 Round Trips besteht, nämlich dem Abfragen des Ereignisses und dem Ändern des Textes. Hinzu kommt die Zeit, bis überhaupt abgefragt wird, die nicht allein von der Pause in der Schleife der Anwendung abhängt, denn während eines laufenden Aufrufs kann nicht abgefragt werden. Der wirksame Abstand zwischen zwei Abfragen beträgt daher 572 ms zuzüglich der eingestellten Pause.
 
 #figure(
   caption: [Zeit von der Berührung bis zur sichtbaren Reaktion],
   table(
-    columns: (1.4fr, auto, auto),
-    align: (left, right, right),
-    table.header([*Teilstrecke*], [*über ein Binding*], [*über den Client*]),
-    [Erkennung durch die Anzeigebibliothek], [im Mittel 20 ms], [im Mittel 20 ms],
-    [Verarbeitung des Ereignisses], [4 ms], [4 ms],
-    [Warten auf die nächste Abfrage], [entfällt], [im Mittel 296 ms],
-    [Abfrage und Reaktion], [entfällt], [1161 ms],
-    [Neuzeichnen], [6 ms], [7 ms],
-    [Summe im Mittel], [30 ms], [rund 1490 ms],
-    [Summe im ungünstigsten Fall], [51 ms], [rund 1790 ms],
+    columns: (1.5fr, auto, auto, auto),
+    align: (left, right, right, left),
+    table.header([*Teilstrecke*], [*über ein Binding*], [*über den Client*], [*Herkunft*]),
+    [Erkennung durch die Anzeigebibliothek], [im Mittel 20 ms], [im Mittel 20 ms], [abgeleitet],
+    [Verarbeitung des Ereignisses], [4 ms], [4 ms], [gemessen],
+    [Warten auf die nächste Abfrage], [entfällt], [im Mittel 296 ms], [abgeleitet],
+    [Abfrage und Reaktion], [entfällt], [1161 ms], [gemessen],
+    [Neuzeichnen], [6 ms], [7 ms], [gemessen],
+    [Summe im Mittel], [33 ms], [rund 1490 ms], [berechnet],
+    [Summe im ungünstigsten Fall], [57 ms], [rund 1800 ms], [berechnet],
   ),
 ) <tab:reaktion>
+
+Die Spalte Herkunft unterscheidet, ob ein Wert unmittelbar gemessen, aus einer Messung abgeleitet oder aus den übrigen Zeilen berechnet wurde. Die gemessenen Werte sind Mediane. Die Verarbeitung des Ereignisses streut über 39 Berührungen von 4 bis 7 ms, das Neuzeichnen von 5 bis 11 ms über ein Binding und von 7 bis 8 ms über den Client. Die beiden Zeilen addieren sich nicht zu den Summen darunter, denn Mediane sind nicht additiv. Maßgeblich ist die je Berührung gemessene Zeit von der Erkennung bis zum fertigen Bild, deren Median bei 13 ms liegt und die zwischen 10 und 17 ms streut. Die Summen beruhen auf diesem Wert und nicht auf der Addition der Einzelmediane. Die Reaktion über den Client liegt in allen drei Läufen bei 1160 bis 1177 ms, mit einem einzelnen Ausreißer von 1277 ms, der weiter unten erklärt wird. Abgeleitet sind die beiden Wartezeiten: die Erkennung ist der halbe Abtasttakt, das Warten auf die nächste Abfrage die halbe Summe aus Aufrufdauer und eingestellter Pause. Berechnet sind die Summen, die sich aus den Zeilen darüber ergeben.
 
 Die Werte in @tab:reaktion gelten für eine Pause von 20 ms in der Schleife der Anwendung. Gemessen wurde zusätzlich mit 0 ms und 1000 ms, wobei die Reaktion selbst in allen drei Fällen gleich lang ausfällt, da die Pause vor der Abfrage liegt. Bei einer Pause von 1000 ms steigt die Summe im Mittel auf rund 1980 ms, weil sich der Abstand zwischen zwei Abfragen entsprechend verlängert.
 
@@ -178,7 +195,9 @@ Die Messungen bestätigen die Annahme, auf der der gesamte Entwurf beruht, denn 
 
 Erklärungsbedürftig sind die 114 ms selbst, denn bei 115200 Baud dauert die Übertragung eines Blocks von 16 Byte deutlich weniger als eine Millisekunde. Die Zeit entsteht folglich nicht auf der Leitung, sondern in den beteiligten Bibliotheken und Ereignisschleifen, zumal auf dem Server die Verarbeitung der Transportbibliothek etwa jede Millisekunde aufgerufen wird und je Durchlauf höchstens ein Kommando bearbeitet. Wie viel Zeit dabei auf welche Seite entfällt, lässt sich mit den vorhandenen Daten nicht beantworten, dafür wäre eine Messung innerhalb der Busanbindung nötig.
 
-Für K4 ergibt sich ein zweigeteiltes Bild, denn über ein Binding liegt die Reaktion mit höchstens 51 ms sicher innerhalb der geforderten 100 ms, über den Client dagegen um fast das Fünfzehnfache darüber. Die lokalen Bindings sind somit nicht nur eine Abkürzung, sondern unter den in dieser Arbeit umgesetzten Mechanismen der einzige Weg, eine Reaktion in der geforderten Zeit anzuzeigen. Dass ihr Satz an Aktionen klein ist, begrenzt zugleich, welche Reaktionen in dieser Zeit überhaupt möglich sind.
+Für K4 ergibt sich ein zweigeteiltes Bild, denn über ein Binding liegt die Reaktion mit höchstens 57 ms sicher innerhalb der geforderten 100 ms, über den Client dagegen um fast das Fünfzehnfache darüber. Die lokalen Bindings sind somit nicht nur eine Abkürzung, sondern unter den in dieser Arbeit umgesetzten Mechanismen der einzige Weg, eine Reaktion in der geforderten Zeit anzuzeigen. Dass ihr Satz an Aktionen klein ist, begrenzt zugleich, welche Reaktionen in dieser Zeit überhaupt möglich sind.
+
+Die Einleitung motiviert die Arbeit mit der Vermittlung von Technikkenntnissen an Kinder und Jugendliche. Ob die entstandene Schnittstelle dafür handhabbar ist, wurde nicht untersucht, dazu wäre eine Erprobung mit Lernenden nötig. Am Beispielprogramm in @lst:beispielprogramm lässt sich immerhin ablesen, was sie voraussetzt. Das Erzeugen und Verändern von Elementen sieht aus wie gewöhnliche Python-Programmierung, und nichts davon verlangt Kenntnis des Protokolls. Drei Stellen treten dennoch nach außen. Erstens blockiert jeder Aufruf, sodass eine Schleife mit Wartezeit nötig ist und die Anzeige nicht nebenbei bedient werden kann. Zweitens müssen Schaltflächen abgefragt werden, was eine Schleife erzwingt, statt auf ein Ereignis zu warten. Drittens werden Stellvertreter nach `clear()` ungültig, was zu einer Ausnahme führt, deren Ursache zeitlich weit von ihrem Auftreten entfernt liegen kann. Die Bindings mildern den ersten und zweiten Punkt, da die häufigste Reaktion, das Umschalten eines Bildschirms, einmal erklärt wird und danach ohne Zutun der Anwendung abläuft. Die in @sec:fazit beschriebenen Rückrufe zielen auf denselben Punkt.
 
 K3 war in der gemessenen Fassung nicht erfüllt, weil nur das jüngste Ereignis je Objekt geliefert wurde. Der Abstand zwischen zwei Abfragen ist durch die Dauer eines Aufrufs nach unten begrenzt, und in dieser Zeit endete eine kurze Berührung, ohne dass die Anwendung davon erfuhr. Mit dem geleerten Puffer und dem gemeldeten Überlauf ist die Anforderung erfüllt. Offen bleibt, dass jeder Button einzeln abgefragt wird, sodass die Anzahl der Aufrufe mit der Anzahl der Bedienelemente wächst. @sec:fazit greift das auf.
 

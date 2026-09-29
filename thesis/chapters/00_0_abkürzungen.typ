@@ -1,5 +1,11 @@
 #let entry-list = (
   (
+    key: "ble",
+    short: "BLE",
+    long: "Bluetooth Low Energy"
+  ),
+
+  (
     key: "onc_rpc",
     short: "ONC RPC",
     long: "Open Network Computing Remote Procedure Call"

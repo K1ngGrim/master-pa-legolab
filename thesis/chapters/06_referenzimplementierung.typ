@@ -196,7 +196,7 @@ Für das Einsammeln eingehender Frames gibt es zwei Wege, die sich in Speicherbe
 
 Der Rückkanal verwendet den sammelnden Weg, der Hinweg den anhängenden. Die in @sec:fragmentierung beschriebene Unabhängigkeit von der Reihenfolge ist damit nur auf dem Rückkanal umgesetzt. Für den hier betrachteten Bus genügt das, da er sequenziell arbeitet. Bei einem Übertragungsweg, der umsortiert, müsste auch der Hinweg auf den sammelnden Weg wechseln.
 
-=== Serialisierung
+=== Serialisierung <sec:umsetzung-codec>
 
 #figure(
   image("../figures/codec.png", width: 50%),
@@ -217,7 +217,9 @@ Enger als im Format vorgesehen ist auch der Wertebereich der Ganzzahlen. Er ende
 
 Welcher Codec verwendet wird, legt eine einzige Zuweisung fest. Möglich ist dieser Wechsel nur, weil die Rahmung die Länge der Nutzlast ausdrücklich mitführt. Die binäre Kodierung erzeugt Nullbytes, und ohne Längenfeld würde das Abschneiden von Füllbytes Teile der Nutzlast entfernen.
 
-Zusätzlich steht ein JSON-Codec zur Verfügung, der bei der Fehlersuche hilfreich ist, da ein mitgeschnittener Frame seine Nutzlast dann im Klartext zeigt. Wie sich die beiden Formate auf die Anzahl der Übertragungen auswirken, vergleicht @sec:evaluation.
+Der JSON-Codec ist dabei nicht nur eine Vergleichsgröße, sondern war die erste Umsetzung. Zwei praktische Gründe sprachen dafür. Das Format steht in beiden Laufzeitumgebungen ohne zusätzliche Abhängigkeit zur Verfügung, und die Nutzlast ist im Klartext lesbar. Auf einem Bus, dessen Datenverkehr sich nur mit erheblichem Aufwand mitschneiden lässt, ist das bei der Fehlersuche ein deutlicher Vorteil, und solange die übrigen Schichten noch entstanden, wog die Lesbarkeit schwerer als eine kompakte Kodierung.
+
+Mit zunehmender Reife änderte sich diese Gewichtung, denn bei dreizehn Byte Nutzlast je Frame wirkt sich jedes zusätzliche Zeichen nach @eq:blöcke unmittelbar auf die Anzahl der Übertragungen aus. Der Wechsel auf MessagePack betraf allein die Stelle, an der kodiert und dekodiert wird, während der entfernte Aufruf und das Objektmodell unverändert blieben. Der JSON-Codec ist dabei erhalten geblieben, weil ein mitgeschnittener Frame seine Nutzlast damit im Klartext zeigt. Wie sich die beiden Formate auf die Anzahl der Übertragungen auswirken, vergleicht @sec:evaluation.
 
 == Kommunikationsschicht <sec:umsetzung-kommunikation>
 
@@ -462,6 +464,41 @@ Ein Aufruf, der nur einen Text ändert, kostet damit mindestens fünf Round Trip
 
 Das Aufrufschema folgt somit der in @sec:interceptor beschriebenen Abfolge. Das Sequenzdiagramm @abb:interceptor zeigt die generischen Abläufe, die hier mit einem konkreten Beispiel gefüllt wurden. Die Abbildung zeigt auch die beiden Round Trips, die der Client für das Abholen des Ergebnisses benötigt. 
 
+=== Zustände eines Aufrufs <sec:automat>
+
+Der beschriebene Ablauf lässt sich für beide Seiten als Zustandsautomat
+angeben. Das ist genauer als eine Beschreibung im Fließtext, weil sich damit
+auch die Fälle festhalten lassen, die im Beispiel nicht vorkommen, also
+ausbleibende Bestätigungen, veraltete Antworten und abgebrochene Übertragungen.
+Eine Kante nennt jeweils das eintreffende Frame und, nach dem Schrägstrich, die
+Reaktion darauf.
+
+#figure(
+  image("../figures/automat_client.svg", width: 100%),
+  caption: [Zustände eines Aufrufs auf dem Client],
+) <abb:automat_client>
+
+@abb:automat_client zeigt den Client. Zwischen dem Verlassen von `Senden` und
+dem Eintreffen von `DONE` ist die Anwendung blockiert, und es ist stets nur ein
+Aufruf unterwegs. Jeder der drei Zustände `Senden`, `Warten` und `Abholen`
+besitzt eine eigene Obergrenze, nach deren Überschreiten der Aufruf in
+`Fehler` übergeht und die Anwendung eine Ausnahme erhält. Damit ist die
+Zusicherung aus @sec:zuverlaessigkeit auch dann eingehalten, wenn die Gegenseite
+gar nicht mehr antwortet.
+
+#figure(
+  image("../figures/automat_server.svg", width: 88%),
+  caption: [Zustände eines Aufrufs auf dem Server, je Nachrichtenkennung],
+) <abb:automat_server>
+
+@abb:automat_server zeigt den Server. Zwei Kanten sind dort die eigentlichen
+Zusicherungen. Eine bereits bekannte Position wird bestätigt, aber nicht erneut
+abgelegt, und ein wiederholter letzter Frame wird bestätigt, ohne den Aufruf ein
+zweites Mal auszuführen. Zusammen ergibt das die in @sec:zuverlaessigkeit
+beschriebene At-most-once-Semantik. Der Übergang von `Ergebnis bereit` zurück
+nach `Empfangen` ist der Punkt, an dem eine wiederverwendete Kennung ihren
+alten Eintrag verwirft, was @sec:umsetzung-kommunikation begründet.
+
 == Nebenläufigkeit und Fehlerbehandlung <sec:nebenlaeufigkeit>
 
 Die bisherigen Abschnitte beschreiben den Ablauf eines Aufrufs, der gelingt. Dieser Abschnitt behandelt, wie die Aufgaben auf dem Server nebeneinander laufen und wie Fehler behandelt werden.
@@ -500,6 +537,8 @@ Fehler werden in der Schicht behandelt, in der sie auftreten, und gelangen nach 
     )
   ],
 ) <tab:fehler>
+
+@sec:automat zeigt die folgenden Fälle als Zustandsübergänge, dieser Abschnitt ordnet sie den Schichten zu.
 
 In der Transportschicht sind Fehler der Normalfall. Da der Client direkt nach dem Schreiben auch liest, erhält er häufig die Antwort auf die vorherige Anfrage. Er erkennt sie an Position und Art des Frames und sendet diesen anschließend erneut.
 

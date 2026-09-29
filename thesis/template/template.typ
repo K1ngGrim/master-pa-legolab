@@ -137,6 +137,10 @@
   custom_front_page: "",
   company_logo: "",
   ai_usage_disclosure: false,
+  // Verzeichnisse, die hinter dem Inhaltsverzeichnis und damit noch im
+  // roemisch nummerierten Vorspann stehen sollen, etwa das Abbildungs- und
+  // das Abkuerzungsverzeichnis.
+  front_matter: none,
   body,
 ) = {
   // Set the document's basic properties.
@@ -417,6 +421,11 @@
     depth: 3, 
     indent: auto,
   )
+
+  if front_matter != none {
+    pagebreak()
+    front_matter
+  }
 
   //counter(page).update(3)
   pagebreak()

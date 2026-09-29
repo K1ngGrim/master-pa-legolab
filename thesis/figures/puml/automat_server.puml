@@ -1,0 +1,29 @@
+@startuml automat_server
+' Zustaende eines Aufrufs auf dem Server, je Nachrichtenkennung.
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 15
+skinparam state {
+  BackgroundColor white
+  BorderColor black
+}
+
+state "Leerlauf" as L
+state "Empfangen" as E
+state "Ausfuehren" as A
+state "Ergebnis bereit" as R
+
+[*] --> L
+L --> L : READY oder NEXT\nohne Eintrag / NACK
+L --> E : DATA, Position 0 / ACK
+E --> E : DATA neuer Position / ACK
+E --> E : bekannte Position /\nACK, nicht ablegen
+E --> A : DATA_LAST / ACK
+A --> A : READY / NACK
+A --> A : DATA_LAST wiederholt /\nACK, nicht erneut ausfuehren
+A --> R : Ergebnis oder\nFehlermeldung ablegen
+R --> R : READY / DONE
+R --> R : NEXT / Frame an der Position
+R --> E : DATA, Position 0 /\nACK, Eintrag verwerfen
+@enduml

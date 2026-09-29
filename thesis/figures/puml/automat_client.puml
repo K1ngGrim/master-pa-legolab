@@ -1,0 +1,27 @@
+@startuml automat_client
+' Zustaende eines Aufrufs auf dem Client. Eine Kante nennt das ausloesende
+' Ereignis und, nach einem Schraegstrich, die daraufhin ausgeloeste Aktion.
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 15
+skinparam state {
+  BackgroundColor white
+  BorderColor black
+}
+
+[*] --> Bereit
+Bereit --> Senden : Aufruf der Anwendung
+Senden --> Senden : ACK, weitere Frames offen
+Senden --> Senden : keine oder falsche Antwort /\nFrame erneut senden
+Senden --> Warten : ACK des letzten Frames
+Senden --> Fehler : Obergrenze der Versuche
+Warten --> Warten : NACK /\nnach 50 ms erneut READY
+Warten --> Abholen : DONE
+Warten --> Fehler : Obergrenze der Wartezeit
+Abholen --> Abholen : DATA, weitere Frames offen
+Abholen --> Abholen : falsche Position /\nerneut anfragen
+Abholen --> Bereit : DATA_LAST /\nErgebnis an die Anwendung
+Abholen --> Fehler : ERR oder Obergrenze der Versuche
+Fehler --> Bereit : Ausnahme an die Anwendung
+@enduml

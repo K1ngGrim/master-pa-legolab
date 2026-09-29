@@ -4,6 +4,9 @@
 
 Der vollständige Quelltext liegt unter
 #link("https://github.com/mat-mv/legolab-tft-display")[github.com/mat-mv/legolab-tft-display].
+Alle Angaben in @sec:referenzimplementierung und @sec:evaluation beziehen sich
+auf den Stand, der dort mit `stand-projektarbeit` markiert ist. Spätere Stände
+setzen die Erweiterungen aus @sec:fazit um und verändern dabei das Protokoll.
 Die folgenden Ordner sind für das Nachvollziehen der Arbeit die wichtigsten.
 
 #figure(
@@ -15,16 +18,16 @@ Die folgenden Ordner sind für das Nachvollziehen der Arbeit die wichtigsten.
     [`src/middleware/`], [Transport- und Kommunikationsschicht, Registratur, Codec],
     [`src/display/`], [Objektmodell, getrennt nach `protocol`, `client` und `server`],
     [`src/hub/`], [Beispielprogramm der Steuereinheit],
-    [`src/tests/`], [Testumgebung aus @sec:testumgebung mit drei Testläufen],
+    [`src/tests/`], [Testumgebung aus @sec:testumgebung],
     [`src/tools/`], [Bundler, Konfigurationsprüfung, Auswertung der Messungen],
     [`src/measurements/`], [Rohdaten aller Messläufe als CSV],
     [`pcb/`], [Entwurf der Adapterplatine],
   ),
 ) <tab:quelltext>
 
-Die Testumgebung wird mit `python3 tests/test_all.py`, `tests/test_events.py`
-und `tests/test_poll.py` ausgeführt und benötigt weder Hardware noch
-zusätzliche Pakete. `tests/fake_env.py` enthält die zweite Umsetzung der
+Die Testumgebung wird mit `python3 tests/test_all.py` und
+`tests/test_events.py` ausgeführt und benötigt weder Hardware noch zusätzliche
+Pakete. `tests/fake_env.py` enthält die zweite Umsetzung der
 Interceptor-Schnittstelle sowie die Attrappen für Anzeigebibliothek und
 Laufzeitumgebungen.
 

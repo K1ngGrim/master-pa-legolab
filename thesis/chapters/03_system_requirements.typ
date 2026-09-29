@@ -137,12 +137,44 @@ Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem v
   ],
 ) <tab:konflikt>
 
+== Verworfene Alternativen <sec:alternativen>
+
+Die bisher beschriebene Aufteilung, ein eigener Mikrocontroller am Sensorport
+und ein Aufruf je Änderung, ist nicht die einzige denkbare. Zwei Alternativen
+liegen nahe genug, um ihre Verwerfung zu begründen.
+
+*Eine Funkverbindung statt des Sensorports.* Der Hub besitzt ein Funkmodul,
+und eine Verbindung über @ble würde die Paketgrenze des Busses umgehen. Drei
+Gründe sprechen dagegen. Erstens löst sie das Problem nicht, sondern verlagert
+es nur: die voreingestellte Paketgröße des Attributprotokolls beträgt 23 Byte,
+von denen 20 für einen Wert bleiben, und der übliche Zugriff erfolgt über
+lesende Anfragen des Clients @CoreSpecification2023. Damit liegt @ble in
+derselben Klasse von Verbindungen, die @sec:verallgemeinerung beschreibt, und
+der gesamte Entwurf wäre weiterhin nötig. Zweitens muss die Anzeigeeinheit
+ohnehin versorgt werden, und die dafür nötige Leitung liegt am Sensorport
+bereits an. Eine Funkverbindung führt also nicht zu weniger Kabel, sondern zu
+einem zweiten Versorgungsweg. Drittens stellt die eingesetzte Firmware für den
+Funkkanal keine Schnittstelle bereit, mit der sich eine Verbindung zu einem
+beliebigen Gerät aufbauen ließe.
+
+*Eine Beschreibung der Oberfläche statt einzelner Aufrufe.* Anstatt jedes
+Element über einen eigenen Aufruf zu erzeugen, könnte die Steuereinheit einmalig
+eine Beschreibung der gesamten Oberfläche übertragen, die die Anzeigeeinheit
+auswertet. Der Aufbau kostet dann eine Übertragung statt vieler. Der Aufbau ist
+jedoch nicht das Problem, denn er findet einmal statt. Wiederkehrend sind das
+Ändern von Zuständen und das Abfragen von Ereignissen, und daran ändert eine
+Beschreibung nichts. Hinzu kommt, dass eine Beschreibung, die mehr kann als
+Elemente zu platzieren, eine Sprache wird, die auf einem Gerät ausgewertet
+wird, auf dem sie sich kaum nachvollziehen lässt. Die in @sec:architektur
+eingeführten Bindings sind die bewusst begrenzte Fassung dieses Gedankens: ein
+geschlossener Satz von Aktionen ohne Bedingungen und ohne Zustand.
+
 == Verallgemeinerung des Problemraums <sec:verallgemeinerung>
 
 Die im vorigen Abschnitt beschriebenen Einschränkungen wurden am konkreten Zielsystem hergeleitet, sind jedoch nicht an dieses System gebunden. Das ist für die weitere Arbeit wichtig, denn davon hängt ab, ob der folgende Entwurf eine Einzellösung ist oder für eine ganze Klasse von Verbindungen gilt.
 
 Die drei Eigenschaften lassen sich von der Plattform ablösen und als allgemeine Merkmale einer Verbindung formulieren. Erstens ist die Übertragung anfragegetrieben, das heißt, nur eine der beiden Seiten kann eine Übertragung anstoßen. Zweitens ist die Nutzlast je Übertragung klein und fest vorgegeben. Drittens steht auf mindestens einer Seite eine Laufzeitumgebung zur Verfügung, die weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellt.
 
-Diese Kombination tritt über den betrachteten Bus hinaus in verschiedenen Ausprägungen auf. Bei der Kommunikation über @i2c treibt beispielsweise der Master den Bus, während ein Slave eine Übertragung nicht selbstständig beginnen kann, und Modbus @rtu folgt demselben Muster aus Anfrage und Antwort. Auch bei Bluetooth Low Energy erfolgt der übliche Zugriff über lesende Anfragen des Clients, und die standardmäßig ausgehandelte Nutzlast liegt in derselben Größenordnung wie beim hier betrachteten Bus @CoreSpecification2023. In allen genannten Fällen stellen sich dieselben Fragen. Wie werden Nachrichten zerlegt und wieder zusammengesetzt? Wie gelangen Ergebnisse und Ereignisse zur anfragenden Seite zurück? Und wie lässt sich all das vor der Anwendung verbergen?
+Diese Kombination tritt über den betrachteten Bus hinaus in verschiedenen Ausprägungen auf. Bei der Kommunikation über @i2c treibt beispielsweise der Master den Bus, während ein Slave eine Übertragung nicht selbstständig beginnen kann, und Modbus @rtu folgt demselben Muster aus Anfrage und Antwort. Auch bei @ble erfolgt der übliche Zugriff über lesende Anfragen des Clients, und die standardmäßig ausgehandelte Nutzlast liegt in derselben Größenordnung wie beim hier betrachteten Bus @CoreSpecification2023. In allen genannten Fällen stellen sich dieselben Fragen. Wie werden Nachrichten zerlegt und wieder zusammengesetzt? Wie gelangen Ergebnisse und Ereignisse zur anfragenden Seite zurück? Und wie lässt sich all das vor der Anwendung verbergen?
 
 Die vorliegende Arbeit behandelt den betrachteten Bus daher als einen Vertreter dieser Klasse. Der Entwurf in den folgenden Kapiteln bezieht sich deshalb auf die genannten Merkmale und nicht auf Eigenschaften einer bestimmten Plattform. Inwieweit das gelungen ist, wird am Ende der Arbeit diskutiert.

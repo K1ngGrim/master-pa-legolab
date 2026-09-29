@@ -28,6 +28,19 @@
    examiner: "Prof. Dr. Uwe Haneke, Matthias Mruzek-Vering",
    zusammenfassung: [#AbstractGerman],
    ai_usage_disclosure: true,
+   front_matter: [
+      #heading(numbering: none, level: 1, outlined: true)[Abbildungs- und Tabellenverzeichnis]
+      #heading(numbering: none, level: 2, outlined: false)[Abbildungen]
+      #outline(title: none, target: figure.where(kind: image))
+      #heading(numbering: none, level: 2, outlined: false)[Tabellen]
+      #outline(title: none, target: figure.where(kind: table))
+      #heading(numbering: none, level: 2, outlined: false)[Code-Listings]
+      #outline(title: none, target: figure.where(kind: raw))
+
+      #pagebreak()
+      #heading(numbering: none, level: 1, outlined: true)[Abkürzungsverzeichnis]
+      #print-glossary(entry-list, disable-back-references: true)
+   ],
    statutory_declaration: [Hiermit erkläre ich, dass ich die vorliegende Arbeit eigenständig und ohne unerlaubte fremde Hilfe angefertigt habe. Textpassagen, die wörtlich oder dem Sinn nach auf Publikationen oder Vorträgen anderer Autoren beruhen, sind als solche kenntlich gemacht. Der Einsatz von KI-Werkzeugen erfolgte ausschließlich im Rahmen der nachstehenden Erklärung zur Nutzung von KI-Werkzeugen. Die Arbeit wurde bisher keiner anderen Prüfungsbehörde vorgelegt und auch noch nicht veröffentlicht.],
 )
 
@@ -39,33 +52,6 @@
 #include "chapters/06_referenzimplementierung.typ"
 #include "chapters/07_evaluation.typ"
 #include "chapters/08_fazit.typ"
-
-#pagebreak()
-
-#page(
-  grid(
-    [#heading(numbering: none, level: 1)[Abbildungs- und Tabellenverzeichnis]],
-    inset: (x: 0pt, y: 20pt),
-    outline(
-      title: [Abbildungsverzeichnis],
-      target: figure.where(kind: image),
-    ),
-    outline(
-      title: [Tabellenverzeichnis],
-      target: figure.where(kind: table),
-    ),
-    outline(
-      title: [Code-Listings],
-
-      target: figure.where(kind: raw),
-    ),
-  ),
-)
-
-#pagebreak()
-#heading(numbering: none, level: 1)[Abkürzungsverzeichnis]
-
-#print-glossary(entry-list, disable-back-references: true)
 
 #pagebreak()
 #bibliography("biblio.bib")
