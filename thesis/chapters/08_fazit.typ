@@ -18,7 +18,7 @@ Eine zweite Einschränkung betrifft den Rückfluss von Ereignissen, dessen Absta
 
 Die Dauer eines Aufrufs ergibt sich aus der Anzahl der Round Trips multipliziert mit 114 ms, wovon zwei unabhängig von der Nachrichtenlänge auf das Abholen des Ergebnisses entfallen. Bei kurzen Aufrufen macht dieser feste Anteil bereits die Hälfte der Gesamtzeit aus.
 
-Eine Reaktion, die über den Client läuft, benötigt zwei Aufrufe und liegt damit im Mittel bei rund 1490 ms. Die Anforderung K4 von 100 ms wird auf diesem Weg um mehr als das Zehnfache verfehlt. Erreichbar ist sie nur über ein Binding, das der Server selbst ausführt und das nach @tab:reaktion unter 51 ms bleibt. Damit ist die Zahl der Reaktionen, die in der geforderten Zeit möglich sind, durch den kleinen Satz an Aktionen aus @tab:aktionen begrenzt.
+Eine Reaktion, die über den Client läuft, benötigt zwei Aufrufe und liegt damit im Mittel bei rund 1490 ms. Die Anforderung K4 von 100 ms wird auf diesem Weg um fast das Fünfzehnfache verfehlt. Erreichbar ist sie nur über ein Binding, das der Server selbst ausführt und das nach @tab:reaktion unter 51 ms bleibt. Damit ist die Zahl der Reaktionen, die in der geforderten Zeit möglich sind, durch den kleinen Satz an Aktionen aus @tab:aktionen begrenzt.
 
 Der Durchsatz war kein Entwurfsziel und fällt entsprechend gering aus, da eine Nachricht von 142 Byte den Bus bereits für 1,5 Sekunden belegt. Für Text und einzelne Bedienelemente reicht das aus, für Bilddaten oder fortlaufende Messwerte jedoch nicht.
 
@@ -60,7 +60,7 @@ Darauf aufbauend könnte die Anwendung Rückrufe je Button registrieren, statt d
 
 === Alternative Serialisierung
 
-Die @json benötigt nach @sec:evaluation das 1,18-fache an Round Trips gegenüber MessagePack. Der Wechsel auf das binäre Format spart also etwa 15 % der Übertragungen. Ein schemagebundenes Format wie Protocol Buffers könnte die Nutzlast weiter verkürzen, da Schlüssel dann gar nicht mehr übertragen werden. Der Preis dafür wären ein Übersetzungsschritt und eine Beschreibung der Schnittstelle, die beide Seiten teilen, was nach @sec:serialisierung gerade der Grund für ein schemafreies Format war. Ob sich der Aufwand lohnt, ließe sich mit dem vorhandenen Messaufbau beantworten, da der Codec an einer einzigen Stelle austauschbar ist.
+Die @json benötigt nach @sec:evaluation das 1,21-fache an Round Trips gegenüber MessagePack. Der Wechsel auf das binäre Format spart also etwa 17 % der Übertragungen. Ein schemagebundenes Format wie Protocol Buffers könnte die Nutzlast weiter verkürzen, da Schlüssel dann gar nicht mehr übertragen werden. Der Preis dafür wären ein Übersetzungsschritt und eine Beschreibung der Schnittstelle, die beide Seiten teilen, was nach @sec:serialisierung gerade der Grund für ein schemafreies Format war. Ob sich der Aufwand lohnt, ließe sich mit dem vorhandenen Messaufbau beantworten, da der Codec an einer einzigen Stelle austauschbar ist.
 
 === Integrierter Hardwareaufbau <sec:standalone>
 

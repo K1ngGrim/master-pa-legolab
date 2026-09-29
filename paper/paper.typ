@@ -562,8 +562,8 @@ buffer bound required by C5. Handles were 16 bits wide, ten for the
 slot and six for the generation, which admits 1024 simultaneous
 objects and costs at most three bytes when encoded.
 
-*Cost per call.* Across 640 calls with payloads from 21 to 142 bytes
-and no retransmissions, one round trip took 114.1 ms with a standard
+*Cost per call.* Across 640 calls with payloads from 21 to 164 bytes
+and no retransmissions, one round trip took 114.2 ms with a standard
 deviation of 0.3 ms, independent of payload length and encoding. The
 duration of a call is therefore the number of round trips times a
 constant: the shortest observed call needed 4 round trips and 457 ms,
@@ -589,8 +589,8 @@ every block boundary at once.
     inset: 4.5pt,
     table.header([*Variant*], [*Round trips, relative*]),
     [Binary encoding, $P = 13$ (reference)], [1.00],
-    [Binary encoding, $P = 7$], [1.56],
-    [Text encoding, $P = 13$], [1.18],
+    [Binary encoding, $P = 7$], [1.59],
+    [Text encoding, $P = 13$], [1.21],
     [Text encoding, $P = 7$], [2.09],
   ),
   caption: [

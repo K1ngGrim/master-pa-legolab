@@ -39,7 +39,7 @@ Der Aufbau erfüllt die Anforderungen D1 bis D3 und S1 bis S3 aus @sec:zielsyste
 
 Der Aufbau besteht aus drei Teilen. Das LMS-ESP32-Board @LMSESP32V20Clever2023 bildet den Mikrocontroller der Anzeigeeinheit, wird über das Kabel eines LEGO-Sensors direkt an einen Port des Hubs angeschlossen und übernimmt die Busanbindung. Das Displaymodul enthält das @tft\-Display mit dem Controller ILI9341@ILI9341LCDController, einen kapazitiven Touchcontroller sowie einen Steckplatz für eine SD-Karte. Die Adapterplatine verbindet schließlich beide Baugruppen und enthält dabei keine aktiven Bauteile, sondern lediglich Steckverbinder und Leiterbahnen.
 
-Signalseitig benötigt die in @sec:busanbindung beschriebene Anbindung nur eine @uart\-Verbindung auf zwei Leitungen des ESP32, die das LMS-ESP32-Board bereits zum Anschluss des Hubs führt. Die Adapterplatine muss sich deshalb nur um die Signale des Displays kümmern. Versorgt wird der Aufbau über den Port des Hubs, im beschriebenen Aufbau über Port B, wobei der ESP32 die 8V-Versorgung anfordert, da das Display mehr Strom benötigt, als die Logikversorgung liefert. Wie @sec:einschraenkungen beschreibt, verkürzt das die zulässige Länge der Kommandonamen auf fünf Zeichen.
+Signalseitig benötigt die in @sec:busanbindung beschriebene Anbindung nur eine @uart\-Verbindung auf zwei Leitungen des ESP32, die das LMS-ESP32-Board bereits zum Anschluss des Hubs führt. Die Adapterplatine muss sich deshalb nur um die Signale des Displays kümmern. Versorgt wird der Aufbau über den Port des Hubs, im beschriebenen Aufbau über Port A, wobei der ESP32 die 8V-Versorgung anfordert, da das Display mehr Strom benötigt, als die Logikversorgung liefert. Wie @sec:einschraenkungen beschreibt, verkürzt das die zulässige Länge der Kommandonamen auf fünf Zeichen.
 
 === Signalzuordnung und Aufbau der Adapterplatine
 
@@ -49,7 +49,7 @@ Die Hintergrundbeleuchtung ist nicht an den ESP32 geführt und leuchtet dauerhaf
 
 Bei der Pinbelegung ist GPIO 12 zu beachten. Der Pin wird beim Start des ESP32 ausgelesen und legt die Spannung des Flash-Speichers fest. Solange nur das Display an MISO hängt, ist das unkritisch, da die Leitung beim Start kaum getrieben wird. Wird die SD-Karte genutzt, teilt sie sich diese Leitung und kann sie über ihren Pull-up-Widerstand beim Start auf High ziehen, sodass der ESP32 nicht mehr zuverlässig startet. Für eine spätere Nutzung der SD-Karte müsste MISO deshalb auf einen anderen Pin gelegt werden. 
 
-Die Platine wurde mit KiCad entworfen und extern gefertigt, wobei beide Baugruppen aufgesteckt werden und sich ohne Löten tauschen lassen. Eine integrierte Trägerplatine, die ESP32, Display und Versorgung auf einer Platine vereint, war ursprünglich als zweite Ausbaustufe geplant. Sie wurde aus Zeitgründen nicht umgesetzt und wird in @sec:fazit als Erweiterung aufgegriffen.
+Die Platine wurde mit KiCad entworfen und extern gefertigt, wobei beide Baugruppen aufgesteckt werden und sich ohne Löten tauschen lassen. Eine integrierte Trägerplatine, die ESP32, Display und Versorgung auf einer Platine vereint, war ursprünglich als zweite Ausbaustufe geplant. Sie wurde aus Zeitgründen nicht umgesetzt und wird in @sec:standalone als Erweiterung aufgegriffen.
 
 == Busanbindung <sec:busanbindung>
 
