@@ -4,11 +4,10 @@
 
 Der vollständige Quelltext liegt unter
 #link("https://github.com/mat-mv/legolab-tft-display")[github.com/mat-mv/legolab-tft-display].
-Die folgenden Verzeichnisse sind für das Nachvollziehen der Arbeit die
-wichtigsten.
+Die folgenden Ordner sind für das Nachvollziehen der Arbeit die wichtigsten.
 
 #figure(
-  caption: [Aufbau des Quelltextverzeichnisses],
+  caption: [Aufbau des Quelltextes],
   table(
     columns: (auto, 1fr),
     align: left + top,
@@ -21,7 +20,7 @@ wichtigsten.
     [`src/measurements/`], [Rohdaten aller Messläufe als CSV],
     [`pcb/`], [Entwurf der Adapterplatine],
   ),
-) <tab:verzeichnisse>
+) <tab:quelltext>
 
 Die Testumgebung wird mit `python3 tests/test_all.py`, `tests/test_events.py`
 und `tests/test_poll.py` ausgeführt und benötigt weder Hardware noch

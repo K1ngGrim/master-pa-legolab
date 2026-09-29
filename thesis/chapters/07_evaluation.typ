@@ -73,7 +73,7 @@ geforderte Erkennbarkeit auch im Grenzfall gilt.
 
 Die Testumgebung deckt damit die Stellen ab, an denen die Messungen nichts
 aussagen können, und die Messungen decken ab, was sich nur am echten Bus zeigt.
-@tab:verzeichnisse im Anhang nennt das Verzeichnis, in dem beide liegen.
+@tab:quelltext im Anhang nennt den Ordner, in dem beide liegen.
 
 == Übertragungsaufwand
 
