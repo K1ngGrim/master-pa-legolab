@@ -4,6 +4,8 @@
 #import "chapters/00_0_abkürzungen.typ": *
 #import "chapters/00_01_abstract.typ": *
 
+#import "chapters/00_01_abstract.typ": AbstractGerman
+
 #show: make-glossary
 #register-glossary(entry-list)
 
@@ -44,16 +46,28 @@
    statutory_declaration: [Hiermit erkläre ich, dass ich die vorliegende Arbeit eigenständig und ohne unerlaubte fremde Hilfe angefertigt habe. Textpassagen, die wörtlich oder dem Sinn nach auf Publikationen oder Vorträgen anderer Autoren beruhen, sind als solche kenntlich gemacht. Der Einsatz von KI-Werkzeugen erfolgte ausschließlich im Rahmen der nachstehenden Erklärung zur Nutzung von KI-Werkzeugen. Die Arbeit wurde bisher keiner anderen Prüfungsbehörde vorgelegt und auch noch nicht veröffentlicht.],
 )
 
+// Jedes Kapitel beginnt auf einer neuen Seite. Der Umbruch steht vor der
+// Überschrift und nicht in ihr, sonst verzeichnet Typst die Überschrift auf der
+// vorigen Seite, und Inhaltsverzeichnis und Kopfzeile nennen eine Seite zu früh.
+#pagebreak(weak: true)
 #include "chapters/01_introduction.typ"
+#pagebreak(weak: true)
 #include "chapters/02_related_work.typ"
+#pagebreak(weak: true)
 #include "chapters/03_system_requirements.typ"
+#pagebreak(weak: true)
 #include "chapters/04_architektur.typ"
+#pagebreak(weak: true)
 #include "chapters/05_entwurf.typ"
+#pagebreak(weak: true)
 #include "chapters/06_referenzimplementierung.typ"
+#pagebreak(weak: true)
 #include "chapters/07_evaluation.typ"
+#pagebreak(weak: true)
 #include "chapters/08_fazit.typ"
 
 #pagebreak()
 #bibliography("biblio.bib")
 
+#pagebreak(weak: true)
 #include "chapters/0100_anhang.typ"

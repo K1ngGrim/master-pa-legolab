@@ -186,6 +186,16 @@
   show raw: set text(font: "New Computer Modern Mono")
   show link: set text(fill: blue.darken(55%))
   show figure: set block(spacing: 1.3em + 3pt)
+  // Narrow table cells in justified text open large gaps, and coloured
+  // abbreviation links inside figures and tables look restless.
+  show table: set par(justify: false)
+  // Hyphenation follows justification by default, so it has to be switched
+  // on again, or long words overflow narrow cells.
+  show table: set text(hyphenate: true)
+  show figure: it => {
+    show link: set text(fill: black)
+    it
+  }
   show figure.where(kind: table): set figure.caption(position: top)
   show figure.where(kind: table): set figure(numbering: "I")
 
@@ -357,16 +367,22 @@
   ]
 
   // Abstract page.
-  if abstract != [] [
-    #align(center)[
-      #heading(outlined: false, numbering: none, text(0.85em, "ZUSAMMENFASSUNG"))
+  // Each part is printed only if it has content, so a report without an
+  // English abstract still gets its Zusammenfassung.
+  if zusammenfassung != [] or abstract != [] [
+    #if zusammenfassung != [] [
+      #align(center)[
+        #heading(outlined: false, numbering: none, text(0.85em, "ZUSAMMENFASSUNG"))
+      ]
+      #zusammenfassung
     ]
-    #zusammenfassung
 
-    #align(center)[
-      #heading(outlined: false, numbering: none, text(0.85em, "ABSTRACT"))
+    #if abstract != [] [
+      #align(center)[
+        #heading(outlined: false, numbering: none, text(0.85em, "ABSTRACT"))
+      ]
+      #abstract
     ]
-    #abstract
 
   ]
 
