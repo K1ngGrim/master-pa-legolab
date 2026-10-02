@@ -1,11 +1,10 @@
 #heading(numbering: none, level: 1)[Anhang]
 
-== Quelltext und Testumgebung
+#heading(numbering: none, level: 2)[Quelltext und Testumgebung]
 
 Der vollständige Quelltext liegt unter
 #link("https://github.com/mat-mv/legolab-tft-display")[github.com/mat-mv/legolab-tft-display].
-Alle Angaben in @sec:referenzimplementierung und @sec:evaluation beziehen sich
-auf den Stand, der dort mit `stand-projektarbeit` markiert ist. Spätere Stände
+Die Angaben in @sec:referenzimplementierung und @sec:evaluation beziehen sich, sofern nicht anders vermerkt, auf den Stand, der dort mit `stand-projektarbeit` markiert ist. Spätere Stände
 setzen die Erweiterungen aus @sec:fazit um und verändern dabei das Protokoll.
 Die folgenden Ordner sind für das Nachvollziehen der Arbeit die wichtigsten.
 
@@ -19,8 +18,8 @@ Die folgenden Ordner sind für das Nachvollziehen der Arbeit die wichtigsten.
     [`src/display/`], [Objektmodell, getrennt nach `protocol`, `client` und `server`],
     [`src/hub/`], [Beispielprogramm der Steuereinheit],
     [`src/tests/`], [Testumgebung aus @sec:testumgebung],
-    [`src/tools/`], [Bundler, Konfigurationsprüfung, Auswertung der Messungen],
-    [`src/measurements/`], [Rohdaten aller Messläufe als CSV],
+    [`src/tools/`], [Bundler und Auswertung der Messungen],
+    [`src/measurements/`], [Rohdaten aller Messläufe],
     [`pcb/`], [Entwurf der Adapterplatine],
   ),
 ) <tab:quelltext>
@@ -29,7 +28,21 @@ Die Testumgebung wird mit `python3 tests/test_all.py` und
 `tests/test_events.py` ausgeführt und benötigt weder Hardware noch zusätzliche
 Pakete. `tests/fake_env.py` enthält die zweite Umsetzung der
 Interceptor-Schnittstelle sowie die Attrappen für Anzeigebibliothek und
-Laufzeitumgebungen.
+Laufzeitumgebungen. Spätere Stände ergänzen `tests/test_poll.py` für die Erweiterungen aus @sec:bestaetigung und @sec:rueckkanal-ereignisse und `tests/test_bindung.py`, das alle
+Testläufe über eine zweite Busanbindung wiederholt, wie @sec:trennung beschreibt.
+
+Für das Nachvollziehen der Messungen ist die Kopie der Bibliothek PUPRemote zu
+beachten. Im Stand `stand-projektarbeit` liegen zwei Kopien der Version 1.6 bei, `src/hub/pupremote.py` und `src/vendor/pupremote/pupremote.py`, deren Funktion `call` ohne Angabe 0 ms wartet. Auf dem Hub lief dagegen eine
+Fassung, in der dieser Wert nach @sec:busanbindung auf 100 ms angehoben ist.
+Spätere Stände enthalten diese Fassung unter `src/hub/pupremote.py` und
+dieselbe Datei mit Paketpfaden unter `src/vendor/pupremote/pupremote.py`. Seit
+die Middleware die Wartezeit ausdrücklich übergibt, hängen die Messwerte nicht
+mehr davon ab, welche Kopie installiert ist.
+
+Nach dem Stand `stand-projektarbeit` ist die Middleware ohne die Anteile von
+Display und Bus in ein eigenes Repository ausgelagert,
+#link("https://github.com/K1ngGrim/micro-rpc")[github.com/K1ngGrim/micro-rpc].
+Das Repository dieser Arbeit bindet es als Submodul ein.
 
 #figure(
   caption: [Beispielprogramm auf dem Hub],
@@ -40,7 +53,7 @@ from pybricks.tools import wait, StopWatch
 
 from pybricks_bundle import *
 
-p = PUPRemoteHub(Port.A)
+p = PUPRemoteHub(Port.B)
 
 interceptor = PyBricksInterceptor(p)
 interceptor.register_interceptor()
@@ -84,7 +97,7 @@ while True:
 
     # The screen has already changed by the time this query happens - the
     # binding did that. What arrives here is the notification, not the trigger.
-    # Polling both buttons costs one round trip each; leaving it out would not
+    # Polling both buttons costs one full call each; leaving it out would not
     # affect the switching at all.
     if to_menu.is_button_pressed():
         print("menu opened")

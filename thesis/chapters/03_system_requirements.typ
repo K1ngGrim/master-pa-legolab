@@ -8,9 +8,9 @@ Ausgangspunkt der vorliegenden Arbeit ist eine bestehende Hardwareplattform aus 
 
 === Der LEGO Education SPIKE Prime Hub als Ausgangsplattform
 
-Den Kern des Zielsystems bildet der LEGO Education SPIKE Prime Hub @HandlungsorientiertesLernen. Hierbei handelt es sich um einen programmierbaren Steuerbaustein, der primär für den Einsatz im Bildungsbereich konzipiert ist und über sechs Ein- und Ausgabeports zum Anschluss von LEGO-kompatiblen Sensoren und Aktoren verfügt. Für die Interaktion mit dem Nutzer stellt der Hub eine Matrix aus 5 × 5 @led:pl, drei Tasten und einen einfachen Lautsprecher bereit.
+Den Kern des Zielsystems bildet der LEGO Education SPIKE Prime Hub @HandlungsorientiertesLernen. Hierbei handelt es sich um einen programmierbaren Steuerbaustein, der primär für den Einsatz im Bildungsbereich konzipiert ist und über sechs Ein- und Ausgabeports zum Anschluss von LEGO-kompatiblen Sensoren und Aktoren verfügt. Für die Interaktion mit dem Nutzer stellt der Hub eine Matrix aus 5 × 5 @led:pl, vier Tasten und einen einfachen Lautsprecher bereit.
 
-Intern basiert der Hub auf einem STM32F413-Mikrocontroller @stmicroelectronicsSTM32F413xGxH2018 mit einem ARM-Cortex-M4-Kern, einer Taktfrequenz von etwa 100 MHz, rund 1 bis 1,5 MB Flash-Speicher sowie 320 kB @sram @LegoLabKarlsruhe. Die Programmierung kann grafisch über die offizielle LEGO-Software oder textbasiert mittels MicroPython erfolgen. Welche Firmware konkret eingesetzt wird und wie sich diese Wahl auf die spätere Lösung auswirkt, wird in @sec:einschraenkungen vertieft.
+Intern basiert der Hub auf einem Mikrocontroller vom Typ STM32F413VG mit einem ARM-Cortex-M4-Kern, einer Taktfrequenz von bis zu 100 MHz, 1 MB Flash-Speicher sowie 320 kB @sram @stmicroelectronicsSTM32F413xGxH2018 @LegoLabKarlsruhe. Die Programmierung kann grafisch über die offizielle LEGO-Software oder textbasiert mittels MicroPython erfolgen. Welche Firmware konkret eingesetzt wird und wie sich diese Wahl auf die spätere Lösung auswirkt, wird in @sec:einschraenkungen vertieft.
 
 Für die vorliegende Arbeit sind drei Eigenschaften des Hubs von besonderer Bedeutung:
 
@@ -29,7 +29,7 @@ Die geforderte Display-Funktionalität lässt sich daher nur außerhalb des Hubs
 - die Wahl einer geeigneten externen Hardware zur Ansteuerung eines Displays sowie
 - eine geeignete Kommunikation zwischen dem Hub und dieser externen Komponente.
 
-== Anforderungen an die Display-Integration
+== Anforderungen an die Display-Integration <sec:d_s_anforderungen>
 
 Die Anforderungen werden in drei Gruppen gegliedert. Die Anforderungen D1 bis D3 betreffen das Display selbst, S1 bis S3 den Mikrocontroller, der es ansteuert, und K1 bis K6 im folgenden Abschnitt die Kommunikation zwischen beiden Einheiten.
 
@@ -37,9 +37,9 @@ Die Anforderungen werden in drei Gruppen gegliedert. Die Anforderungen D1 bis D3
 
 Bevor konkrete Hardwarekomponenten betrachtet werden, lassen sich aus der Zielsetzung der Arbeit allgemeine Anforderungen an ein externes Display ableiten:
 
-- *D1 -- Grafische Darstellung.* Das Display soll die Darstellung einfacher grafischer Elemente wie Schaltflächen, Beschriftungen und Anzeigen ermöglichen.
-- *D2 -- Berührungseingabe.* Es soll zugleich Benutzereingaben über einen Touchscreen entgegennehmen.
-- *D3 -- Embedded-typische Auslegung.* Auflösung, Größe und Energieaufnahme orientieren sich an typischen Embedded-Anwendungen. Damit kommen kleine @tft\-Displays mit einer Auflösung von etwa 240 × 320 Pixeln in Frage.
+- *D1 Grafische Darstellung.* Das Display soll die Darstellung einfacher grafischer Elemente wie Schaltflächen, Beschriftungen und Anzeigen ermöglichen.
+- *D2 Berührungseingabe.* Es soll zugleich Benutzereingaben über einen Touchscreen entgegennehmen.
+- *D3 Embedded-typische Auslegung.* Auflösung, Größe und Energieaufnahme orientieren sich an typischen Embedded-Anwendungen. Damit kommen kleine @tft\-Displays mit einer Auflösung von etwa 240 × 320 Pixeln in Frage.
 
 Solche Displays sind in unterschiedlichen Ausführungen verfügbar, wobei im Embedded-Bereich Module mit ILI9341-Display-Controller @ilitekILI9341Datasheet2011 weit verbreitet sind. Sie unterstützen eine Auflösung von 240 × 320 Pixeln bei einer Farbtiefe von 18 Bit und werden über @spi angesteuert. Für die Erkennung von Berührungen kommen typischerweise kapazitive Touchcontroller wie der FT6x06 @focaltechFT6x06Datasheet2014 zum Einsatz, die über @i2c angebunden werden und neben Einzelberührungen auch Mehrfingergesten erfassen können. Solche Module sind kostengünstig verfügbar und werden in der Maker- und Embedded-Community häufig in Verbindung mit Mikrocontrollern der ESP32-Familie eingesetzt.
 
@@ -47,9 +47,9 @@ Solche Displays sind in unterschiedlichen Ausführungen verfügbar, wobei im Emb
 
 Da der SPIKE Prime Hub selbst kein @tft\-Display über @spi anbinden kann, muss zwischen Hub und Display ein zusätzlicher Mikrocontroller vermitteln. Er übernimmt die Ansteuerung des Displays und die Verarbeitung der Touch-Eingaben und kommuniziert gleichzeitig mit dem Hub. Aus dieser Doppelrolle ergeben sich folgende Anforderungen an die Hardware:
 
-- *S1 -- Displayschnittstellen.* Sie muss über geeignete Schnittstellen zur Ansteuerung typischer @tft\-Displays verfügen, insbesondere @spi für die Bildschirmdaten und @i2c für den Touch-Controller.
-- *S2 -- Rechenleistung und Speicher.* Sie muss ausreichend Rechenleistung und Speicher bieten, um eine grafische Bibliothek wie etwa @LVGL @LVGLLightVersatile ausführen zu können.
-- *S3 -- Busanbindung.* Sie muss über eine Schnittstelle verfügen, die kompatibel zu den Sensorports des SPIKE Prime Hubs ist, oder eine entsprechende Anbindung über @lpf2 unterstützen.
+- *S1 Displayschnittstellen.* Sie muss über geeignete Schnittstellen zur Ansteuerung typischer @tft\-Displays verfügen, insbesondere @spi für die Bildschirmdaten und @i2c für den Touch-Controller.
+- *S2 Rechenleistung und Speicher.* Sie muss ausreichend Rechenleistung und Speicher bieten, um eine grafische Bibliothek wie etwa @LVGL @LVGLLightVersatile ausführen zu können.
+- *S3 Busanbindung.* Sie muss über eine Schnittstelle verfügen, die kompatibel zu den Sensorports des SPIKE Prime Hubs ist, oder eine entsprechende Anbindung über @lpf2 unterstützen.
 
 Diese Anforderungen erfüllen Erweiterungsboards aus dem Bildungs- und Maker-Bereich, die speziell für die Anbindung an LEGO-Hubs entworfen wurden. Ein Beispiel sind die ESP32-basierten Boards der LMS-ESP32-Reihe @LMSESP32V20Clever2023. Sie geben sich gegenüber dem Hub als LEGO-Sensor aus und können dadurch über das @lpf2\-Protokoll kommunizieren. Welche Hardware in dieser Arbeit konkret eingesetzt wird und wie die Software dafür eingerichtet ist, beschreibt @sec:referenzimplementierung.
 
@@ -61,18 +61,18 @@ Aus diesen Überlegungen ergibt sich eine Systemstruktur aus drei Teilen. Der SP
 
 Der vorige Abschnitt legt fest, aus welchen Komponenten das System besteht. Offen ist noch, was die Verbindung zwischen Steuer- und Anzeigeeinheit leisten muss. Die folgenden Anforderungen leiten sich aus dem Anwendungsfall einer interaktiven Oberfläche ab und beziehen sich nicht auf einen bestimmten Übertragungsweg. Sie sind mit K1 bis K6 nummeriert, damit @sec:evaluation später auf sie verweisen kann.
 
-- *K1 -- Strukturierte Nachrichten unbestimmter Länge.* Ein Bedienelement lässt sich nicht durch einen einzelnen Wert beschreiben. Zum Erzeugen einer Schaltfläche gehören Position, Abmessungen und Beschriftung. Ein Beschriftungstext hat keine feste Länge, und eine Auswahlliste enthält unterschiedlich viele Einträge. Die Verbindung muss deshalb zusammengesetzte Werte übertragen können, deren Länge erst zur Laufzeit feststeht. Feste Formatangaben je Aufruf, wie sie die in @sec:relatedwork betrachtete Transportbibliothek verwendet, reichen dafür nicht aus.
+- *K1 Strukturierte Nachrichten unbestimmter Länge.* Ein Bedienelement lässt sich nicht durch einen einzelnen Wert beschreiben. Zum Erzeugen einer Schaltfläche gehören Position, Abmessungen und Beschriftung. Ein Beschriftungstext hat keine feste Länge, und eine Auswahlliste enthält unterschiedlich viele Einträge. Die Verbindung muss deshalb zusammengesetzte Werte übertragen können, deren Länge erst zur Laufzeit feststeht. Feste Formatangaben je Aufruf, wie sie die in @sec:relatedwork betrachtete Transportbibliothek verwendet, reichen dafür nicht aus.
 
-- *K2 -- Aufrufe mit zuordenbarem Ergebnis.* Viele Aufrufe liefern einen Rückgabewert. Das Erzeugen eines Objekts liefert eine Referenz, über die es später angesprochen wird. Das Auslesen eines Zustands liefert den entsprechenden Wert. Zu jeder Anfrage muss also eine Antwort zurückkommen. Werden mehrere Anfragen nacheinander abgesetzt, muss erkennbar bleiben, welche Antwort zu welcher Anfrage gehört.
+- *K2 Aufrufe mit zuordenbarem Ergebnis.* Viele Aufrufe liefern einen Rückgabewert. Das Erzeugen eines Objekts liefert eine Referenz, über die es später angesprochen wird. Das Auslesen eines Zustands liefert den entsprechenden Wert. Zu jeder Anfrage muss also eine Antwort zurückkommen. Werden mehrere Anfragen nacheinander abgesetzt, muss erkennbar bleiben, welche Antwort zu welcher Anfrage gehört.
 
-- *K3 -- Rückfluss von Ereignissen.* Berührungen entstehen auf der Anzeigeeinheit, ausgewertet werden sie aber von der Anwendung auf der Steuereinheit. Informationen müssen daher auch dann von der Anzeige- zur Steuereinheit gelangen, wenn sie keine Antwort auf einen Aufruf sind. Ereignisse sollen dabei nicht verloren gehen. Lässt sich ein Verlust nicht vermeiden, muss er zumindest erkennbar sein.
+- *K3 Rückfluss von Ereignissen.* Berührungen entstehen auf der Anzeigeeinheit, ausgewertet werden sie aber von der Anwendung auf der Steuereinheit. Informationen müssen daher auch dann von der Anzeige- zur Steuereinheit gelangen, wenn sie keine Antwort auf einen Aufruf sind. Ereignisse sollen dabei nicht verloren gehen. Lässt sich ein Verlust nicht vermeiden, muss er zumindest erkennbar sein.
 
-- *K4 -- Antwortzeit.* Berührung und Reaktion auf dem Bildschirm sollen für den Benutzer zusammengehören. Als Richtwert dient die bei direkter Manipulation übliche Grenze von etwa 100 Millisekunden @millerResponseTimeMancomputer1968 @cardPsychologyHumancomputerInteraction1983.
+- *K4 Antwortzeit.* Berührung und Reaktion auf dem Bildschirm sollen für den Benutzer zusammengehören. Als Richtwert dient die bei direkter Manipulation übliche Grenze von etwa 100 Millisekunden @millerResponseTimeMancomputer1968 @cardPsychologyHumancomputerInteraction1983.
   Gemeint ist dabei der gesamte Vorgang aus Erkennung, Übertragung, Verarbeitung und Rückmeldung, nicht die Übertragung eines einzelnen Pakets.
 
-- *K5 -- Begrenzter Speicherbedarf.* Auf beiden Seiten der Verbindung arbeitet ein Mikrocontroller. Puffer brauchen deshalb eine feste Obergrenze, die schon beim Entwurf bekannt ist. Verfahren, die im ungünstigen Fall beliebig viel Speicher belegen, etwa das Sammeln aller bisher aufgetretenen Ereignisse, kommen nicht in Frage.
+- *K5 Begrenzter Speicherbedarf.* Auf beiden Seiten der Verbindung arbeitet ein Mikrocontroller. Puffer brauchen deshalb eine feste Obergrenze, die schon beim Entwurf bekannt ist. Verfahren, die im ungünstigen Fall beliebig viel Speicher belegen, etwa das Sammeln aller bisher aufgetretenen Ereignisse, kommen nicht in Frage.
 
-- *K6 -- Unabhängigkeit vom Übertragungsweg.* Der Übertragungsweg ist durch die Plattform vorgegeben und gehört nicht zum eigentlichen Problem. Seine Eigenschaften sollen sich deshalb nur in einem klar abgegrenzten Teil des Entwurfs auswirken. Prüfen lässt sich das daran, wie viel geändert werden müsste, um denselben Dienst über einen anderen Weg anzubieten.
+- *K6 Unabhängigkeit vom Übertragungsweg.* Der Übertragungsweg ist durch die Plattform vorgegeben und gehört nicht zum eigentlichen Problem. Seine Eigenschaften sollen sich deshalb nur in einem klar abgegrenzten Teil des Entwurfs auswirken. Prüfen lässt sich das daran, wie viel geändert werden müsste, um denselben Dienst über einen anderen Weg anzubieten.
 
 K1 bis K3 betreffen den Inhalt der Übertragung, K4 und K5 die Bedingungen, unter denen sie stattfindet, und K6 den Aufbau des Entwurfs. Der folgende Abschnitt stellt diesen Anforderungen die Eigenschaften der Plattform gegenüber.
 
@@ -82,10 +82,9 @@ Steuer- und Anzeigeeinheit sind über einen Sensorport des Hubs und das @lpf2\-P
 
 === Eingeschränkte Kommunikationsrichtung
 
-Das @lpf2\-Protokoll arbeitet nach dem Master-Slave-Prinzip @LeJOSEV3Wiki.
-Der Hub ist dabei der Master. Er wählt den aktiven Modus des angeschlossenen Geräts aus und stößt jede Übertragung an. Das Gerät meldet sich als Sensor an und stellt Werte bereit, die der Hub abruft, während es von sich aus nicht senden kann.
+Im @lpf2\-Protokoll ist der Hub der Master @LeJOSEV3Wiki und wählt den aktiven Modus des angeschlossenen Geräts aus. Anders als ein Slave bei @i2c meldet sich das Gerät als Sensor an und sendet die Werte dieses Modus, auch ohne Anfrage. Das Programm auf dem Hub erfährt davon jedoch nicht. Die Firmware hält je Modus nur den zuletzt empfangenen Wert, und das Programm sieht ihn erst, wenn es liest.
 
-Die in @sec:relatedwork beschriebene Bibliothek PUPRemote bildet das direkt ab und bietet ein einziges Zugriffsmuster an. Die Steuereinheit schreibt Daten in einen Modus und liest im selben Vorgang die Antwort zurück. Jede Übertragung besteht damit aus Anfrage und Antwort, und die Anzeigeeinheit antwortet ausschließlich.
+Die in @sec:relatedwork beschriebene Bibliothek PUPRemote bildet das in zwei Zugriffsmustern ab. Bei einem Kanal legt die Anzeigeeinheit einen Wert ab, den die Steuereinheit liest. Bei einem Kommando schreibt die Steuereinheit Daten in einen Modus und liest im selben Vorgang die Antwort zurück. Nur das Kommando trägt Daten in beide Richtungen, und nur damit lassen sich Aufrufe übertragen. Ein zusätzlicher Kanal für Rückmeldungen läge in einem zweiten Modus, und der Hub müsste bei jedem Wechsel zwischen Aufruf und Abfrage den Modus umschalten. Die Middleware verwendet deshalb allein das Kommando, sodass jeder Austausch aus Anfrage und Antwort besteht.
 
 Für die Anforderungen bedeutet das, dass sich weder Ergebnisse (K2) noch Ereignisse (K3) zustellen lassen, sondern beides nur bereitgehalten und abgefragt werden kann. Entsteht ein Ergebnis erst nach der letzten Anfrage, ist eine weitere Anfrage nötig, und eine Berührung zwischen zwei Anfragen muss bis zur nächsten Anfrage zwischengespeichert werden. Wann eine Rückmeldung eintrifft, bestimmt damit die Seite, die sie abholt. Die zeitliche Auflösung von Ereignissen ist dadurch durch den Abfragetakt der Steuereinheit begrenzt, was sich direkt auf K4 auswirkt.
 
@@ -110,7 +109,7 @@ Dazu kommt der begrenzte Arbeitsspeicher auf beiden Seiten, wodurch K5 auf diese
 
 === Wechselwirkung der Einschränkungen
 
-Einzeln betrachtet ließe sich jede der drei Einschränkungen bewältigen. Kleine Pakete lassen sich durch Zerlegung überbrücken, eine fehlende Sendemöglichkeit durch regelmäßiges Abfragen, und ein Ablauf lässt sich auch ohne Nebenläufigkeit sequenziell formulieren. Zusammen verstärken sie sich jedoch gegenseitig.
+Einzeln betrachtet ließe sich jede der drei Einschränkungen bewältigen. Kleine Pakete lassen sich durch Zerlegung überbrücken, eine Seite, die von Daten der anderen erst beim Nachfragen erfährt, durch regelmäßiges Abfragen, und ein Ablauf lässt sich auch ohne Nebenläufigkeit sequenziell formulieren. Zusammen verstärken sie sich jedoch gegenseitig.
 
 Durch die kleine Paketgröße zerfällt eine Nachricht in viele Pakete. Wegen der eingeschränkten Kommunikationsrichtung erfordert jedes dieser Pakete eine eigene Anfrage der Steuereinheit samt Antwort, und für das Abholen des Ergebnisses sind weitere Anfragen nötig. Ohne Nebenläufigkeit werden all diese Anfragen nacheinander abgearbeitet.
 
@@ -128,8 +127,8 @@ Für den weiteren Entwurf folgt daraus, dass die Dauer eines Aufrufs vor allem v
         [*Nr.*], [*Anforderung*], [*Entgegenstehende Einschränkung*], [*Folge für den Entwurf*],
       ),
       [K1], [Strukturierte Nachrichten unbestimmter Länge], [Feste Paketgröße von 16 Byte], [Nachrichten müssen zerlegt und wieder zusammengesetzt werden],
-      [K2], [Aufrufe mit zuordenbarem Ergebnis], [Keine eigenständige Übertragung durch die Anzeigeeinheit], [Ergebnisse werden bereitgehalten und abgefragt, Zuordnung über eine mitgeführte Kennung],
-      [K3], [Rückfluss von Ereignissen], [Keine eigenständige Übertragung durch die Anzeigeeinheit], [Ereignisse werden zwischengespeichert und von der Steuereinheit abgeholt],
+      [K2], [Aufrufe mit zuordenbarem Ergebnis], [Steuereinheit sieht Daten der Anzeigeeinheit erst beim Lesen], [Ergebnisse werden bereitgehalten und abgefragt, Zuordnung über eine mitgeführte Kennung],
+      [K3], [Rückfluss von Ereignissen], [Steuereinheit sieht Daten der Anzeigeeinheit erst beim Lesen], [Ereignisse werden zwischengespeichert und von der Steuereinheit abgeholt],
       [K4], [Antwortzeit], [Alle drei Einschränkungen gemeinsam], [Anzahl der Übertragungen je Aufruf wird zur bestimmenden Größe],
       [K5], [Begrenzter Speicherbedarf], [Beschränkter Arbeitsspeicher beider Seiten], [Feste Obergrenzen für alle Puffer, festgelegtes Verhalten beim Überlauf],
       [K6], [Unabhängigkeit vom Übertragungsweg], [Eigenheiten von Bus und #box[PUPRemote]], [Alle wegabhängigen Anteile in einer austauschbaren Schicht bündeln],
@@ -145,17 +144,17 @@ liegen nahe genug, um ihre Verwerfung zu begründen.
 
 *Eine Funkverbindung statt des Sensorports.* Der Hub besitzt ein Funkmodul,
 und eine Verbindung über @ble würde die Paketgrenze des Busses umgehen. Drei
-Gründe sprechen dagegen. Erstens löst sie das Problem nicht, sondern verlagert
-es nur: die voreingestellte Paketgröße des Attributprotokolls beträgt 23 Byte,
-von denen 20 für einen Wert bleiben, und der übliche Zugriff erfolgt über
-lesende Anfragen des Clients @CoreSpecification2023. Damit liegt @ble in
-derselben Klasse von Verbindungen, die @sec:verallgemeinerung beschreibt, und
-der gesamte Entwurf wäre weiterhin nötig. Zweitens muss die Anzeigeeinheit
+Gründe sprechen dagegen. Erstens verschiebt sie die Paketgrenze nur: die
+voreingestellte Paketgröße des Attributprotokolls beträgt 23 Byte, von denen 20
+für einen Wert bleiben @CoreSpecification2023. Zerlegung und Rahmung wären damit
+weiterhin nötig. Den Rückkanal könnte @ble dagegen abkürzen, da der Server den
+Client über Benachrichtigungen ohne Anfrage informieren kann. Zweitens muss die Anzeigeeinheit
 ohnehin versorgt werden, und die dafür nötige Leitung liegt am Sensorport
 bereits an. Eine Funkverbindung führt also nicht zu weniger Kabel, sondern zu
 einem zweiten Versorgungsweg. Drittens stellt die eingesetzte Firmware für den
 Funkkanal keine Schnittstelle bereit, mit der sich eine Verbindung zu einem
-beliebigen Gerät aufbauen ließe.
+beliebigen Gerät aufbauen ließe. Dieser dritte Grund schließt die Alternative
+bereits für sich genommen aus.
 
 *Eine Beschreibung der Oberfläche statt einzelner Aufrufe.* Anstatt jedes
 Element über einen eigenen Aufruf zu erzeugen, könnte die Steuereinheit einmalig
@@ -165,7 +164,11 @@ jedoch nicht das Problem, denn er findet einmal statt. Wiederkehrend sind das
 Ändern von Zuständen und das Abfragen von Ereignissen, und daran ändert eine
 Beschreibung nichts. Hinzu kommt, dass eine Beschreibung, die mehr kann als
 Elemente zu platzieren, eine Sprache wird, die auf einem Gerät ausgewertet
-wird, auf dem sie sich kaum nachvollziehen lässt. Die in @sec:architektur
+wird, auf dem sie sich kaum nachvollziehen lässt. Dieser Weg ist für
+Sensornetze mit Maté bereits gegangen worden, einer kleinen virtuellen
+Maschine, an die statt einzelner Aufrufe ein Programm übertragen wird
+@MateTinyVirtual2026. Der Preis ist dort derselbe, nämlich eine zweite Sprache
+und eine zweite Laufzeitumgebung, die mitgepflegt werden müssen. Die in @sec:schicht-objektmodell
 eingeführten Bindings sind die bewusst begrenzte Fassung dieses Gedankens: ein
 geschlossener Satz von Aktionen ohne Bedingungen und ohne Zustand.
 
@@ -173,8 +176,8 @@ geschlossener Satz von Aktionen ohne Bedingungen und ohne Zustand.
 
 Die im vorigen Abschnitt beschriebenen Einschränkungen wurden am konkreten Zielsystem hergeleitet, sind jedoch nicht an dieses System gebunden. Das ist für die weitere Arbeit wichtig, denn davon hängt ab, ob der folgende Entwurf eine Einzellösung ist oder für eine ganze Klasse von Verbindungen gilt.
 
-Die drei Eigenschaften lassen sich von der Plattform ablösen und als allgemeine Merkmale einer Verbindung formulieren. Erstens ist die Übertragung anfragegetrieben, das heißt, nur eine der beiden Seiten kann eine Übertragung anstoßen. Zweitens ist die Nutzlast je Übertragung klein und fest vorgegeben. Drittens steht auf mindestens einer Seite eine Laufzeitumgebung zur Verfügung, die weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellt.
+Die drei Eigenschaften lassen sich von der Plattform ablösen und als allgemeine Merkmale einer Verbindung formulieren. Erstens ist die Übertragung anfragegetrieben, das heißt, eine der beiden Seiten erfährt von Daten der anderen erst, wenn sie selbst nachfragt. Zweitens ist die Nutzlast je Übertragung klein und fest vorgegeben. Drittens steht auf mindestens einer Seite eine Laufzeitumgebung zur Verfügung, die weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellt.
 
-Diese Kombination tritt über den betrachteten Bus hinaus in verschiedenen Ausprägungen auf. Bei der Kommunikation über @i2c treibt beispielsweise der Master den Bus, während ein Slave eine Übertragung nicht selbstständig beginnen kann, und Modbus @rtu folgt demselben Muster aus Anfrage und Antwort. Auch bei @ble erfolgt der übliche Zugriff über lesende Anfragen des Clients, und die standardmäßig ausgehandelte Nutzlast liegt in derselben Größenordnung wie beim hier betrachteten Bus @CoreSpecification2023. In allen genannten Fällen stellen sich dieselben Fragen. Wie werden Nachrichten zerlegt und wieder zusammengesetzt? Wie gelangen Ergebnisse und Ereignisse zur anfragenden Seite zurück? Und wie lässt sich all das vor der Anwendung verbergen?
+Einzelne dieser Merkmale finden sich in vielen Verbindungen, alle drei zusammen dagegen seltener. Bei der Kommunikation über @i2c treibt der Master den Bus, während ein Slave eine Übertragung nicht selbstständig beginnen kann, und Modbus @rtu folgt demselben Muster aus Anfrage und Antwort. Beide teilen damit das erste Merkmal, begrenzen die Nutzlast aber nicht in gleicher Weise, denn bei @i2c legt erst die Umsetzung des Slaves eine Grenze fest, und Modbus @rtu erlaubt bis zu 252 Byte Daten je Anfrage @MODBUSApplicationProtocol. Bei @ble ist es umgekehrt. Die voreingestellte Nutzlast liegt in derselben Größenordnung wie beim hier betrachteten Bus, über Benachrichtigungen kann der Server den Client aber ohne Anfrage informieren @CoreSpecification2023. Die Kombination aller drei Merkmale tritt am ehesten bei Sensorschnittstellen wie der hier betrachteten auf, bei denen ein Gerät Werte fester Länge in vorab vereinbarten Kanälen bereitstellt. Jedes Merkmal wirft dabei für sich eine der folgenden Fragen auf, gleich in welcher Verbindung es auftritt. Wie werden Nachrichten zerlegt und wieder zusammengesetzt? Wie gelangen Ergebnisse und Ereignisse zur anfragenden Seite zurück? Und wie lässt sich all das vor der Anwendung verbergen?
 
 Die vorliegende Arbeit behandelt den betrachteten Bus daher als einen Vertreter dieser Klasse. Der Entwurf in den folgenden Kapiteln bezieht sich deshalb auf die genannten Merkmale und nicht auf Eigenschaften einer bestimmten Plattform. Inwieweit das gelungen ist, wird am Ende der Arbeit diskutiert.

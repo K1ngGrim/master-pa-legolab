@@ -25,26 +25,26 @@ In verteilten Systemen durchläuft eine Nachricht den Schichtenstapel zweimal, a
 
 Die Transportschicht setzt nach unten einen Übertragungsweg voraus, über den sie möglichst wenig wissen darf, damit die Anforderungen aus @sec:kommunikationsanforderungen erfüllt werden können. Jede Eigenschaft, die sie voraussetzt, schließt Übertragungswege aus, die diese Eigenschaft nicht bieten. Die Schnittstelle richtet sich deshalb danach, was die betrachtete Verbindungsklasse mindestens leisten muss, und nicht nach den Fähigkeiten eines bestimmten Busses.
 
-Da nur der Client die Übertragung anstoßen kann, lässt sich jede Interaktion auf denselben Ablauf zurückführen:
+Da der Client von Daten des Servers erst erfährt, wenn er selbst nachfragt, lässt sich jede Interaktion auf denselben Ablauf zurückführen:
 
 #figure(
-  image("../figures/interceptor_ablauf.png", width: 85%),
+  image("../figures/interceptor_ablauf.png", width: 72%),
   caption: [Ablauf eines Aufrufs an der Interceptor-Schnittstelle],
 ) <abb:interceptor>
 
 Die Schnittstelle bietet daher eine einzige Operation, bei der ein Block begrenzter Größe übergeben wird und im selben Vorgang ein Block zurückkommt. Ob dieser Block Nutzlast, eine Bestätigung oder eine Anfrage nach dem Ergebnis enthält, spielt für die Schnittstelle keine Rolle, da sie ihn nur befördert und nicht liest. Die drei Phasen in @abb:interceptor bestehen deshalb aus Wiederholungen derselben Operation, unterscheiden sich nur im Inhalt der Blöcke und werden alle vom Client angestoßen.
 
-Eine umfangreichere Schnittstelle wäre denkbar, würde aber Übertragungswege ausschließen. Eine Zustellung ohne vorherige Anfrage setzt voraus, dass der Server von sich aus senden kann. Ein Warten auf eine Meldung des Servers setzt zusätzlich voraus, dass er dies zu einem selbst gewählten Zeitpunkt tut. Beides leistet der hier betrachtete Bus nicht, und beides ist auch für die übrigen Vertreter der in @sec:verallgemeinerung beschriebenen Klasse nicht vorauszusetzen. Die Schnittstelle bildet daher die Schnittmenge dessen, was alle Übertragungswege dieser Klasse leisten können.
+Eine umfangreichere Schnittstelle wäre denkbar, würde aber Übertragungswege ausschließen. Eine Zustellung ohne Anfrage setzt voraus, dass der Client eine Sendung des Servers bemerkt, ohne nachzufragen. Ein Warten auf eine Meldung setzt zusätzlich voraus, dass sie den Client weckt. Beides leistet der hier betrachtete Bus nicht, da der Client erst beim nächsten Lesen etwas bemerkt, und beides ist auch für die übrigen Vertreter der in @sec:verallgemeinerung beschriebenen Klasse nicht vorauszusetzen. Die Schnittstelle bildet daher die Schnittmenge dessen, was alle Übertragungswege dieser Klasse leisten können.
 
-Beide Seiten erfüllen dieselbe Schnittstelle und unterscheiden sich allein in der Richtung, aus der ein Block eintrifft. Der Client übergibt Blöcke und erhält Antworten, der Server nimmt Blöcke entgegen und beantwortet sie. Die Schnittstelle ist also symmetrisch, und eine Änderung des Übertragungswegs betrifft genau eine Stelle pro Seite.
+Beide Seiten erfüllen dieselbe Schnittstelle und unterscheiden sich allein in der Richtung, aus der ein Block eintrifft. Der Client übergibt Blöcke und erhält Antworten, der Server nimmt Blöcke entgegen und beantwortet sie. Die Schnittstelle ist also symmetrisch, und eine Änderung des Übertragungswegs betrifft im Entwurf genau eine Stelle pro Seite.
 
-Den Inhalt der Blöcke wertet die Schnittstelle nicht aus, denn sie kennt weder die Zugehörigkeit eines Blocks zu einer Nachricht noch seine Position darin, setzt nichts zusammen, erkennt keine Wiederholungen und ordnet keine Antworten zu. Alles, was eine Struktur voraussetzt, liegt darüber und wird in den folgenden Abschnitten beschrieben. Die Interceptor-Schnittstelle erfüllt damit die Anforderung K6 aus @sec:kommunikationsanforderungen.
+Den Inhalt der Blöcke wertet die Schnittstelle nicht aus, denn sie kennt weder die Zugehörigkeit eines Blocks zu einer Nachricht noch seine Position darin, setzt nichts zusammen, erkennt keine Wiederholungen und ordnet keine Antworten zu. Alles, was eine Struktur voraussetzt, liegt darüber und wird in den folgenden Abschnitten beschrieben. Die Interceptor-Schnittstelle ist damit im Entwurf die Voraussetzung für die Anforderung K6 aus @sec:kommunikationsanforderungen. Wie weit die Umsetzung sie erfüllt, bewertet @sec:testumgebung.
 
 === Frame-Struktur <sec:frame-struktur>
 
 Für die Schnittstelle aus dem vorherigen Abschnitt genügt ein Block ohne weitere Struktur. Die Transportschicht gibt den Blöcken eine Struktur, um aus einer Folge unabhängiger Blöcke eine Nachricht beliebiger Länge zu machen. Dazu benötigt jeder Block neben der Nutzlast Steuerinformationen, die unter anderem die Zugehörigkeit zu einer Nachricht und die Position innerhalb der Nachricht beschreiben. Diese Steuerinformationen werden in einem Header zusammengefasst, der jedem Block vorangestellt wird. Ein Block mit dieser Struktur wird im Folgenden als Frame bezeichnet.
 
-Die folgenden Felder sind für die Rahmung eines Frames notwendig. Größe und Format der Felder werden dabei bewusst nicht vorgegeben, damit der Entwurf auf andere Systeme übertragbar bleibt. Eine konkrete Ausprägung zeigt @sec:umsetzung-transport, und @sec:evaluation vergleicht sie mit einer früheren Fassung, die dieselbe Aufgabe mit deutlich mehr Steuerinformationen löste.
+Die folgenden Felder sind für die Rahmung eines Frames notwendig. Größe und Format der Felder werden dabei bewusst nicht vorgegeben, damit der Entwurf auf andere Systeme übertragbar bleibt. Eine konkrete Ausprägung zeigt @sec:umsetzung-transport, und @sec:evaluation stellt ihr eine Fassung gegenüber, die dieselbe Aufgabe mit deutlich mehr Steuerinformationen löst.
 
 *Zugehörigkeit:* Ohne Kennung der Nachricht lässt sich nicht entscheiden, ob ein eintreffender Block zu einer laufenden Übertragung gehört. Das ist auch bei einem rein synchronen Austausch nötig, bei dem immer nur eine Nachricht gleichzeitig unterwegs ist. Da direkt nach dem Absetzen einer Anfrage gelesen wird, hat die Gegenseite diese unter Umständen noch nicht verarbeitet. Gelesen wird dann die Antwort auf die vorangegangene Anfrage, und erst die Kennung macht solche veralteten Antworten erkennbar.
 
@@ -113,7 +113,7 @@ Ein Block wird erneut übertragen, wenn die zugehörige Bestätigung ausbleibt. 
 Da die Zerlegung eindeutig ist, hat der wiederholte Block denselben Inhalt wie der ursprüngliche, was dem Empfänger allein jedoch nicht hilft, denn hängt er den Block ein zweites Mal an, entsteht eine falsche Nachricht. Die Rekonstruktion muss Wiederholungen deshalb selbst abfangen und Blöcke verwerfen, deren Position bereits vorliegt, wodurch auch sie idempotent wird.
 
 ==== Was passiert bei einer abgebrochenen Übertragung? <pg:abbruch>
-Bricht eine Übertragung ab, bevor die Nachricht vollständig ist, bleiben die bereits eingetroffenen Blöcke liegen. Der Empfänger kann nicht entscheiden, ob die Übertragung noch fortgesetzt wird, da er weder die Gesamtzahl der Blöcke noch einen Zeitpunkt kennt, zu dem er aufgeben dürfte. Erkennbar wird der Abbruch erst daran, dass eine neue Übertragung beginnt, also ein Block an Position $0$ eintrifft. Die Position ist dafür verlässlicher als die Kennung, da sich die Kennung nach einer festen Anzahl von Nachrichten wiederholt.
+Bricht eine Übertragung ab, bevor die Nachricht vollständig ist, bleiben die bereits eingetroffenen Blöcke liegen. Der Empfänger kann nicht entscheiden, ob die Übertragung noch fortgesetzt wird, da er weder die Gesamtzahl der Blöcke noch einen Zeitpunkt kennt, zu dem er aufgeben dürfte. Erkennbar wird der Abbruch erst daran, dass eine neue Übertragung beginnt, also ein Block an Position $0$ eintrifft. Die Position allein genügt dafür allerdings nur, solange eine Nachricht mehr als einen Block umfasst. Besteht sie aus einem einzigen Block, sieht dessen Wiederholung genauso aus wie der Beginn einer neuen Übertragung. Unterscheiden lassen sich beide Fälle erst, wenn der Empfänger zusätzlich die Kennung mit der zuletzt empfangenen vergleicht. Da der Client nur eine Nachricht zugleich sendet, kann nur diese wiederholt werden, und eine gleiche Kennung an Position $0$ ist damit stets eine Wiederholung.
 
 Für den Umgang mit den liegengebliebenen Blöcken bestehen zwei Möglichkeiten:
 
@@ -123,9 +123,9 @@ Für den Umgang mit den liegengebliebenen Blöcken bestehen zwei Möglichkeiten:
 Der Entwurf wählt die erste Möglichkeit, da die betrachtete Verbindungsklasse anfragegetrieben ist und der Client ohnehin nur eine Nachricht zugleich senden kann. Hinzu kommt, dass die in @sec:einschraenkungen beschriebene Laufzeitumgebung die für die zweite Möglichkeit nötige Nebenläufigkeit nicht bereitstellt.
 
 ==== Wie viel Speicher benötigt die Rekonstruktion? <pg:speicher>
-Der Empfänger muss alle Blöcke einer Nachricht halten, bis sie vollständig ist. Anforderung K5 verlangt dafür eine zur Entwurfszeit bekannte Obergrenze, die sich aus den bisherigen Festlegungen ergibt. Ist $b_"pos"$ die Breite des Positionsfelds in Bit, lassen sich $2^(b_"pos")$ Positionen unterscheiden, und die längste übertragbare Nachricht umfasst höchstens
+Der Empfänger muss alle Blöcke einer Nachricht halten, bis sie vollständig ist. Anforderung K5 verlangt dafür eine zur Entwurfszeit bekannte Obergrenze, die sich aus den bisherigen Festlegungen ergibt. Ist $b_"pos"$ die Breite des Positionsfelds in Bit und $r$ die Anzahl der Werte, die für Frames ohne Position reserviert sind, so bleiben $2^(b_"pos") - r$ nutzbare Positionen, und die längste übertragbare Nachricht umfasst höchstens
 
-$ L_"max" = 2^(b_"pos") dot P $ <eq:maxlen>
+$ L_"max" = (2^(b_"pos") - r) dot P $ <eq:maxlen>
 
 Bytes. Dieser Wert ist zugleich die Obergrenze des Puffers, den die Gegenseite bereithalten muss.
 
@@ -162,11 +162,11 @@ Für diese Fälle wird Stop-and-Wait @arq @tanenbaumComputernetzwerke2012 verwen
 
 Die drei genannten Fehlerfälle sind für den Sender nicht unterscheidbar, da er in allen Fällen dasselbe sieht, nämlich eine ausbleibende Bestätigung. Eine Unterscheidung würde zudem nichts bringen, weil die Reaktion immer dieselbe ist. Der Empfänger erkennt die Wiederholung an der Position und verwirft sie, wie in @sec:fragmentierung beschrieben.
 
-Wiederholungen brauchen eine Obergrenze, denn ohne sie wartet der Client endlos, sobald der Server dauerhaft nicht antwortet. Aus einem Fehler auf der einen Seite wird dann ein Stillstand der Anwendung auf der anderen. Mit einer Obergrenze scheitert der Aufruf nach einer bekannten Zeit und die Anwendung behält die Kontrolle. Das ist zugleich die Voraussetzung dafür, dass K4 geprüft werden kann, denn eine Antwortzeit lässt sich nur angeben, wenn sie nach oben begrenzt ist.
+Wiederholungen brauchen eine Obergrenze, denn ohne sie wartet der Client endlos, sobald der Server dauerhaft nicht antwortet. Aus einem Fehler auf der einen Seite wird dann ein Stillstand der Anwendung auf der anderen. Mit einer Obergrenze scheitert der Aufruf nach einer bekannten Zeit und die Anwendung behält die Kontrolle. Das ist zugleich die Voraussetzung dafür, dass K4 geprüft werden kann, denn eine Antwortzeit lässt sich nur angeben, wenn sie nach oben begrenzt ist. Zu beachten ist dabei, dass eine Obergrenze je Phase noch keine Obergrenze für den Aufruf ergibt. Wie beide zusammenhängen, führt @sec:limitierungen für die Referenzimplementierung aus.
 
 Dieselbe Überlegung gilt für das Abholen des Ergebnisses, denn der Client fragt so lange nach, bis ein Ergebnis vorliegt, und benötigt auch dafür eine Obergrenze. Für den Server folgt daraus die Zusicherung, dass jeder Aufruf ein Ergebnis oder eine Fehlermeldung hinterlassen muss, auch wenn die Ausführung selbst fehlschlägt. Bleibt beides aus, wartet der Client auf etwas, das nie eintrifft. Die Fehlerbehandlung ist damit Teil des Protokolls und wird nicht der Umsetzung überlassen.
 
-Zusammen mit der idempotenten Rekonstruktion aus @sec:fragmentierung legt das die Aufrufsemantik fest. Ein wiederholter Block wird verworfen, ein wiederholter letzter Block löst die Ausführung kein zweites Mal aus, und ein Ergebnis wird beliebig oft unverändert herausgegeben. Ein Aufruf wird deshalb höchstens einmal ausgeführt, in der Einteilung von @ImplementingRemoteProcedure1984 also mit At-most-once-Semantik. Dass er mindestens einmal ausgeführt wird, sichert das Protokoll dagegen nicht zu: erreicht der letzte Block den Server nie, scheitert der Aufruf nach der Obergrenze, ohne dass auf dem Server etwas geschehen ist. Für die betrachteten Aufrufe ist das die richtige Wahl, da eine doppelt ausgeführte Änderung an der Anzeige nicht rückgängig zu machen wäre, ein gescheiterter Aufruf dagegen von der Anwendung wiederholt werden kann.
+Zusammen mit der idempotenten Rekonstruktion aus @sec:fragmentierung legt das die Aufrufsemantik fest. Ein wiederholter Block wird verworfen, ein wiederholter letzter Block löst die Ausführung kein zweites Mal aus, und ein Ergebnis wird beliebig oft unverändert herausgegeben. Ein Aufruf wird deshalb höchstens einmal ausgeführt, in der Einteilung von @ImplementingRemoteProcedure1984 also mit At-most-once-Semantik. Für eine Nachricht aus einem einzigen Block gilt das nur mit dem Vergleich der Kennung aus @sec:fragmentierung. Dass er mindestens einmal ausgeführt wird, sichert das Protokoll dagegen nicht zu: erreicht der letzte Block den Server nie, scheitert der Aufruf nach der Obergrenze, ohne dass auf dem Server etwas geschehen ist. Für die betrachteten Aufrufe ist das die richtige Wahl, da eine doppelt ausgeführte Änderung an der Anzeige nicht rückgängig zu machen wäre, ein gescheiterter Aufruf dagegen von der Anwendung wiederholt werden kann.
 
 Drei Aufgaben übernimmt die Schicht ausdrücklich nicht. Sie korrigiert keine Fehler, sondern verlässt sich auf die Prüfsumme des Übertragungswegs und wiederholt den betroffenen Block. Sie sichert die Reihenfolge nicht gesondert ab, da der Kanal sequenziell arbeitet, wobei das Positionsfeld die Rekonstruktion gleichwohl von der Reihenfolge unabhängig macht. Außerdem betreibt sie keine Stauvermeidung, da auf einer Punkt-zu-Punkt-Verbindung mit einem Master und einer einzigen Nachricht gleichzeitig kein Stau entstehen kann.
 
@@ -196,7 +196,8 @@ Beide Festlegungen setzen voraus, dass Client und Server dieselbe Schnittstelle 
 
 Fehler in dieser Vereinbarung fallen unterschiedlich auf. Eine unbekannte Methodenkennung erkennt der Server und antwortet mit einer Fehlermeldung, während eine abweichende Reihenfolge der Argumente nur auffällt, wenn sich dabei ihre Anzahl ändert. Vertauschte Werte gleicher Art werden dagegen ohne Fehler ausgeführt.
 
-=== Zuordnung von Anfrage und Antwort
+=== Zuordnung von Anfrage und Antwort <sec:zuordnung>
+
 
 Jede Antwort muss der Anfrage zugeordnet werden, zu der sie gehört. Der Frame führt nach @sec:frame-struktur bereits eine Kennung je Nachricht mit, und ein Aufruf entspricht genau einer Nachricht. Diese Kennung identifiziert also zugleich den Aufruf, und eine zweite Angabe in der Nutzlast ist nicht nötig.
 
@@ -217,11 +218,11 @@ Findet sich für einen Scope kein Empfänger, muss der Aufruf mit einer Fehlerme
 
 === Anfragegetriebener Rückkanal
 
-Aufgrund der eingeschränkten Kommunikationsrichtung aus @sec:einschraenkungen kann der Server keine Übertragung anstoßen. Ein Ergebnis kann er deshalb nicht zustellen, sondern nur bereithalten, bis es abgeholt wird. Hinzu kommt, dass die Ausführung noch nicht abgeschlossen ist, wenn der letzte Block des Aufrufs bestätigt wurde. Der Client muss also zunächst feststellen, ob ein Ergebnis vorliegt, und es anschließend abholen. 
+Aufgrund der eingeschränkten Kommunikationsrichtung aus @sec:einschraenkungen erfährt der Client von einem Ergebnis erst, wenn er selbst nachfragt. Der Server kann es deshalb nicht zustellen, sondern nur bereithalten, bis es abgeholt wird. Hinzu kommt, dass die Ausführung noch nicht abgeschlossen ist, wenn der letzte Block des Aufrufs bestätigt wurde. Der Client muss also zunächst feststellen, ob ein Ergebnis vorliegt, und es anschließend abholen. 
 
 Ereignisse folgen demselben Muster, unterscheiden sich jedoch in einem Punkt. Ein Ergebnis erwartet der Client, weil er den zugehörigen Aufruf abgesetzt hat, ein Ereignis dagegen nicht, sodass er regelmäßig nachfragen muss, ohne zu wissen, ob es etwas abzuholen gibt.
 
-Die zeitliche Auflösung hängt damit vom Abfragetakt ab, denn ein Ereignis, das zwischen zwei Abfragen auftritt, wird erst bei der nächsten bemerkt. Häufigeres Abfragen verkürzt zwar diese Verzögerung, kostet jedoch je Abfrage eine Übertragung und damit Zeit, die für Aufrufe fehlt, während selteneres Abfragen Übertragungen spart und die Verzögerung verlängert. Beide Ziele lassen sich also nicht zugleich erreichen.
+Die Unterscheidung zwischen einem Abholen durch den Empfänger und einem Zustellen durch die Quelle ist in verteilten Systemen geläufig und unter den Begriffen Pull und Push eingeführt @eugsterManyFacesPublish2003. Eine Wahl besteht hier nicht, denn auch ein ohne Anfrage gesendeter Wert wird auf dem Client erst beim nächsten Lesen sichtbar. Die zeitliche Auflösung hängt damit vom Abfragetakt ab, denn ein Ereignis, das zwischen zwei Abfragen auftritt, wird erst bei der nächsten bemerkt. Häufigeres Abfragen verkürzt zwar diese Verzögerung, kostet jedoch je Abfrage eine Übertragung und damit Zeit, die für Aufrufe fehlt, während selteneres Abfragen Übertragungen spart und die Verzögerung verlängert. Beide Ziele lassen sich also nicht zugleich erreichen.
 
 Zwischen zwei Abfragen können mehrere Ereignisse auftreten, die der Server puffern muss, wobei der Puffer nach K5 begrenzt ist. Läuft er über, gehen Ereignisse verloren, weshalb für diesen Fall ein Verhalten festgelegt sein muss, da ein stilles Verwerfen für die Anwendung nicht erkennbar wäre.
 

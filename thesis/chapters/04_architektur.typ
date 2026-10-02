@@ -51,7 +51,7 @@ Das System ist in fünf Schichten gegliedert, die auf beiden Seiten der Verbindu
 
 Zwei Eigenschaften dieses Aufbaus sind hervorzuheben. Zum einen ist er symmetrisch, da beide Seiten dieselben Schichten mit denselben Aufgaben besitzen und sich lediglich in der Richtung unterscheiden, aus der ein Aufruf eintrifft. Zum anderen ist er streng geschichtet, denn jede Schicht spricht ausschließlich mit der unmittelbar darunterliegenden, sodass eine Änderung innerhalb einer Schicht die übrigen nicht berührt.
 
-Die beiden Seiten nehmen dabei feste Rollen ein. Die Steuereinheit ruft Methoden auf und stößt jede Übertragung an, weshalb sie im Folgenden als Client bezeichnet wird, während die Anzeigeeinheit die Aufrufe ausführt, ausschließlich antwortet und deshalb als Server bezeichnet wird. Die Rollen decken sich mit der Verteilung auf dem Bus, auf dem der Hub als Master arbeitet, und wechseln im Betrieb nicht, auch nicht bei Ereignissen, da auch diese vom Client abgefragt werden.
+Die beiden Seiten nehmen dabei feste Rollen ein. Die Steuereinheit ruft Methoden auf und beginnt jeden Austausch, weshalb sie im Folgenden als Client bezeichnet wird, während die Anzeigeeinheit die Aufrufe ausführt, ausschließlich antwortet und deshalb als Server bezeichnet wird. Die Rollen decken sich mit der Verteilung auf dem Bus, auf dem der Hub als Master arbeitet, und wechseln im Betrieb nicht, auch nicht bei Ereignissen, da auch diese vom Client abgefragt werden.
 
 Die folgenden Abschnitte beschreiben die Schichten von unten nach oben. Für jede Schicht werden ihre Aufgabe, die nach oben angebotene Abstraktion und die Aufgaben benannt, die sie bewusst nicht übernimmt.
 
@@ -77,17 +77,19 @@ Zwei Entwurfsentscheidungen dieser Schicht wirken über sie hinaus. Die Rahmung 
 
 Die Kommunikationsschicht stellt den entfernten Aufruf her. Auf dem Client bildet sie aus dem Namen einer Methode, deren Argumenten und der Angabe des Scopes eine Nachricht, übergibt diese nach unten und nimmt anschließend das Ergebnis entgegen. Auf dem Server nimmt sie eine Nachricht entgegen, wählt den zuständigen Empfänger, ruft die benannte Methode auf und stellt deren Ergebnis zur Abholung bereit.
 
-In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da der Server nicht von sich aus senden kann, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt diesen Umstand, sodass ein Aufruf nach oben als gewöhnlicher, synchroner Methodenaufruf erscheint, der zurückkehrt, sobald das Ergebnis vorliegt.
+In dieser Schicht liegt außerdem die Behandlung des Rückkanals. Da der Client vom Server nur erfährt, was er selbst abfragt, wird das Ergebnis nicht zugestellt, sondern bereitgehalten und auf Anfrage herausgegeben. Die Kommunikationsschicht verbirgt diesen Umstand, sodass ein Aufruf nach oben als gewöhnlicher, synchroner Methodenaufruf erscheint, der zurückkehrt, sobald das Ergebnis vorliegt.
 
 Diese Schicht kennt die aufgerufenen Objekte nicht und befördert einen Aufruf zu einem benannten Empfänger, ohne zu wissen, was dieser darstellt.
 
-=== Objektmodell
+=== Objektmodell <sec:schicht-objektmodell>
 
 Das Objektmodell hebt den entfernten Aufruf auf die Ebene entfernter Objekte. Grafische Elemente wie Bildschirme, Beschriftungen und Schaltflächen werden als Objekte abgebildet, die auf dem Server bestehen und auf dem Client durch Stellvertreter vertreten werden.
 
-Grundlage ist eine gemeinsame abstrakte Schnittstelle je Objekttyp, die auf beiden Seiten vorliegt. Damit ein Stellvertreter ein bestimmtes entferntes Objekt anspricht, vergibt der Server beim Erzeugen eines Objekts eine Referenz und verwaltet die Objekte in einer Registratur. Der Stellvertreter führt diese Referenz mit und übergibt sie bei jedem Aufruf. Auf diese Weise lassen sich beliebig viele Objekte erzeugen und gezielt ansprechen.
+Grundlage ist eine gemeinsame abstrakte Schnittstelle je Objekttyp, die auf beiden Seiten vorliegt. Damit ein Stellvertreter ein bestimmtes entferntes Objekt anspricht, vergibt der Server beim Erzeugen eines Objekts eine Referenz und verwaltet die Objekte in einer Registratur. Der Stellvertreter führt diese Referenz mit und übergibt sie bei jedem Aufruf. Auf diese Weise lassen sich viele Objekte erzeugen und gezielt ansprechen.
 
-Nach oben bietet diese Schicht eine Sicht an, die sich von einer rein lokalen Programmierung nicht unterscheidet, womit das Ziel der Aufrufstransparenz erreicht ist.
+Hinzu kommen Reaktionen, die der Server selbst ausführt. Jede Reaktion über den Client durchläuft den anfragegetriebenen Rückkanal und ist damit an dessen Abfragetakt gebunden. Die Anwendung kann eine Reaktion deshalb auch vorab beim Server hinterlegen. Ein solches Binding verknüpft ein Ereignis auf einem Objekt mit einer Aktion auf einem anderen, und der Server führt die Aktion beim Eintreten des Ereignisses aus, ohne dass eine Übertragung nötig ist. Die Aktionen bilden einen kleinen, festen Satz, der nur die Darstellung betrifft, sodass die Logik der Anwendung auf dem Client bleibt. Die Umsetzung beschreibt @sec:ansteuerung.
+
+Nach oben bietet diese Schicht eine Sicht an, die sich in der Schreibweise eines Aufrufs von einer rein lokalen Programmierung nicht unterscheidet. Das Ziel der Aufrufstransparenz ist damit syntaktisch erreicht, im Zeitverhalten dagegen nicht, wie @sec:grundlagen-rpc bereits andeutet und @sec:limitierungen an der Umsetzung zeigt.
 
 === Anwendung und Anzeige
 
@@ -101,7 +103,7 @@ Innerhalb der Schichten treten drei wiederkehrende Rollen auf. Sie sind als Entw
 
 === Interceptor
 
-Der Interceptor bildet die Schnittstelle zwischen Kommunikationsschicht und Busanbindung. Der Name ist an das gleichnamige Muster aus @PDFPatternOrientedSoftware angelehnt, das dort einen festgelegten Punkt beschreibt, an dem sich ein Rahmenwerk um eigene Dienste erweitern lässt. Gemeinsam ist beiden der eine festgelegte Punkt, an dem eingegriffen wird. Hier wird jedoch nicht ein Dienst ergänzt, sondern der Übertragungsweg ausgetauscht. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Block zur Gegenseite gelangt und wie die Antwort zurückkommt. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
+Der Interceptor bildet die Schnittstelle zwischen Kommunikationsschicht und Busanbindung. Der Name ist an das gleichnamige Muster aus @PDFPatternOrientedSoftware angelehnt, das dort einen festgelegten Punkt beschreibt, an dem sich ein Rahmenwerk um eigene Dienste erweitern lässt. Gemeinsam ist beiden der eine festgelegte Punkt, an dem eingegriffen wird. Hier wird jedoch nicht ein Dienst ergänzt, sondern der Übertragungsweg ausgetauscht. Näher liegt in dieser Hinsicht das Muster Forwarder-Receiver aus @PDFPatternorientedSoftware, das die Teilnehmer von den zugrunde liegenden Mechanismen der Kommunikation entkoppelt, indem es Senden und Empfangen in eigene Komponenten auslagert. Eine für beide Seiten gemeinsame Schnittstelle legt fest, wie ein Block zur Gegenseite gelangt und wie die Antwort zurückkommt. Auf dem Client verpackt der Interceptor einen Methodenaufruf, sendet dessen Pakete und holt anschließend das Ergebnis ab. Auf dem Server nimmt er die Pakete entgegen, setzt die Nachricht zusammen und stellt das Ergebnis zur Abholung bereit.
 
 Da diese Schnittstelle ohne Bezug auf einen konkreten Übertragungsweg formuliert ist, ist der Interceptor der Ansatzpunkt für die Unabhängigkeit vom Übertragungsweg. Ein anderer Übertragungsweg wird angebunden, indem eine weitere Umsetzung dieser Rolle bereitgestellt wird, ohne dass die höheren Schichten davon berührt werden.
 
@@ -119,7 +121,7 @@ Dass beide dieselbe Schnittstelle erfüllen, ist die Grundlage der Aufrufstransp
 
 == Kommunikationsmodell
 
-Aus Sicht der Anwendung ist die Kommunikation synchron, da ein Aufruf erst zurückkehrt, wenn das Ergebnis vorliegt. Intern folgt die Übertragung dagegen dem anfragegetriebenen Muster des Übertragungswegs, bei dem jede Übertragung vom Client angestoßen wird und der Server ausschließlich antwortet.
+Aus Sicht der Anwendung ist die Kommunikation synchron, da ein Aufruf erst zurückkehrt, wenn das Ergebnis vorliegt. Intern folgt die Übertragung dagegen dem anfragegetriebenen Muster des Übertragungswegs, bei dem jeder Austausch vom Client ausgeht und der Server ausschließlich antwortet.
 
 Logisch werden zwei Kanäle unterschieden. Über den ersten Kanal sendet der Client die Pakete eines Aufrufs, und der Server bestätigt jedes Paket. Über den zweiten Kanal fragt der Client den Zustand und das Ergebnis ab, indem er zunächst prüft, ob ein Ergebnis bereitsteht, und es anschließend Paket für Paket abholt.
 
@@ -133,4 +135,4 @@ In der zweiten Phase überträgt der Client die Pakete. Der Server bestätigt je
 
 In der letzten Phase fragt der Client ab, ob das Ergebnis bereitsteht, und holt es anschließend Paket für Paket ab. Die Kommunikationsschicht setzt die Antwort zusammen, liest die Nutzlast aus und gibt das Ergebnis an den Stellvertreter zurück, der es an die Anwendung weiterreicht.
 
-An diesem Ablauf zeigt sich, wofür die Übertragungen aufgewendet werden. Ein einzelner Aufruf zerfällt in eine Folge von Paketen, die jeweils einzeln bestätigt werden, gefolgt von wiederholten Abfragen nach dem Ergebnis. Nutzlast trägt davon nur der erste Teil. Was das nach der in @sec:einschraenkungen abgeleiteten Kostenrechnung bedeutet, beziffert @sec:kosten.
+An diesem Ablauf zeigt sich, wofür die Übertragungen aufgewendet werden. Ein einzelner Aufruf zerfällt in eine Folge von Paketen, die jeweils einzeln bestätigt werden, gefolgt von wiederholten Abfragen nach dem Ergebnis. Nutzlast trägt davon nur der erste Teil. Was das für die Anzahl der Übertragungen bedeutet, beziffert @sec:kosten.

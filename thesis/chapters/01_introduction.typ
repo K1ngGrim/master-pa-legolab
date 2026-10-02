@@ -12,7 +12,7 @@ Vor diesem Hintergrund beschäftigt sich die vorliegende Arbeit mit der Frage, w
 
 Die Anbindung zusätzlicher Peripherie an eine solche Plattform wird durch drei technische Einschränkungen erschwert, die gemeinsam auftreten und sich gegenseitig verstärken.
 
-Erstens ist die Verbindung zwischen den Systemkomponenten anfragegetrieben. Sie ist zwar in beide Richtungen nutzbar, eine Übertragung kann aber nur die übergeordnete Seite anstoßen, während die untergeordnete Seite ausschließlich antwortet. Zweitens ist die je Paket übertragbare Datenmenge sehr klein und fest vorgegeben, sodass Nachrichten üblicher Größe nicht in ein einzelnes Paket passen. Drittens stehen stark beschränkte Laufzeitumgebungen zur Verfügung, die zumindest auf einer Seite weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellen.
+Erstens ist die Verbindung zwischen den Systemkomponenten anfragegetrieben. Sie ist zwar in beide Richtungen nutzbar, die übergeordnete Seite erfährt von Daten der untergeordneten aber erst, wenn sie selbst nachfragt. Zweitens ist die je Paket übertragbare Datenmenge sehr klein und fest vorgegeben, sodass Nachrichten üblicher Größe nicht in ein einzelnes Paket passen. Drittens stehen stark beschränkte Laufzeitumgebungen zur Verfügung, die zumindest auf einer Seite weder einen vollständigen Netzwerkstack noch die üblichen Mittel nebenläufiger Programmierung bereitstellen.
 
 Diese Rahmenbedingungen stehen im Gegensatz zu den Anforderungen interaktiver Benutzeroberflächen, die eine flexible Übertragung strukturierter Daten und eine zeitnahe Rückmeldung von Benutzereingaben voraussetzen. Gerade die Verarbeitung von Eingaben und die Übertragung zusammengesetzter Zustände sind unter diesen Bedingungen eine Herausforderung.
 
@@ -33,7 +33,7 @@ Der Entwurf soll die drei genannten Einschränkungen auf wenige Schichten eingre
 
 Ein weiterer Schwerpunkt liegt darauf, den Entwurf vom konkreten Übertragungsweg zu lösen, damit er auf andere Verbindungen derselben Klasse übertragbar bleibt.
 
-Die Bewertung stützt sich auf drei Kriterien. Das erste ist der funktionale Nachweis, dass sich eine interaktive Oberfläche über die entwickelte Abstraktion umsetzen lässt. Das zweite ist der Übertragungsaufwand je Aufruf, gemessen in benötigten Paketen und in der daraus folgenden Verzögerung. Das dritte ist der Ressourcenverbrauch, vor allem auf der Steuereinheit, deren Laufzeitumgebung am stärksten eingeschränkt ist.
+Die Bewertung stützt sich auf drei Kriterien. Das erste ist der funktionale Nachweis, dass sich eine interaktive Oberfläche über die entwickelte Abstraktion umsetzen lässt. Das zweite ist der Übertragungsaufwand je Aufruf, gemessen in benötigten Paketen und in der daraus folgenden Verzögerung. Das dritte ist der Ressourcenverbrauch auf beiden Einheiten. Die Laufzeitumgebung ist auf der Steuereinheit am stärksten eingeschränkt, der Arbeitsspeicher dagegen auf der Anzeigeeinheit am knappsten.
 
 == Aufbau der Arbeit
 
