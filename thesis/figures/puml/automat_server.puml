@@ -11,19 +11,23 @@ skinparam state {
 
 state "Leerlauf" as L
 state "Empfangen" as E
-state "Ausfuehren" as A
+state "Ausführen" as A
 state "Ergebnis bereit" as R
 
 [*] --> L
-L --> L : READY oder NEXT\nohne Eintrag / NACK
+L --> L : READY ohne Eintrag / NACK
+L --> L : NEXT ohne Eintrag / ERR
 L --> E : DATA, Position 0 / ACK
+L --> A : DATA_LAST, Position 0 / ACK
 E --> E : DATA neuer Position / ACK
 E --> E : bekannte Position /\nACK, nicht ablegen
 E --> A : DATA_LAST / ACK
 A --> A : READY / NACK
-A --> A : DATA_LAST wiederholt /\nACK, nicht erneut ausfuehren
+A --> A : DATA_LAST wiederholt /\nACK, nicht erneut ausführen
 A --> R : Ergebnis oder\nFehlermeldung ablegen
 R --> R : READY / DONE
 R --> R : NEXT / Frame an der Position
+R --> R : DATA_LAST wiederholt,\nPosition > 0 / ACK
 R --> E : DATA, Position 0 /\nACK, Eintrag verwerfen
+R --> A : DATA_LAST, Position 0 /\nACK, Eintrag verwerfen
 @enduml
